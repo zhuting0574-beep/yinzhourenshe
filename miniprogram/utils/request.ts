@@ -1,0 +1,1 @@
+const app=getApp<IAppOption>(); export function request<T>(url:string,options:Wechat.RequestOption={}){return new Promise<T>((resolve,reject)=>wx.request({url:app.globalData.apiBase+url,...options,header:{Authorization:app.globalData.token,...options.header},success:r=>r.statusCode>=200&&r.statusCode<300?resolve(r.data as T):reject(r),fail:reject}))}

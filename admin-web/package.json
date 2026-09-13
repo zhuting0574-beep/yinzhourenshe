@@ -1,0 +1,7 @@
+{
+  "name": "yinling-admin",
+  "private": true,
+  "scripts": {"dev": "vite", "build": "vite build"},
+  "dependencies": {"@vitejs/plugin-vue": "latest", "element-plus": "latest", "vue": "latest", "vue-router": "latest", "pinia": "latest", "axios": "latest"},
+  "devDependencies": {"vite": "latest", "typescript": "latest"}
+}

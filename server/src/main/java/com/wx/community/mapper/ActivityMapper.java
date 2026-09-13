@@ -1,0 +1,3 @@
+package com.wx.community.mapper;
+import com.wx.community.domain.Activity; import org.apache.ibatis.annotations.*; import java.util.*;
+@Mapper public interface ActivityMapper { @Select("select * from activities where status='PUBLISHED' and end_time>=now() order by start_time") List<Activity> published(); @Select("select * from activities where id=#{id}") Activity find(Long id); @Insert("insert into activities(title,cover_url,description,start_time,end_time,points,status,latitude,longitude) values(#{title},#{coverUrl},#{description},#{startTime},#{endTime},#{points},#{status},#{latitude},#{longitude})") @Options(useGeneratedKeys=true,keyProperty="id") int insert(Activity a); }

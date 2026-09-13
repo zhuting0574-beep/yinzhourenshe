@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>鄞领π · UX 高保真原型</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="overrides.css" />
+</head>
+<body>
+  <header class="prototype-bar">
+    <div class="brand"><span class="brand-mark">π</span><span>鄞领π · UX Prototype</span></div>
+    <div class="switcher" role="tablist">
+      <button class="switch active" data-mode="mini">微信小程序</button>
+      <button class="switch" data-mode="admin">管理端</button>
+    </div>
+    <span class="hint">V1.0 · 点击页面元素体验交互</span>
+  </header>
+
+  <main id="mini-view" class="workspace mini-workspace">
+    <aside class="page-index">
+      <div class="index-title">小程序页面</div>
+      <button class="page-link active" data-page="home">首页</button>
+      <button class="page-link" data-page="activities">活动列表</button>
+      <button class="page-link" data-page="activity-detail">活动详情</button>
+      <button class="page-link" data-page="checkin">每日签到</button>
+      <button class="page-link" data-page="survey">问卷填写</button>
+      <button class="page-link" data-page="products">积分兑换</button>
+      <button class="page-link" data-page="orders">兑换记录</button>
+      <button class="page-link" data-page="profile">个人中心</button>
+      <div class="state-note"><b>原型状态</b><br>已登录 · 可用积分 1005<br>点击卡片、按钮或底部导航切换。</div>
+    </aside>
+    <section class="phone-stage">
+      <div class="phone">
+        <div class="phone-status"><span>9:41</span><span>● ● ▰</span></div>
+        <div id="mini-screen" class="mini-screen"></div>
+        <nav class="tabbar">
+          <button data-page="home" class="tab active"><span>⌂</span><small>首页</small></button>
+          <button data-page="activities" class="tab"><span>◌</span><small>活动</small></button>
+          <button data-page="products" class="tab"><span class="tab-main">π</span><small>兑换</small></button>
+          <button data-page="profile" class="tab"><span>◉</span><small>我的</small></button>
+        </nav>
+      </div>
+    </section>
+    <aside class="spec-panel">
+      <div class="panel-kicker">页面说明</div>
+      <h2 id="mini-title">首页 · 用户入口</h2>
+      <p id="mini-desc">首屏用蓝粉双色品牌视觉承接活动横幅、快捷入口与关于我们内容。</p>
+      <div class="token-list"><span>主色 <i class="swatch blue"></i>#1769E0</span><span>强调 <i class="swatch pink"></i>#F05D9C</span><span>背景 <i class="swatch sky"></i>#F2FAFF</span></div>
+      <div class="interaction-tip">交互提示：点击首页“问卷任务”可打开登录后的任务弹窗；点击卡片可进入详情。</div>
+    </aside>
+  </main>
+
+  <main id="admin-view" class="workspace admin-workspace hidden">
+    <aside class="admin-sidebar">
+      <div class="admin-logo"><span class="brand-mark">π</span><div><b>鄞领π</b><small>运营管理平台</small></div></div>
+      <div class="admin-menu-label">工作台</div>
+      <button class="admin-link active" data-admin="dashboard"><span>▦</span>数据概览</button>
+      <div class="admin-menu-label">业务管理</div>
+      <button class="admin-link" data-admin="users"><span>♙</span>用户管理</button>
+      <button class="admin-link" data-admin="events"><span>▣</span>活动管理</button>
+      <button class="admin-link" data-admin="surveys"><span>☑</span>问卷管理</button>
+      <button class="admin-link" data-admin="products"><span>◇</span>商品与库存</button>
+      <button class="admin-link" data-admin="orders"><span>▤</span>兑换订单</button>
+      <button class="admin-link" data-admin="points"><span>∑</span>积分明细</button>
+      <div class="admin-menu-label">内容配置</div>
+      <button class="admin-link" data-admin="content"><span>◈</span>展示内容</button>
+      <div class="sidebar-footer">管理员<br><b>运营管理员</b><span>退出</span></div>
+    </aside>
+    <section class="admin-main">
+      <header class="admin-topbar"><div><span class="crumb">工作台</span><span class="slash">/</span><b id="admin-title">数据概览</b></div><div class="top-actions"><span>⌕</span><span>◔</span><span class="avatar">管</span></div></header>
+      <div id="admin-screen" class="admin-screen"></div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

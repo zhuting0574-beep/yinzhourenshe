@@ -1,0 +1,1 @@
+<view class="page"><view class="user">个人中心</view><view class="points">积分余额 <text>{{points}}</text></view><navigator url="/pages/orders/orders" class="item">兑换记录 <text>›</text></navigator><navigator url="/pages/checkin/checkin" class="item">每日签到 <text>›</text></navigator></view>

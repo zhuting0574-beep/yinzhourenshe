@@ -1,0 +1,2 @@
+import {request} from '../../utils/request'
+Page({data:{days:[],selected:'',checked:false},onLoad(){const days=Array.from({length:7},(_,i)=>({label:['一','二','三','四','五','六','日'][i],date:i+1}));this.setData({days})},choose(e:any){this.setData({selected:e.currentTarget.dataset.date})},submit(){request('/mini/check-ins',{method:'POST',data:{date:this.data.selected}}).then(()=>this.setData({checked:true}))}})

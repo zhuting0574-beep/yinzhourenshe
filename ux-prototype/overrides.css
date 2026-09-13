@@ -1,0 +1,15 @@
+.phone.drawn-active>.tabbar{display:none}
+.quick-drawn svg{width:30px;height:30px;stroke:none}
+.quick-drawn button{gap:5px}
+.calendar-grid span{height:27px;padding-top:6px;border:1px solid transparent;border-radius:3px}
+.calendar-grid span.today{border-color:#ee8d4c;border-radius:4px;background:#ee8d4c}
+.daily-reward{text-align:center;color:#a1adb5;font-size:8px;margin-top:7px}
+.task-drawn{border-radius:8px;margin-bottom:8px;box-shadow:0 2px 6px #dce9ef}
+.drawn-modal-shade{position:absolute;inset:0;background:rgba(16,39,65,.62);z-index:8;display:flex;align-items:center;justify-content:center;padding:38px 26px}
+.drawn-modal{position:relative;width:100%;min-height:310px;border-radius:14px;background:linear-gradient(#fff 0 63%,#ef6da5 63%);text-align:center;overflow:hidden;box-shadow:0 10px 25px #18365355}
+.drawn-modal-close{position:absolute;right:8px;top:8px;border:0;background:rgba(0,0,0,.2);color:#fff;width:22px;height:22px;border-radius:50%;font-size:18px;line-height:18px;z-index:2}
+.drawn-modal-brand{font-size:15px;color:#e7629d;font-weight:900;margin-top:18px}
+.drawn-modal-icon{display:inline-grid;place-items:center;width:34px;height:34px;margin-top:12px;border-radius:6px;background:#f7c0d9;color:#df4f91;font-size:22px}
+.drawn-modal h3{margin:7px 0 0;color:#e85b98;font-size:17px;line-height:1.35}.drawn-modal h3 em{font-style:normal;font-size:14px}
+.modal-mascot{font:900 116px/1 Arial;color:#1476d0;text-shadow:4px 4px #fff;position:absolute;left:50%;transform:translateX(-50%);bottom:26px}
+.drawn-modal>strong{position:absolute;bottom:7px;left:0;right:0;color:#fff;font-size:20px}.drawn-modal>strong small{font-size:9px;margin-left:3px}

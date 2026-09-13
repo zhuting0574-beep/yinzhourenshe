@@ -1,0 +1,3 @@
+package com.wx.community.mapper;
+import com.wx.community.domain.Order; import org.apache.ibatis.annotations.*; import java.util.*;
+@Mapper public interface OrderMapper { @Insert("insert into orders(order_no,user_id,product_id,points,status,expire_at) values(#{orderNo},#{userId},#{productId},#{points},'PENDING',#{expireAt})") @Options(useGeneratedKeys=true,keyProperty="id") int insert(Order o); @Select("select * from orders where user_id=#{uid} order by created_at desc") List<Order> byUser(Long uid); @Select("select * from orders where order_no=#{no}") Order findByNo(String no); @Update("update orders set status=#{status} where id=#{id} and status='PENDING'") int updateStatus(@Param("id")Long id,@Param("status")String status); }

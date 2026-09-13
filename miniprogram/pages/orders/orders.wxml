@@ -1,0 +1,1 @@
+<view class="page"><view class="title">兑换记录</view><view wx:if="{{!items.length}}" class="empty">暂无兑换记录</view><view wx:for="{{items}}" wx:key="id" class="card">{{item.productName}}<text>{{item.status}}</text></view></view>

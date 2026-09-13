@@ -1,0 +1,3 @@
+package com.wx.community.mapper;
+import com.wx.community.domain.Product; import org.apache.ibatis.annotations.*; import java.util.*;
+@Mapper public interface ProductMapper { @Select("select * from products where status='ON_SALE' order by id desc") List<Product> onSale(); @Select("select * from products where id=#{id}") Product find(Long id); @Update("update products set stock=stock-1,locked_stock=locked_stock+1 where id=#{id} and status='ON_SALE' and stock>0") int lockStock(Long id); @Update("update products set stock=stock+1,locked_stock=locked_stock-1 where id=#{id} and locked_stock>0") int releaseStock(Long id); }
