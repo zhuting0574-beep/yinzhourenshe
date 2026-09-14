@@ -13,3 +13,20 @@
 .drawn-modal h3{margin:7px 0 0;color:#e85b98;font-size:17px;line-height:1.35}.drawn-modal h3 em{font-style:normal;font-size:14px}
 .modal-mascot{font:900 116px/1 Arial;color:#1476d0;text-shadow:4px 4px #fff;position:absolute;left:50%;transform:translateX(-50%);bottom:26px}
 .drawn-modal>strong{position:absolute;bottom:7px;left:0;right:0;color:#fff;font-size:20px}.drawn-modal>strong small{font-size:9px;margin-left:3px}
+.original-asset{display:block;max-width:100%;object-fit:cover}
+.original-banner{height:184px!important;padding:0!important;background:#fff!important;overflow:hidden!important;border-radius:0 0 4px 4px}
+.original-banner .original-asset{width:100%;height:100%;object-fit:cover;object-position:center}
+.original-about{padding:0!important;background:#fff!important;height:137px!important}
+.original-about .original-asset{width:100%;height:100%;object-fit:cover;object-position:center 48%}
+.quick-drawn .original-asset{width:38px;height:38px;object-fit:cover;border-radius:50%}
+.original-activity-cover{height:91px;padding:0!important;background:#f66b20!important}
+.original-activity-cover .original-asset{width:100%;height:100%;object-fit:cover;object-position:center}
+.original-detail-cover{height:144px!important;padding:0!important;background:#f66b20!important}
+.original-detail-cover .original-asset{width:100%;height:100%;object-fit:cover;object-position:center}
+.original-modal{min-height:0!important;height:420px;background:#fff!important;border-radius:14px!important}
+.original-modal .original-asset{width:100%;height:100%;object-fit:cover;object-position:center;border-radius:14px}
+.original-checkin-bg{height:100px!important;padding:0!important;overflow:hidden;position:relative}
+.original-checkin-bg>.original-asset{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72}
+.checkin-score-copy{position:absolute;inset:17px 21px;z-index:1;text-align:right;color:#101d2a}
+.checkin-score-copy small,.checkin-score-copy strong{display:block}.checkin-score-copy strong{font-size:29px}
+.task-icon .original-asset{width:100%;height:100%;object-fit:cover;border-radius:50%}
