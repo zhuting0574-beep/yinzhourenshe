@@ -9,7 +9,30 @@ spring:
     redis:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
     jdbc-type-for-null: 'NULL'
+app:
+  timezone: Asia/Shanghai
+  token-secret: ${TOKEN_SECRET:change-this-development-token-secret-at-least-32-bytes}
+  qr-secret: ${QR_SECRET:change-this-development-qr-secret-at-least-32-bytes}
+  token-hours: ${TOKEN_HOURS:168}
+  dev-auth-enabled: ${DEV_AUTH_ENABLED:true}
+  upload-dir: ${UPLOAD_DIR:./uploads}
+  public-base-url: ${PUBLIC_BASE_URL:http://localhost:8081}
+  wechat:
+    app-id: ${WECHAT_APP_ID:}
+    app-secret: ${WECHAT_APP_SECRET:}
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:}

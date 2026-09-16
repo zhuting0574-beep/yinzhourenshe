@@ -1,0 +1,1 @@
+<view class="page"><view class="balance"><small>当前积分</small><strong>{{points}}</strong></view><view class="list"><view wx:for="{{items}}" wx:key="id" class="row"><text class="amount {{item.amount<0?'minus':''}}">{{item.amount>0?'+':''}}{{item.amount}}</text><view><strong>{{item.remark}}</strong><small>{{item.created_at}} · 余额 {{item.balance}}</small></view></view></view></view>

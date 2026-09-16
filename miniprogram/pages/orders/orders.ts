@@ -1,2 +1,2 @@
-import {request} from '../../utils/request'
-Page({data:{items:[]},onLoad(){request<any>('/mini/orders').then((r:any)=>this.setData({items:r.data||[]}))}})
+import {request,requireLogin} from '../../utils/request'
+Page({data:{items:[]},onShow(){requireLogin().then(()=>request<any[]>('/mini/orders')).then(items=>this.setData({items}))}})

@@ -1,2 +1,2 @@
-import {request} from '../../utils/request'
-Page({data:{user:null,points:0},onShow(){request<any>('/mini/profile').then((r:any)=>this.setData(r.data||{})).catch(()=>{})}})
+import {request,login,scanActivity,bindPhone} from '../../utils/request'
+Page({data:{user:null as any,loggedIn:false},onShow(){const app=getApp<IAppOption>();if(!app.globalData.token)return this.setData({user:null,loggedIn:false});request<any>('/mini/profile').then(user=>this.setData({user,loggedIn:true})).catch(()=>this.setData({user:null,loggedIn:false}))},login(){login().then(user=>this.setData({user,loggedIn:true}))},phone(e:any){if(!e.detail.code)return wx.showToast({title:'未授权手机号',icon:'none'});bindPhone(e.detail.code).then(user=>{this.setData({user,loggedIn:true});wx.showToast({title:'绑定成功，获得100积分'})})},scan(){scanActivity()}})

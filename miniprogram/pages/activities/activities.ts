@@ -1,2 +1,2 @@
-import {request} from '../../utils/request'
-Page({data:{items:[],loading:true},onLoad(){request<any>('/mini/activities').then((r:any)=>this.setData({items:r.data||[],loading:false})).catch(()=>this.setData({loading:false}))}})
+import {request,scanActivity} from '../../utils/request'
+Page({data:{items:[],loading:true},onShow(){this.load()},onPullDownRefresh(){this.load().finally(wx.stopPullDownRefresh)},load(){return request<any[]>('/mini/activities').then(items=>this.setData({items,loading:false})).catch(()=>this.setData({loading:false}))},open(e:any){wx.navigateTo({url:`/pages/activity-detail/activity-detail?id=${e.currentTarget.dataset.id}`})},scan(){scanActivity()}})
