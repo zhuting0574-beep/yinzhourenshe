@@ -1,1 +1,34 @@
-{"compileType":"miniprogram","libVersion":"3.5.0","appid":"touristappid","setting":{"es6":true,"postcss":true,"minified":false},"miniprogramRoot":"./"}
+{
+  "compileType": "miniprogram",
+  "libVersion": "3.5.0",
+  "appid": "wx2f4e4aed7a1aa3a5",
+  "setting": {
+    "es6": true,
+    "postcss": true,
+    "minified": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "enhance": false,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "miniprogramRoot": "./",
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {}
+}

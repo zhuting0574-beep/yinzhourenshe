@@ -1,1 +1,40 @@
-{"pages":["pages/home/home","pages/activities/activities","pages/activity-detail/activity-detail","pages/checkin/checkin","pages/questionnaire/questionnaire","pages/products/products","pages/product-detail/product-detail","pages/orders/orders","pages/points/points","pages/rules/rules","pages/profile/profile"],"window":{"navigationBarTitleText":"鄞领π","navigationBarBackgroundColor":"#dff4ff","navigationBarTextStyle":"black","backgroundColor":"#eefaff"},"tabBar":{"color":"#8194a1","selectedColor":"#ef649e","list":[{"pagePath":"pages/home/home","text":"首页"},{"pagePath":"pages/activities/activities","text":"活动"},{"pagePath":"pages/products/products","text":"兑换"},{"pagePath":"pages/profile/profile","text":"我的"}]}}
+{
+  "pages": [
+    "pages/home/home",
+    "pages/activities/activities",
+    "pages/activity-detail/activity-detail",
+    "pages/checkin/checkin",
+    "pages/questionnaire/questionnaire",
+    "pages/products/products",
+    "pages/product-detail/product-detail",
+    "pages/orders/orders",
+    "pages/points/points",
+    "pages/rules/rules",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "navigationBarTitleText": "鄞领π",
+    "navigationBarBackgroundColor": "#dff4ff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#e9f8ff",
+    "backgroundTextStyle": "dark"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于活动现场签到范围校验"
+    }
+  },
+  "requiredPrivateInfos": ["getLocation"],
+  "tabBar": {
+    "custom": true,
+    "color": "#8194a1",
+    "selectedColor": "#222222",
+    "list": [
+      {"pagePath": "pages/home/home", "text": "首页"},
+      {"pagePath": "pages/activities/activities", "text": "活动"},
+      {"pagePath": "pages/products/products", "text": "兑换"},
+      {"pagePath": "pages/profile/profile", "text": "我的"}
+    ]
+  }
+}

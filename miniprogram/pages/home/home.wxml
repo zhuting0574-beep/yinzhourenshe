@@ -1,1 +1,27 @@
-<view class="page"><swiper class="banner" autoplay circular indicator-dots><swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image_url}}" mode="aspectFill"/><text>{{item.title}}</text></swiper-item><swiper-item wx:if="{{!banners.length}}"><view class="banner-fallback">鄞领π<small>连接青年 活动与城市生活</small></view></swiper-item></swiper><view class="hello">{{points?'Hi，可用积分 '+points:'欢迎来到鄞领π'}}</view><view class="quick"><navigator url="/pages/activities/activities">活动报名</navigator><navigator url="/pages/products/products">积分兑换</navigator><navigator url="/pages/checkin/checkin">每日签到</navigator></view><view class="section">推荐活动</view><view wx:for="{{activities}}" wx:key="id" class="card" data-id="{{item.id}}" bindtap="openActivity"><image src="{{item.cover_url}}" mode="aspectFill"/><view><text>{{item.title}}</text><small>{{item.start_time}} - {{item.end_time}}</small></view></view><button class="scan" bindtap="scan">⌗</button></view>
+<view class="page-shell home-page">
+  <view class="safe-top"></view>
+  <view class="home-capsule"><text>•••</text><view class="i"></view><text>◎</text></view>
+  <image class="hero" src="/assets/ux/home-banner.jpg" mode="aspectFill"/>
+  <view class="home-body">
+    <view class="hello">Hi，{{userName||'欢迎来到鄞领π'}}</view>
+    <view class="quick-grid">
+      <navigator url="/pages/activities/activities" open-type="switchTab" class="quick-card"><image src="/assets/ux/icon-activity.jpg"/><text>活动报名</text></navigator>
+      <navigator url="/pages/products/products" open-type="switchTab" class="quick-card"><image src="/assets/ux/icon-points.jpg"/><text>积分兑换</text></navigator>
+      <navigator url="/pages/checkin/checkin" class="quick-card"><image src="/assets/ux/icon-checkin.jpg"/><text>每日签到</text></navigator>
+    </view>
+    <view class="about-wrap" bindtap="openActivities">
+      <image class="about" src="/assets/ux/home-about.jpg" mode="widthFix"/>
+      <text class="more">查看更多 ›</text>
+    </view>
+  </view>
+  <view wx:if="{{showSurvey}}" class="survey-mask" bindtap="closeSurvey">
+    <view class="survey-modal" catchtap="noop">
+      <button class="modal-close" bindtap="closeSurvey">×</button>
+      <view class="modal-brand">鄞领π</view>
+      <view class="modal-icon">▤</view>
+      <view class="modal-title">填写调查问卷<text>得100积分</text></view>
+      <view class="modal-pi">π</view>
+      <button class="survey-go" bindtap="goSurvey">去填写 <text>+100积分</text></button>
+    </view>
+  </view>
+</view>

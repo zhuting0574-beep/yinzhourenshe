@@ -15,6 +15,12 @@
 .login-form { align-self: center; margin: 50px; padding: 42px; background: #fff; border: 1px solid #e6edf3; border-radius: 8px; } .login-form h2 { margin: 0 0 28px; } .login-form > .el-button { width: 100%; }
 .qr-panel { text-align: center; } .qr-panel img { width: 320px; height: 320px; display: block; margin: auto; } .qr-panel code { display: block; margin: 18px auto 0; max-width: 420px; overflow-wrap: anywhere; color: #60788c; } .qr-panel p { color: #95a5b2; }
 .inline-upload { margin-left: 8px; } .el-form-item .el-input + .inline-upload { flex: 0 0 auto; }
+.workbench-dialog { max-width: calc(100vw - 32px); max-height: calc(100vh - 48px); margin: 24px auto !important; display: flex; flex-direction: column; overflow: hidden; }
+.workbench-dialog .el-dialog__header, .workbench-dialog .el-dialog__footer { flex: 0 0 auto; background: #fff; }
+.workbench-dialog .el-dialog__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.workbench-dialog .el-dialog__footer { border-top: 1px solid #e7edf2; padding-top: 16px; }
+.date-time-picker { width: 100% !important; }
+.full-control { width: 100%; } .unit { margin-left: 8px; color: #73879a; }
 .question-editor { width: 100%; display: grid; gap: 12px; } .question-row { padding: 14px; border: 1px solid #e4eaf0; border-radius: 8px; background: #fafcff; }
 .question-head { display: grid; grid-template-columns: 110px 1fr auto auto; gap: 8px; align-items: center; } .option-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0 0 118px; }
 @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, 1fr); } .login-page { grid-template-columns: 1fr; } .login-brand { display: none; } .login-form { width: min(440px, calc(100% - 32px)); margin: auto; } }

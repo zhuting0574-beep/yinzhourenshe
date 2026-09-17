@@ -19,6 +19,7 @@ import java.util.*;
  @GetMapping("/mini/activities/{id}") public ApiResponse<?> activity(@PathVariable Long id,@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.activity(id,uid(a)));}
  @PostMapping("/mini/activities/{id}/register") public ApiResponse<?> register(@PathVariable Long id,@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.registerActivity(registered(a),id));}
  @PostMapping("/mini/activities/verify") public ApiResponse<?> verify(@AuthenticationPrincipal AuthUser a,@RequestBody Map<String,Object>b){return ApiResponse.ok(s.verifyActivity(registered(a),str(b,"token",""),"QR"));}
+ @PostMapping("/mini/activities/{id}/check-in/location") public ApiResponse<?> locationCheckIn(@PathVariable Long id,@AuthenticationPrincipal AuthUser a,@RequestBody Map<String,Object>b){return ApiResponse.ok(s.locationCheckIn(registered(a),id,decimal(b,"latitude"),decimal(b,"longitude"),decimal(b,"accuracy")));}
  @GetMapping("/mini/check-ins") public ApiResponse<?> checkins(@AuthenticationPrincipal AuthUser a,@RequestParam(defaultValue="0")int year,@RequestParam(defaultValue="0")int month){var now=java.time.LocalDate.now(java.time.ZoneId.of("Asia/Shanghai"));return ApiResponse.ok(s.checkinSummary(required(a),year==0?now.getYear():year,month==0?now.getMonthValue():month));}
  @PostMapping("/mini/check-ins") public ApiResponse<?> checkin(@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.dailyCheckIn(registered(a)));}
  @GetMapping("/mini/questionnaires/active") public ApiResponse<?> questionnaire(@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.activeQuestionnaire(required(a)));}
@@ -32,5 +33,5 @@ import java.util.*;
  @GetMapping("/mini/content/{type}") public ApiResponse<?> content(@PathVariable String type){return ApiResponse.ok(s.content(type.toUpperCase(Locale.ROOT)));}
  private Map<String,Object>auth(Map<String,Object>u){return Map.of("token",tokens.issue("USER",((Number)u.get("id")).longValue()),"user",u,"needsPhone",u.get("phone")==null);}
  private Long uid(AuthUser a){return a!=null&&"USER".equals(a.role())?a.id():null;} private Long required(AuthUser a){Long id=uid(a);if(id==null)throw new BusinessException("LOGIN_REQUIRED","请先登录");return id;} private Long registered(AuthUser a){Long id=required(a);Object phone=db.queryForObject("select phone from users where id=?",Object.class,id);if(phone==null||String.valueOf(phone).isBlank())throw new BusinessException("PHONE_REQUIRED","请先授权手机号完成注册");return id;}
- private String str(Map<String,Object>b,String k,String d){Object v=b.get(k);return v==null?d:String.valueOf(v);}
+ private String str(Map<String,Object>b,String k,String d){Object v=b.get(k);return v==null?d:String.valueOf(v);} private double decimal(Map<String,Object>b,String k){try{return Double.parseDouble(String.valueOf(b.get(k)));}catch(Exception e){throw new BusinessException("INVALID_LOCATION","定位数据无效");}}
 }

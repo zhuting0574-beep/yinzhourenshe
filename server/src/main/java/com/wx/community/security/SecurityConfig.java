@@ -13,7 +13,6 @@ import java.io.IOException; import java.util.List;
  @Bean PasswordEncoder passwordEncoder(){return new BCryptPasswordEncoder();}
  @Bean SecurityFilterChain filter(HttpSecurity h,TokenFilter f)throws Exception{return h.csrf(x->x.disable()).cors(x->{}).sessionManagement(x->x.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(x->x
   .requestMatchers("/api/mini/auth/**","/api/admin/auth/login","/api/dev/**","/uploads/**").permitAll()
-  .requestMatchers(HttpMethod.GET,"/api/admin/activities/*/qr.png").permitAll()
   .requestMatchers(HttpMethod.GET,"/api/mini/home","/api/mini/activities/**","/api/mini/products/**","/api/mini/content/**").permitAll()
   .requestMatchers("/api/admin/**").hasRole("ADMIN").anyRequest().authenticated()).addFilterBefore(f,UsernamePasswordAuthenticationFilter.class).build();}
 }
