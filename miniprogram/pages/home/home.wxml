@@ -15,13 +15,13 @@
     </view>
   </view>
   <view wx:if="{{showSurvey}}" class="survey-mask" bindtap="closeSurvey">
-    <view class="survey-modal" catchtap="noop">
-      <button class="modal-close" bindtap="closeSurvey">×</button>
+    <view class="survey-modal" bindtap="goSurvey">
+      <button class="modal-close" catchtap="closeSurvey">×</button>
       <view class="modal-brand">鄞领π</view>
       <view class="modal-icon">▤</view>
       <view class="modal-title">填写调查问卷<text>得100积分</text></view>
       <view class="modal-pi">π</view>
-      <button class="survey-go" bindtap="goSurvey">去填写 <text>+100积分</text></button>
+      <button class="survey-go" catchtap="goSurvey">去填写 <text>+100积分</text></button>
     </view>
   </view>
 </view>
