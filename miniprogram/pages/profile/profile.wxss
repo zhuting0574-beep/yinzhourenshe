@@ -1,1 +1,92 @@
-.profile-page{background:#e9f8ff}.profile-bg{min-height:100vh;padding-bottom:20rpx;background:url('/assets/ux/profile-bg.jpg') top center/100% auto repeat-y}.account{display:flex;align-items:center;gap:32rpx;margin:40rpx 34rpx 34rpx}.account image{width:156rpx;height:156rpx;border-radius:50%;object-fit:cover}.account .strong,.account .small{display:block}.account .strong{font-size:48rpx;font-weight:500}.account .small{margin-top:14rpx;font-size:24rpx;white-space:nowrap}.phone-btn{width:calc(100% - 60rpx);margin:-12rpx 30rpx 24rpx;background:#1769e0;color:#fff;border-radius:40rpx;font-size:24rpx}.points-card{margin:0 30rpx 34rpx;border-radius:26rpx;overflow:hidden;background:#fff;box-shadow:0 8rpx 25rpx rgba(41,108,152,.1)}.balance{height:112rpx;padding:0 30rpx;background:#0750bd;color:#fff;display:flex;align-items:center;justify-content:space-between;font-size:29rpx}.balance .strong{font-size:54rpx;font-weight:400}.links{height:128rpx;display:flex;align-items:center}.links navigator{flex:1;text-align:center;border-right:1rpx solid #ddd;color:#b6b6b6;font-size:35rpx}.links navigator:last-child{border:0}.links text{display:inline;margin-left:10rpx;color:#333;font-size:25rpx}.service{margin:0 30rpx;border-radius:26rpx;overflow:hidden}.service image{display:block;width:100%}
+.profile-page {
+  background: #e9f8ff;
+}
+.profile-bg {
+  min-height: 100vh;
+  padding-bottom: 20rpx;
+  background: url('/assets/ux/profile-bg.jpg') top center/100% auto repeat-y;
+}
+.account {
+  display: flex;
+  align-items: center;
+  gap: 32rpx;
+  margin: 40rpx 34rpx 34rpx;
+}
+.account image {
+  width: 156rpx;
+  height: 156rpx;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.account .strong,
+.account .small {
+  display: block;
+}
+.account .strong {
+  font-size: 48rpx;
+  font-weight: 500;
+}
+.account .small {
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  white-space: nowrap;
+}
+.phone-btn {
+  width: calc(100% - 60rpx);
+  margin: -12rpx 30rpx 24rpx;
+  background: #1769e0;
+  color: #fff;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+}
+.points-card {
+  margin: 0 30rpx 34rpx;
+  border-radius: 26rpx;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 8rpx 25rpx rgba(41, 108, 152, 0.1);
+}
+.balance {
+  height: 112rpx;
+  padding: 0 30rpx;
+  background: #0750bd;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 29rpx;
+}
+.balance .strong {
+  font-size: 54rpx;
+  font-weight: 400;
+}
+.links {
+  height: 128rpx;
+  display: flex;
+  align-items: center;
+}
+.links navigator {
+  flex: 1;
+  text-align: center;
+  border-right: 1rpx solid #ddd;
+  color: #b6b6b6;
+  font-size: 35rpx;
+}
+.links navigator:last-child {
+  border: 0;
+}
+.links text {
+  display: inline;
+  margin-left: 10rpx;
+  color: #333;
+  font-size: 25rpx;
+}
+.service {
+  margin: 0 30rpx;
+  border-radius: 26rpx;
+  overflow: hidden;
+}
+.service image {
+  display: block;
+  width: 100%;
+}

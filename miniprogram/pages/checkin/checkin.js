@@ -1,2 +1,75 @@
-const {request,requireLogin}=require('../../utils/request')
-Page({data:{days:[],calendarDays:[],count:0,todayChecked:false,points:0,submitting:false,year:0,month:0,scrollProgress:0},onShow(){requireLogin('/pages/checkin/checkin').then(()=>this.load())},back(){wx.navigateBack({fail:()=>this.home()})},home(){wx.switchTab({url:'/pages/home/home'})},makeCalendar(days){const now=new Date();const checked=new Set(days.map(Number));const today=now.getDate();const total=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();const focus=Math.max(1,today-1);return Array.from({length:total},(_,i)=>{const day=i+1;return{day,label:day===today?'今':String(day),today:day===today,focus:day===focus,checked:checked.has(day)}})},initialProgress(total,today){return Math.min(1,Math.max(0,(today-2)/Math.max(1,total-7)))},scrollCalendar(e){const width=wx.getWindowInfo().windowWidth*614/750;const max=Math.max(1,e.detail.scrollWidth-width);this.setData({scrollProgress:Math.min(1,Math.max(0,e.detail.scrollLeft/max))})},load(){request('/mini/check-ins').then(d=>{const days=d.days.map(x=>String(x.check_date).slice(8,10));const now=new Date();const calendarDays=this.makeCalendar(days);this.setData({...d,days,year:now.getFullYear(),month:now.getMonth()+1,calendarDays,scrollProgress:this.initialProgress(calendarDays.length,now.getDate())})});request('/mini/profile').then(u=>this.setData({points:u.points}))},submit(){if(this.data.submitting)return;this.setData({submitting:true});request('/mini/check-ins',{method:'POST'}).then(d=>{const days=d.days.map(x=>String(x.check_date).slice(8,10));this.setData({...d,days,calendarDays:this.makeCalendar(days),submitting:false});wx.showToast({title:'签到成功 +10'})}).catch(()=>this.setData({submitting:false}))}})
+const { request, requireLogin } = require('../../utils/request')
+Page({
+  data: {
+    days: [],
+    calendarDays: [],
+    count: 0,
+    todayChecked: false,
+    points: 0,
+    submitting: false,
+    year: 0,
+    month: 0,
+    scrollProgress: 0,
+  },
+  onShow() {
+    requireLogin('/pages/checkin/checkin').then(() => this.load())
+  },
+  back() {
+    wx.navigateBack({ fail: () => this.home() })
+  },
+  home() {
+    wx.switchTab({ url: '/pages/home/home' })
+  },
+  makeCalendar(days) {
+    const now = new Date()
+    const checked = new Set(days.map(Number))
+    const today = now.getDate()
+    const total = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+    const focus = Math.max(1, today - 1)
+    return Array.from({ length: total }, (_, i) => {
+      const day = i + 1
+      return {
+        day,
+        label: day === today ? '今' : String(day),
+        today: day === today,
+        focus: day === focus,
+        checked: checked.has(day),
+      }
+    })
+  },
+  initialProgress(total, today) {
+    return Math.min(1, Math.max(0, (today - 2) / Math.max(1, total - 7)))
+  },
+  scrollCalendar(e) {
+    const width = (wx.getWindowInfo().windowWidth * 614) / 750
+    const max = Math.max(1, e.detail.scrollWidth - width)
+    this.setData({ scrollProgress: Math.min(1, Math.max(0, e.detail.scrollLeft / max)) })
+  },
+  load() {
+    request('/mini/check-ins').then((d) => {
+      const days = d.days.map((x) => String(x.check_date).slice(8, 10))
+      const now = new Date()
+      const calendarDays = this.makeCalendar(days)
+      this.setData({
+        ...d,
+        days,
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        calendarDays,
+        scrollProgress: this.initialProgress(calendarDays.length, now.getDate()),
+      })
+    })
+    request('/mini/profile').then((u) => this.setData({ points: u.points }))
+  },
+  submit() {
+    if (this.data.submitting) return
+    this.setData({ submitting: true })
+    request('/mini/check-ins', { method: 'POST' })
+      .then((d) => {
+        const days = d.days.map((x) => String(x.check_date).slice(8, 10))
+        this.setData({ ...d, days, calendarDays: this.makeCalendar(days), submitting: false })
+        wx.showToast({ title: '签到成功 +10' })
+      })
+      .catch(() => this.setData({ submitting: false }))
+  },
+})

@@ -1,1 +1,69 @@
-.products-page{background:#e9f8ff}.products-top{height:72rpx;padding:0 28rpx;display:flex;align-items:center;justify-content:space-between}.banner-link{display:block;margin:12rpx 28rpx 26rpx;border-radius:24rpx;overflow:hidden}.banner-link image{display:block;width:100%}.product-list{padding:0 28rpx 25rpx;display:grid;gap:24rpx}.product-card{height:220rpx;padding:22rpx;border-radius:24rpx;background:#fff;display:flex;gap:27rpx;box-sizing:border-box;box-shadow:0 8rpx 24rpx rgba(56,119,153,.09)}.product-image{width:190rpx;height:176rpx;border-radius:18rpx;background:#f2f2f2;flex-shrink:0}.product-info{min-width:0;flex:1;padding-top:6rpx}.product-name{font-size:31rpx;font-weight:700;line-height:1.38}.price{margin-top:26rpx;padding:10rpx 18rpx;border-radius:32rpx;background:#ededed;font-size:25rpx;text-align:center}.price .strong{font-size:28rpx}.stock{margin-top:10rpx;color:#99a5ad;font-size:20rpx;text-align:right}
+.products-page {
+  background: #e9f8ff;
+}
+.products-top {
+  height: 72rpx;
+  padding: 0 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.banner-link {
+  display: block;
+  margin: 12rpx 28rpx 26rpx;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+.banner-link image {
+  display: block;
+  width: 100%;
+}
+.product-list {
+  padding: 0 28rpx 25rpx;
+  display: grid;
+  gap: 24rpx;
+}
+.product-card {
+  height: 220rpx;
+  padding: 22rpx;
+  border-radius: 24rpx;
+  background: #fff;
+  display: flex;
+  gap: 27rpx;
+  box-sizing: border-box;
+  box-shadow: 0 8rpx 24rpx rgba(56, 119, 153, 0.09);
+}
+.product-image {
+  width: 190rpx;
+  height: 176rpx;
+  border-radius: 18rpx;
+  background: #f2f2f2;
+  flex-shrink: 0;
+}
+.product-info {
+  min-width: 0;
+  flex: 1;
+  padding-top: 6rpx;
+}
+.product-name {
+  font-size: 31rpx;
+  font-weight: 700;
+  line-height: 1.38;
+}
+.price {
+  margin-top: 26rpx;
+  padding: 10rpx 18rpx;
+  border-radius: 32rpx;
+  background: #ededed;
+  font-size: 25rpx;
+  text-align: center;
+}
+.price .strong {
+  font-size: 28rpx;
+}
+.stock {
+  margin-top: 10rpx;
+  color: #99a5ad;
+  font-size: 20rpx;
+  text-align: right;
+}

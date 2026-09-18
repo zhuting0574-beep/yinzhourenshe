@@ -1,13 +1,26 @@
 <view class="page-shell home-page">
   <view class="safe-top"></view>
-  <view class="home-capsule"><text>•••</text><view class="i"></view><text>◎</text></view>
+  <view class="home-capsule">
+    <text>•••</text>
+    <view class="i"></view>
+    <text>◎</text>
+  </view>
   <image class="hero" src="/assets/ux/home-banner.jpg" mode="aspectFill"/>
   <view class="home-body">
     <view class="hello">Hi，{{userName||'欢迎来到鄞领π'}}</view>
     <view class="quick-grid">
-      <navigator url="/pages/activities/activities" open-type="switchTab" class="quick-card"><image src="/assets/ux/icon-activity.jpg"/><text>活动报名</text></navigator>
-      <navigator url="/pages/products/products" open-type="switchTab" class="quick-card"><image src="/assets/ux/icon-points.jpg"/><text>积分兑换</text></navigator>
-      <navigator url="/pages/checkin/checkin" class="quick-card"><image src="/assets/ux/icon-checkin.jpg"/><text>每日签到</text></navigator>
+      <navigator url="/pages/activities/activities" open-type="switchTab" class="quick-card">
+        <image src="/assets/ux/icon-activity.jpg"/>
+        <text>活动报名</text>
+      </navigator>
+      <navigator url="/pages/products/products" open-type="switchTab" class="quick-card">
+        <image src="/assets/ux/icon-points.jpg"/>
+        <text>积分兑换</text>
+      </navigator>
+      <navigator url="/pages/checkin/checkin" class="quick-card">
+        <image src="/assets/ux/icon-checkin.jpg"/>
+        <text>每日签到</text>
+      </navigator>
     </view>
     <view class="about-wrap" bindtap="openActivities">
       <image class="about" src="/assets/ux/home-about.jpg" mode="widthFix"/>

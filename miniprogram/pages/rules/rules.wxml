@@ -1,1 +1,46 @@
-<view class="rules-page"><view class="safe-top"></view><view class="mini-top"><view class="mini-nav"><button class="mini-nav__button" bindtap="back" aria-label="返回上一页"><view class="mini-nav__back"></view></button><view class="mini-nav__divider"></view><button class="mini-nav__button" bindtap="home" aria-label="返回首页"><view class="mini-nav__home"></view></button></view><view class="mini-top__title">积分使用规则</view><view class="capsule">•••　│　◎</view></view><view class="rules-card"><rich-text wx:if="{{rules.length}}" nodes="{{rules[0].content}}"/><block wx:else><view class="rule"><text class="strong">01</text><text>注册并绑定手机号，获得100积分</text></view><view class="rule"><text class="strong">02</text><text>每日签到，获得10积分</text></view><view class="rule"><text class="strong">03</text><text>每自然月完成一次调查问卷，获得100积分</text></view><view class="rule"><text class="strong">04</text><text>活动报名并现场扫码核销，获得100积分</text></view><view class="note">积分按获得年度有效，逾期自动清零；不可兑现、转让或赠与。</view></block></view><view class="service" bindtap="navigate"><view><text class="strong">{{service[0].title||'鄞领π服务点'}}</text><text>{{service[0].address||'宁波市鄞州区学府路1号'}}</text><text class="small">点击打开地图导航</text></view><text class="arrow">›</text></view></view>
+<view class="rules-page">
+  <view class="safe-top"></view>
+  <view class="mini-top">
+    <view class="mini-nav">
+      <button class="mini-nav__button" bindtap="back" aria-label="返回上一页">
+        <view class="mini-nav__back"></view>
+      </button>
+      <view class="mini-nav__divider"></view>
+      <button class="mini-nav__button" bindtap="home" aria-label="返回首页">
+        <view class="mini-nav__home"></view>
+      </button>
+    </view>
+    <view class="mini-top__title">积分使用规则</view>
+    <view class="capsule">•••　│　◎</view>
+  </view>
+  <view class="rules-card">
+    <rich-text wx:if="{{rules.length}}" nodes="{{rules[0].content}}"/>
+    <block wx:else>
+      <view class="rule">
+        <text class="strong">01</text>
+        <text>注册并绑定手机号，获得100积分</text>
+      </view>
+      <view class="rule">
+        <text class="strong">02</text>
+        <text>每日签到，获得10积分</text>
+      </view>
+      <view class="rule">
+        <text class="strong">03</text>
+        <text>每自然月完成一次调查问卷，获得100积分</text>
+      </view>
+      <view class="rule">
+        <text class="strong">04</text>
+        <text>活动报名并现场扫码核销，获得100积分</text>
+      </view>
+      <view class="note">积分按获得年度有效，逾期自动清零；不可兑现、转让或赠与。</view>
+    </block>
+  </view>
+  <view class="service" bindtap="navigate">
+    <view>
+      <text class="strong">{{service[0].title||'鄞领π服务点'}}</text>
+      <text>{{service[0].address||'宁波市鄞州区学府路1号'}}</text>
+      <text class="small">点击打开地图导航</text>
+    </view>
+    <text class="arrow">›</text>
+  </view>
+</view>

@@ -1,1 +1,31 @@
-<view class="page-shell activities-page"><view class="safe-top"></view><view class="mini-top"><view></view><view class="mini-top__title">活动报名</view><view class="capsule">•••　│　◎</view></view><view class="search"><text>⌕</text><input placeholder="输入活动标题" bindinput="search"/></view><view wx:if="{{!loading && !displayItems.length}}" class="empty">暂无活动</view><view class="activity-list"><view wx:for="{{displayItems}}" wx:key="id" class="activity-card" data-id="{{item.id}}" bindtap="open"><view class="cover-wrap"><image src="{{item.cover_url||'/assets/ux/activity-orange.jpg'}}" mode="aspectFill"/><text class="status-pill">{{item.participation_status==='REGISTERED'?'已报名':'活动报名中'}}</text></view><view class="activity-info"><view class="name">{{item.title}}</view><view class="meta">活动时间：{{item.start_time}} - {{item.end_time}}</view></view></view></view></view>
+<view class="page-shell activities-page">
+  <view class="safe-top"></view>
+  <view class="mini-top">
+    <view></view>
+    <view class="mini-top__title">活动报名</view>
+    <view class="capsule">•••　│　◎</view>
+  </view>
+  <view class="search">
+    <text>⌕</text>
+    <input placeholder="输入活动标题" bindinput="search"/>
+  </view>
+  <view wx:if="{{!loading && !displayItems.length}}" class="empty">暂无活动</view>
+  <view class="activity-list">
+    <view
+      wx:for="{{displayItems}}"
+      wx:key="id"
+      class="activity-card"
+      data-id="{{item.id}}"
+      bindtap="open"
+    >
+      <view class="cover-wrap">
+        <image src="{{item.cover_url||'/assets/ux/activity-orange.jpg'}}" mode="aspectFill"/>
+        <text class="status-pill">{{item.participation_status==='REGISTERED'?'已报名':'活动报名中'}}</text>
+      </view>
+      <view class="activity-info">
+        <view class="name">{{item.title}}</view>
+        <view class="meta">活动时间：{{item.start_time}} - {{item.end_time}}</view>
+      </view>
+    </view>
+  </view>
+</view>

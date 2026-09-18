@@ -1,1 +1,32 @@
-<view class="page-shell profile-page"><view class="profile-bg"><view class="safe-top"></view><view class="mini-top"><view></view><view class="mini-top__title">个人中心</view><view class="capsule">•••　│　◎</view></view><view class="account" bindtap="login"><image src="{{user.avatar_url||'/assets/ux/profile-avatar.png'}}"/><view><text class="strong">{{loggedIn?(user.nickname||'微信用户'):'未登录'}}</text><text class="small">{{loggedIn?(user.phone||'授权手机号后可参与积分活动'):'登录后，兑换领取更多好礼~'}}</text></view></view><button wx:if="{{loggedIn&&!user.phone}}" class="phone-btn" open-type="getPhoneNumber" bindgetphonenumber="phone">授权手机号并完成注册</button><view class="points-card"><view class="balance"><text>◉　可用积分</text><text class="strong">{{user.points||0}}</text></view><view class="links"><navigator url="/pages/points/points">▣<text>积分明细</text></navigator><navigator url="/pages/orders/orders">▤<text>兑换记录</text></navigator><navigator url="/pages/rules/rules">◇<text>积分规则</text></navigator></view></view><view class="service" bindtap="navigate"><image src="/assets/ux/profile-navigation.jpg" mode="widthFix"/></view></view></view>
+<view class="page-shell profile-page">
+  <view class="profile-bg">
+    <view class="safe-top"></view>
+    <view class="mini-top">
+      <view></view>
+      <view class="mini-top__title">个人中心</view>
+      <view class="capsule">•••　│　◎</view>
+    </view>
+    <view class="account" bindtap="login">
+      <image src="{{user.avatar_url||'/assets/ux/profile-avatar.png'}}"/>
+      <view>
+        <text class="strong">{{loggedIn?(user.nickname||'微信用户'):'未登录'}}</text>
+        <text class="small">{{loggedIn?(user.phone||'授权手机号后可参与积分活动'):'登录后，兑换领取更多好礼~'}}</text>
+      </view>
+    </view>
+    <button wx:if="{{loggedIn&&!user.phone}}" class="phone-btn" open-type="getPhoneNumber" bindgetphonenumber="phone">授权手机号并完成注册</button>
+    <view class="points-card">
+      <view class="balance">
+        <text>◉　可用积分</text>
+        <text class="strong">{{user.points||0}}</text>
+      </view>
+      <view class="links">
+        <navigator url="/pages/points/points">▣<text>积分明细</text></navigator>
+        <navigator url="/pages/orders/orders">▤<text>兑换记录</text></navigator>
+        <navigator url="/pages/rules/rules">◇<text>积分规则</text></navigator>
+      </view>
+    </view>
+    <view class="service" bindtap="navigate">
+      <image src="/assets/ux/profile-navigation.jpg" mode="widthFix"/>
+    </view>
+  </view>
+</view>

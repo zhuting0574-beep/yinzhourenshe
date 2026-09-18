@@ -1,1 +1,76 @@
-.ledger-page{min-height:100vh;padding-bottom:35rpx;background:#e9f8ff}.balance{position:relative;margin:8rpx 28rpx 24rpx;padding:30rpx 36rpx;border-radius:24rpx;background:#0750bd;color:#fff}.balance .small,.balance .strong{display:block}.balance .small{font-size:22rpx;opacity:.8}.balance .strong{font-size:65rpx;margin-top:5rpx}.balance>text{position:absolute;right:36rpx;bottom:31rpx;font-size:21rpx;opacity:.8}.list{margin:0 28rpx;border-radius:24rpx;overflow:hidden;background:#fff;box-shadow:0 7rpx 22rpx rgba(57,116,147,.08)}.row{display:flex;align-items:center;gap:18rpx;padding:30rpx 24rpx;border-bottom:1rpx solid #edf1f4}.row:last-child{border:0}.amount{width:100rpx;color:#22a879;font-size:33rpx}.amount.minus{color:#e36a83}.row>view{flex:1}.row .strong,.row .small{display:block}.row .strong{font-size:25rpx}.row .small{margin-top:9rpx;color:#98a9b5;font-size:20rpx}.after{font-size:20rpx;color:#98a9b5}
+.ledger-page {
+  min-height: 100vh;
+  padding-bottom: 35rpx;
+  background: #e9f8ff;
+}
+.balance {
+  position: relative;
+  margin: 8rpx 28rpx 24rpx;
+  padding: 30rpx 36rpx;
+  border-radius: 24rpx;
+  background: #0750bd;
+  color: #fff;
+}
+.balance .small,
+.balance .strong {
+  display: block;
+}
+.balance .small {
+  font-size: 22rpx;
+  opacity: 0.8;
+}
+.balance .strong {
+  font-size: 65rpx;
+  margin-top: 5rpx;
+}
+.balance > text {
+  position: absolute;
+  right: 36rpx;
+  bottom: 31rpx;
+  font-size: 21rpx;
+  opacity: 0.8;
+}
+.list {
+  margin: 0 28rpx;
+  border-radius: 24rpx;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 7rpx 22rpx rgba(57, 116, 147, 0.08);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 30rpx 24rpx;
+  border-bottom: 1rpx solid #edf1f4;
+}
+.row:last-child {
+  border: 0;
+}
+.amount {
+  width: 100rpx;
+  color: #22a879;
+  font-size: 33rpx;
+}
+.amount.minus {
+  color: #e36a83;
+}
+.row > view {
+  flex: 1;
+}
+.row .strong,
+.row .small {
+  display: block;
+}
+.row .strong {
+  font-size: 25rpx;
+}
+.row .small {
+  margin-top: 9rpx;
+  color: #98a9b5;
+  font-size: 20rpx;
+}
+.after {
+  font-size: 20rpx;
+  color: #98a9b5;
+}

@@ -1,2 +1,39 @@
-import {request,scanActivity} from '../../utils/request'
-Page({data:{items:[] as any[],displayItems:[] as any[],loading:true},onShow(){const tab=this.getTabBar&&this.getTabBar();if(tab)tab.setData({selected:1});this.load()},onPullDownRefresh(){this.load().finally(wx.stopPullDownRefresh)},load(){return request<any[]>('/mini/activities').then(items=>this.setData({items,displayItems:items,loading:false})).catch(()=>this.setData({loading:false}))},search(e:any){const keyword=String(e.detail.value||'').trim().toLowerCase();this.setData({displayItems:keyword?this.data.items.filter((item:any)=>String(item.title||'').toLowerCase().includes(keyword)):this.data.items})},open(e:any){wx.navigateTo({url:`/pages/activity-detail/activity-detail?id=${e.currentTarget.dataset.id}`})},scan(){scanActivity()}})
+import { request, scanActivity } from '../../utils/request'
+Page({
+  data: { items: [] as any[], displayItems: [] as any[], loading: true },
+  onShow() {
+    const tab = this.getTabBar && this.getTabBar()
+    if (tab) tab.setData({ selected: 1 })
+    this.load()
+  },
+  onPullDownRefresh() {
+    this.load().finally(wx.stopPullDownRefresh)
+  },
+  load() {
+    return request<any[]>('/mini/activities')
+      .then((items) => this.setData({ items, displayItems: items, loading: false }))
+      .catch(() => this.setData({ loading: false }))
+  },
+  search(e: any) {
+    const keyword = String(e.detail.value || '')
+      .trim()
+      .toLowerCase()
+    this.setData({
+      displayItems: keyword
+        ? this.data.items.filter((item: any) =>
+            String(item.title || '')
+              .toLowerCase()
+              .includes(keyword)
+          )
+        : this.data.items,
+    })
+  },
+  open(e: any) {
+    wx.navigateTo({
+      url: `/pages/activity-detail/activity-detail?id=${e.currentTarget.dataset.id}`,
+    })
+  },
+  scan() {
+    scanActivity()
+  },
+})

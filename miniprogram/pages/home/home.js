@@ -1,2 +1,38 @@
-const {request}=require('../../utils/request')
-Page({data:{banners:[],activities:[],points:0,about:[],questionnaire:null,loading:true,showSurvey:false,userName:''},onShow(){const tab=this.getTabBar&&this.getTabBar();if(tab)tab.setData({selected:0});const user=getApp().globalData.user;request('/mini/home').then(d=>this.setData({...d,loading:false,userName:(user&&user.nickname)||'',showSurvey:!!(d.questionnaire&&!d.questionnaire.completedThisMonth)})).catch(()=>this.setData({loading:false,userName:(user&&user.nickname)||''}))},openActivities(){wx.switchTab({url:'/pages/activities/activities'})},closeSurvey(){this.setData({showSurvey:false})},goSurvey(){wx.navigateTo({url:'/pages/questionnaire/questionnaire'})},noop(){}})
+const { request } = require('../../utils/request')
+Page({
+  data: {
+    banners: [],
+    activities: [],
+    points: 0,
+    about: [],
+    questionnaire: null,
+    loading: true,
+    showSurvey: false,
+    userName: '',
+  },
+  onShow() {
+    const tab = this.getTabBar && this.getTabBar()
+    if (tab) tab.setData({ selected: 0 })
+    const user = getApp().globalData.user
+    request('/mini/home')
+      .then((d) =>
+        this.setData({
+          ...d,
+          loading: false,
+          userName: (user && user.nickname) || '',
+          showSurvey: !!(d.questionnaire && !d.questionnaire.completedThisMonth),
+        })
+      )
+      .catch(() => this.setData({ loading: false, userName: (user && user.nickname) || '' }))
+  },
+  openActivities() {
+    wx.switchTab({ url: '/pages/activities/activities' })
+  },
+  closeSurvey() {
+    this.setData({ showSurvey: false })
+  },
+  goSurvey() {
+    wx.navigateTo({ url: '/pages/questionnaire/questionnaire' })
+  },
+  noop() {},
+})

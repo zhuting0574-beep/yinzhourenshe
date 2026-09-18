@@ -1,1 +1,70 @@
-.rules-page{min-height:100vh;padding-bottom:35rpx;background:#e9f8ff}.rules-card{margin:8rpx 28rpx 24rpx;padding:32rpx;border-radius:24rpx;background:#fff;box-shadow:0 7rpx 22rpx rgba(57,116,147,.08)}.rule{display:flex;align-items:center;gap:24rpx;padding:24rpx 0;border-bottom:1rpx solid #edf1f4}.rule .strong{width:62rpx;height:62rpx;border-radius:50%;display:grid;place-items:center;background:#fff0f7;color:#e65c98;font-size:21rpx}.rule text{flex:1;font-size:25rpx;line-height:1.5}.note{margin-top:28rpx;padding:22rpx;border-radius:16rpx;background:#f2f9fd;color:#708897;font-size:22rpx;line-height:1.7}.service{margin:0 28rpx;padding:28rpx 30rpx;border-radius:24rpx;background:#0750bd;color:#fff;display:flex;align-items:center;justify-content:space-between}.service .strong,.service view>text,.service .small{display:block}.service view>text{margin-top:11rpx;font-size:23rpx}.service .small{margin-top:11rpx;font-size:20rpx;opacity:.75}.arrow{font-size:48rpx}
+.rules-page {
+  min-height: 100vh;
+  padding-bottom: 35rpx;
+  background: #e9f8ff;
+}
+.rules-card {
+  margin: 8rpx 28rpx 24rpx;
+  padding: 32rpx;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 7rpx 22rpx rgba(57, 116, 147, 0.08);
+}
+.rule {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #edf1f4;
+}
+.rule .strong {
+  width: 62rpx;
+  height: 62rpx;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #fff0f7;
+  color: #e65c98;
+  font-size: 21rpx;
+}
+.rule text {
+  flex: 1;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+.note {
+  margin-top: 28rpx;
+  padding: 22rpx;
+  border-radius: 16rpx;
+  background: #f2f9fd;
+  color: #708897;
+  font-size: 22rpx;
+  line-height: 1.7;
+}
+.service {
+  margin: 0 28rpx;
+  padding: 28rpx 30rpx;
+  border-radius: 24rpx;
+  background: #0750bd;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.service .strong,
+.service view > text,
+.service .small {
+  display: block;
+}
+.service view > text {
+  margin-top: 11rpx;
+  font-size: 23rpx;
+}
+.service .small {
+  margin-top: 11rpx;
+  font-size: 20rpx;
+  opacity: 0.75;
+}
+.arrow {
+  font-size: 48rpx;
+}

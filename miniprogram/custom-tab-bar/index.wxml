@@ -1,6 +1,20 @@
 <view class="tabbar">
-  <view wx:for="{{list}}" wx:key="pagePath" class="tab {{selected===index?'active':''}} {{item.scan?'scan-tab':''}}" data-index="{{index}}" bindtap="switchTab">
-    <view wx:if="{{item.scan}}" class="scan-circle"><view class="scan-glyph"><view class="corner tl"></view><view class="corner tr"></view><view class="corner bl"></view><view class="corner br"></view><view class="scan-line"></view></view></view>
+  <view
+    wx:for="{{list}}"
+    wx:key="pagePath"
+    class="tab {{selected===index?'active':''}} {{item.scan?'scan-tab':''}}"
+    data-index="{{index}}"
+    bindtap="switchTab"
+  >
+    <view wx:if="{{item.scan}}" class="scan-circle">
+      <view class="scan-glyph">
+        <view class="corner tl"></view>
+        <view class="corner tr"></view>
+        <view class="corner bl"></view>
+        <view class="corner br"></view>
+        <view class="scan-line"></view>
+      </view>
+    </view>
     <image wx:else class="tab-icon" src="{{selected===index?item.selectedIconPath:item.iconPath}}"/>
     <text>{{item.text}}</text>
   </view>

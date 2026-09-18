@@ -1,1 +1,25 @@
-<view class="page-shell products-page"><view class="safe-top"></view><view class="products-top"><view></view><view class="capsule">•••　│　◎</view></view><navigator class="banner-link" url="/pages/activities/activities" open-type="switchTab"><image src="/assets/ux/points-banner.jpg" mode="widthFix"/></navigator><view wx:if="{{!loading && !items.length}}" class="empty">暂无商品</view><view class="product-list"><view wx:for="{{items}}" wx:key="id" class="product-card" data-id="{{item.id}}" bindtap="open"><image class="product-image" src="{{item.cover_url||'/assets/ux/product-bag.png'}}" mode="aspectFill"/><view class="product-info"><view class="product-name">{{item.name}}</view><view class="price">兑换积分：<text class="strong">{{item.points_cost}}积分</text></view><view class="stock">{{item.stock>0?'剩余 '+item.stock:'已兑完'}}</view></view></view></view></view>
+<view class="page-shell products-page">
+  <view class="safe-top"></view>
+  <view class="products-top">
+    <view></view>
+    <view class="capsule">•••　│　◎</view>
+  </view>
+  <navigator class="banner-link" url="/pages/activities/activities" open-type="switchTab">
+    <image src="/assets/ux/points-banner.jpg" mode="widthFix"/>
+  </navigator>
+  <view wx:if="{{!loading && !items.length}}" class="empty">暂无商品</view>
+  <view class="product-list">
+    <view wx:for="{{items}}" wx:key="id" class="product-card" data-id="{{item.id}}" bindtap="open">
+      <image
+        class="product-image"
+        src="{{item.cover_url||'/assets/ux/product-bag.png'}}"
+        mode="aspectFill"
+      />
+      <view class="product-info">
+        <view class="product-name">{{item.name}}</view>
+        <view class="price">兑换积分：<text class="strong">{{item.points_cost}}积分</text></view>
+        <view class="stock">{{item.stock>0?'剩余 '+item.stock:'已兑完'}}</view>
+      </view>
+    </view>
+  </view>
+</view>

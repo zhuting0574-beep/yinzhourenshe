@@ -1,1 +1,182 @@
-.checkin-page{min-height:100vh;padding-bottom:40rpx;background:#f8fdff url('/assets/ux/checkin-bg.jpg') top center/100% auto no-repeat;box-sizing:border-box}.score{height:156rpx;padding:20rpx 64rpx 0;text-align:right;box-sizing:border-box}.score text,.score .strong{display:block}.score text{font-size:30rpx;font-weight:600}.score .strong{font-size:76rpx;line-height:1.05}.calendar{margin:0 28rpx;padding:24rpx 40rpx 42rpx;border-radius:28rpx;background:linear-gradient(#fff0df,#fff 116rpx);box-shadow:0 10rpx 28rpx rgba(240,127,71,.08)}.month{font-size:29rpx;font-weight:700}.count{font-size:33rpx;font-weight:700;margin-top:4rpx}.week{margin:58rpx 0 25rpx;display:grid;grid-template-columns:repeat(7,1fr);text-align:center;color:#999;font-size:23rpx}.calendar-scroll{width:100%;white-space:nowrap}.calendar-grid{display:flex;gap:8rpx;text-align:center}.calendar-grid view{width:78rpx;height:70rpx;flex:0 0 78rpx;border:1rpx solid #fde7d1;border-radius:13rpx;display:grid;place-items:center;box-sizing:border-box;font-size:21rpx;color:#777}.calendar-grid view.checked{border-color:#ffc19f;background:#fff3eb}.calendar-grid view.today{color:#fff;border-color:#f48d55;background:linear-gradient(135deg,#f59056,#f3602c)}.progress{position:relative;width:64rpx;height:10rpx;margin:38rpx auto 26rpx;border-radius:8rpx;background:#f2f2f2}.progress .i{position:absolute;left:0;top:0;width:14rpx;height:10rpx;border-radius:8rpx;background:#f46c37}.check-btn{width:316rpx;height:78rpx;margin:0 auto;padding:9rpx 0;background:linear-gradient(110deg,#f18c4e,#f3602e);border-radius:48rpx;color:#fff;line-height:1.15}.check-btn text,.check-btn .small{display:block}.check-btn .small{font-size:17rpx;margin-top:6rpx}.check-btn[disabled]{opacity:.64;color:#fff}.tasks{margin:42rpx 28rpx 0;border-radius:26rpx;overflow:hidden;background:#e879af}.tasks-title{text-align:center;color:#fff;font-size:34rpx;font-weight:700;padding:18rpx 0 15rpx}.task-body{padding:0 24rpx;background:#fff;border-radius:26rpx}.task{height:230rpx;padding:14rpx 20rpx;display:flex;align-items:center;justify-content:center;gap:34rpx;box-sizing:border-box}.task+.task{border-top:2rpx solid #e7e7e7}.task image{width:190rpx;height:190rpx;object-fit:contain}.task>view{width:205rpx;display:flex;flex-direction:column;align-items:center}.task text{width:205rpx;margin-top:18rpx;padding:8rpx 0;border-radius:30rpx;text-align:center;background:#e879af;color:#fff;font-size:23rpx;font-weight:600}.task text.strong{width:auto;margin:0;padding:0;border-radius:0;background:transparent;color:#222;font-size:28rpx;white-space:nowrap}.task text.purple{background:#9380f5}
+.checkin-page {
+  min-height: 100vh;
+  padding-bottom: 40rpx;
+  background: #f8fdff url('/assets/ux/checkin-bg.jpg') top center/100% auto no-repeat;
+  box-sizing: border-box;
+}
+.score {
+  height: 156rpx;
+  padding: 20rpx 64rpx 0;
+  text-align: right;
+  box-sizing: border-box;
+}
+.score text,
+.score .strong {
+  display: block;
+}
+.score text {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+.score .strong {
+  font-size: 76rpx;
+  line-height: 1.05;
+}
+.calendar {
+  margin: 0 28rpx;
+  padding: 24rpx 40rpx 42rpx;
+  border-radius: 28rpx;
+  background: linear-gradient(#fff0df, #fff 116rpx);
+  box-shadow: 0 10rpx 28rpx rgba(240, 127, 71, 0.08);
+}
+.month {
+  font-size: 29rpx;
+  font-weight: 700;
+}
+.count {
+  font-size: 33rpx;
+  font-weight: 700;
+  margin-top: 4rpx;
+}
+.week {
+  margin: 58rpx 0 25rpx;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  color: #999;
+  font-size: 23rpx;
+}
+.calendar-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+.calendar-grid {
+  display: flex;
+  gap: 8rpx;
+  text-align: center;
+}
+.calendar-grid view {
+  width: 78rpx;
+  height: 70rpx;
+  flex: 0 0 78rpx;
+  border: 1rpx solid #fde7d1;
+  border-radius: 13rpx;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  font-size: 21rpx;
+  color: #777;
+}
+.calendar-grid view.checked {
+  border-color: #ffc19f;
+  background: #fff3eb;
+}
+.calendar-grid view.today {
+  color: #fff;
+  border-color: #f48d55;
+  background: linear-gradient(135deg, #f59056, #f3602c);
+}
+.progress {
+  position: relative;
+  width: 64rpx;
+  height: 10rpx;
+  margin: 38rpx auto 26rpx;
+  border-radius: 8rpx;
+  background: #f2f2f2;
+}
+.progress .i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 14rpx;
+  height: 10rpx;
+  border-radius: 8rpx;
+  background: #f46c37;
+}
+.check-btn {
+  width: 316rpx;
+  height: 78rpx;
+  margin: 0 auto;
+  padding: 9rpx 0;
+  background: linear-gradient(110deg, #f18c4e, #f3602e);
+  border-radius: 48rpx;
+  color: #fff;
+  line-height: 1.15;
+}
+.check-btn text,
+.check-btn .small {
+  display: block;
+}
+.check-btn .small {
+  font-size: 17rpx;
+  margin-top: 6rpx;
+}
+.check-btn[disabled] {
+  opacity: 0.64;
+  color: #fff;
+}
+.tasks {
+  margin: 42rpx 28rpx 0;
+  border-radius: 26rpx;
+  overflow: hidden;
+  background: #e879af;
+}
+.tasks-title {
+  text-align: center;
+  color: #fff;
+  font-size: 34rpx;
+  font-weight: 700;
+  padding: 18rpx 0 15rpx;
+}
+.task-body {
+  padding: 0 24rpx;
+  background: #fff;
+  border-radius: 26rpx;
+}
+.task {
+  height: 230rpx;
+  padding: 14rpx 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 34rpx;
+  box-sizing: border-box;
+}
+.task + .task {
+  border-top: 2rpx solid #e7e7e7;
+}
+.task image {
+  width: 190rpx;
+  height: 190rpx;
+  object-fit: contain;
+}
+.task > view {
+  width: 205rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.task text {
+  width: 205rpx;
+  margin-top: 18rpx;
+  padding: 8rpx 0;
+  border-radius: 30rpx;
+  text-align: center;
+  background: #e879af;
+  color: #fff;
+  font-size: 23rpx;
+  font-weight: 600;
+}
+.task text.strong {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #222;
+  font-size: 28rpx;
+  white-space: nowrap;
+}
+.task text.purple {
+  background: #9380f5;
+}

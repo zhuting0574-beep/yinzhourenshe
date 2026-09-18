@@ -1,2 +1,37 @@
-import {request,login,scanActivity,bindPhone} from '../../utils/request'
-Page({data:{user:null as any,loggedIn:false,service:null as any},onShow(){const tab=this.getTabBar&&this.getTabBar();if(tab)tab.setData({selected:4});const app=getApp<IAppOption>();request<any[]>('/mini/content/SERVICE').then(items=>this.setData({service:items[0]||null})).catch(()=>{});if(!app.globalData.token)return this.setData({user:null,loggedIn:false});request<any>('/mini/profile').then(user=>this.setData({user,loggedIn:true})).catch(()=>this.setData({user:null,loggedIn:false}))},login(){login().then(user=>this.setData({user,loggedIn:true}))},phone(e:any){if(!e.detail.code)return wx.showToast({title:'未授权手机号',icon:'none'});bindPhone(e.detail.code).then(user=>{this.setData({user,loggedIn:true});wx.showToast({title:'绑定成功，获得100积分'})})},navigate(){const s:any=this.data.service;if(s)wx.openLocation({latitude:Number(s.latitude),longitude:Number(s.longitude),name:s.title,address:s.address});else wx.navigateTo({url:'/pages/rules/rules'})}})
+import { request, login, scanActivity, bindPhone } from '../../utils/request'
+Page({
+  data: { user: null as any, loggedIn: false, service: null as any },
+  onShow() {
+    const tab = this.getTabBar && this.getTabBar()
+    if (tab) tab.setData({ selected: 4 })
+    const app = getApp<IAppOption>()
+    request<any[]>('/mini/content/SERVICE')
+      .then((items) => this.setData({ service: items[0] || null }))
+      .catch(() => {})
+    if (!app.globalData.token) return this.setData({ user: null, loggedIn: false })
+    request<any>('/mini/profile')
+      .then((user) => this.setData({ user, loggedIn: true }))
+      .catch(() => this.setData({ user: null, loggedIn: false }))
+  },
+  login() {
+    login().then((user) => this.setData({ user, loggedIn: true }))
+  },
+  phone(e: any) {
+    if (!e.detail.code) return wx.showToast({ title: '未授权手机号', icon: 'none' })
+    bindPhone(e.detail.code).then((user) => {
+      this.setData({ user, loggedIn: true })
+      wx.showToast({ title: '绑定成功，获得100积分' })
+    })
+  },
+  navigate() {
+    const s: any = this.data.service
+    if (s)
+      wx.openLocation({
+        latitude: Number(s.latitude),
+        longitude: Number(s.longitude),
+        name: s.title,
+        address: s.address,
+      })
+    else wx.navigateTo({ url: '/pages/rules/rules' })
+  },
+})

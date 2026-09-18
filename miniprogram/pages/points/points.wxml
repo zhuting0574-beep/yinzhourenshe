@@ -1,1 +1,31 @@
-<view class="ledger-page"><view class="safe-top"></view><view class="mini-top"><view class="mini-nav"><button class="mini-nav__button" bindtap="back" aria-label="返回上一页"><view class="mini-nav__back"></view></button><view class="mini-nav__divider"></view><button class="mini-nav__button" bindtap="home" aria-label="返回首页"><view class="mini-nav__home"></view></button></view><view class="mini-top__title">积分明细</view><view class="capsule">•••　│　◎</view></view><view class="balance"><text class="small">当前积分</text><text class="strong">{{points}}</text><text>积分</text></view><view class="list"><view wx:for="{{items}}" wx:key="id" class="row"><text class="amount {{item.amount<0?'minus':''}}">{{item.amount>0?'+':''}}{{item.amount}}</text><view><text class="strong">{{item.remark}}</text><text class="small">{{item.created_at}}</text></view><text class="after">余额 {{item.balance}}</text></view></view></view>
+<view class="ledger-page">
+  <view class="safe-top"></view>
+  <view class="mini-top">
+    <view class="mini-nav">
+      <button class="mini-nav__button" bindtap="back" aria-label="返回上一页">
+        <view class="mini-nav__back"></view>
+      </button>
+      <view class="mini-nav__divider"></view>
+      <button class="mini-nav__button" bindtap="home" aria-label="返回首页">
+        <view class="mini-nav__home"></view>
+      </button>
+    </view>
+    <view class="mini-top__title">积分明细</view>
+    <view class="capsule">•••　│　◎</view>
+  </view>
+  <view class="balance">
+    <text class="small">当前积分</text>
+    <text class="strong">{{points}}</text>
+    <text>积分</text>
+  </view>
+  <view class="list">
+    <view wx:for="{{items}}" wx:key="id" class="row">
+      <text class="amount {{item.amount<0?'minus':''}}">{{item.amount>0?'+':''}}{{item.amount}}</text>
+      <view>
+        <text class="strong">{{item.remark}}</text>
+        <text class="small">{{item.created_at}}</text>
+      </view>
+      <text class="after">余额 {{item.balance}}</text>
+    </view>
+  </view>
+</view>

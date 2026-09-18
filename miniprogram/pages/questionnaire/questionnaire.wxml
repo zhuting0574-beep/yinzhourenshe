@@ -1,1 +1,49 @@
-<view class="survey-page"><view class="safe-top"></view><view class="mini-top"><view class="mini-nav"><button class="mini-nav__button" bindtap="back" aria-label="返回上一页"><view class="mini-nav__back"></view></button><view class="mini-nav__divider"></view><button class="mini-nav__button" bindtap="home" aria-label="返回首页"><view class="mini-nav__home"></view></button></view><view class="mini-top__title">调查问卷</view><view class="capsule">•••　│　◎</view></view><view wx:if="{{!questionnaire}}" class="empty">本月暂无可填写问卷</view><block wx:else><view class="survey-head"><view class="status-pill pink">问卷任务</view><view class="title">{{questionnaire.name}}</view><view class="intro">{{questionnaire.description}}</view><view class="reward">完成奖励 <text class="strong">100</text> 积分</view></view><view wx:if="{{questionnaire.completedThisMonth}}" class="done">本月已完成问卷</view><view class="questions"><view wx:for="{{questions}}" wx:key="id" class="question"><view class="question-title">{{index+1}}. {{item.title}} <text wx:if="{{item.required}}">*</text></view><radio-group wx:if="{{item.question_type==='SINGLE'}}" data-id="{{item.id}}" bindchange="change"><label wx:for="{{item.options}}" wx:key="*this"><radio color="#e96ba4" value="{{item}}"/>{{item}}</label></radio-group><checkbox-group wx:elif="{{item.question_type==='MULTIPLE'}}" data-id="{{item.id}}" bindchange="change"><label wx:for="{{item.options}}" wx:key="*this"><checkbox color="#e96ba4" value="{{item}}"/>{{item}}</label></checkbox-group><textarea wx:else data-id="{{item.id}}" bindinput="change" placeholder="请输入你的建议"/></view></view><view wx:if="{{!questionnaire.completedThisMonth}}" class="submit-bar"><button bindtap="submit" loading="{{submitting}}">提交问卷 · 获得100积分</button></view></block></view>
+<view class="survey-page">
+  <view class="safe-top"></view>
+  <view class="mini-top">
+    <view class="mini-nav">
+      <button class="mini-nav__button" bindtap="back" aria-label="返回上一页">
+        <view class="mini-nav__back"></view>
+      </button>
+      <view class="mini-nav__divider"></view>
+      <button class="mini-nav__button" bindtap="home" aria-label="返回首页">
+        <view class="mini-nav__home"></view>
+      </button>
+    </view>
+    <view class="mini-top__title">调查问卷</view>
+    <view class="capsule">•••　│　◎</view>
+  </view>
+  <view wx:if="{{!questionnaire}}" class="empty">本月暂无可填写问卷</view>
+  <block wx:else>
+    <view class="survey-head">
+      <view class="status-pill pink">问卷任务</view>
+      <view class="title">{{questionnaire.name}}</view>
+      <view class="intro">{{questionnaire.description}}</view>
+      <view class="reward">完成奖励 <text class="strong">100</text> 积分</view>
+    </view>
+    <view wx:if="{{questionnaire.completedThisMonth}}" class="done">本月已完成问卷</view>
+    <view class="questions">
+      <view wx:for="{{questions}}" wx:key="id" class="question">
+        <view class="question-title">{{index+1}}. {{item.title}} <text wx:if="{{item.required}}">*</text></view>
+        <radio-group
+          wx:if="{{item.question_type==='SINGLE'}}"
+          data-id="{{item.id}}"
+          bindchange="change"
+        >
+          <label wx:for="{{item.options}}" wx:key="*this"><radio color="#e96ba4" value="{{item}}"/>{{item}}</label>
+        </radio-group>
+        <checkbox-group
+          wx:elif="{{item.question_type==='MULTIPLE'}}"
+          data-id="{{item.id}}"
+          bindchange="change"
+        >
+          <label wx:for="{{item.options}}" wx:key="*this"><checkbox color="#e96ba4" value="{{item}}"/>{{item}}</label>
+        </checkbox-group>
+        <textarea wx:else data-id="{{item.id}}" bindinput="change" placeholder="请输入你的建议"/>
+      </view>
+    </view>
+    <view wx:if="{{!questionnaire.completedThisMonth}}" class="submit-bar">
+      <button bindtap="submit" loading="{{submitting}}">提交问卷 · 获得100积分</button>
+    </view>
+  </block>
+</view>
