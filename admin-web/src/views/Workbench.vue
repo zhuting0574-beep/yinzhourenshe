@@ -234,7 +234,9 @@ onBeforeUnmount(closeDialog)
         <el-form-item label="详情"><RichTextEditor v-model="editing.description" /></el-form-item>
       </template>
       <template v-else-if="module === 'questionnaires'">
-        <el-form-item label="名称"><el-input v-model="editing.name" /></el-form-item><el-form-item label="开始时间"><el-input v-model="editing.startTime" /></el-form-item><el-form-item label="结束时间"><el-input v-model="editing.endTime" /></el-form-item>
+        <el-form-item label="名称"><el-input v-model="editing.name" /></el-form-item>
+        <el-form-item label="开始时间"><el-date-picker v-model="editing.startTime" class="date-time-picker" type="datetime" format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择开始时间" /></el-form-item>
+        <el-form-item label="结束时间"><el-date-picker v-model="editing.endTime" class="date-time-picker" type="datetime" format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择结束时间" /></el-form-item>
         <el-form-item label="状态"><el-select v-model="editing.status"><el-option label="草稿" value="DRAFT" /><el-option label="已发布" value="PUBLISHED" /><el-option label="已结束" value="ENDED" /></el-select></el-form-item>
         <el-form-item label="说明"><el-input v-model="editing.description" type="textarea" /></el-form-item>
         <el-form-item label="题目"><div class="question-editor"><div v-for="(q, i) in editing.questions" :key="i" class="question-row">
