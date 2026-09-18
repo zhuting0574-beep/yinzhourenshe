@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../api'
 import AmapLocationPicker from '../components/AmapLocationPicker.vue'
 import RichTextEditor from '../components/RichTextEditor.vue'
+import QuestionnaireResults from '../components/QuestionnaireResults.vue'
 import { useSession } from '../stores/session'
 
 const props = defineProps<{ module: string }>()
@@ -19,6 +20,8 @@ const editing = reactive<any>({})
 const search = ref('')
 const qr = ref('')
 const qrImageUrl = ref('')
+const resultsDialog = ref(false)
+const resultsQuestionnaire = ref<any | null>(null)
 
 const menus = [
   ['dashboard', '数据概览'], ['users', '用户管理'], ['activities', '活动管理'],
@@ -160,6 +163,7 @@ async function showQr(row: any) {
   } catch (e: any) { ElMessage.error(e.message) }
 }
 function closeDialog() { if (qrImageUrl.value) URL.revokeObjectURL(qrImageUrl.value); qrImageUrl.value = '' }
+function showResults(row: any) { resultsQuestionnaire.value = row; resultsDialog.value = true }
 async function exportData() {
   const resource = props.module === 'activities' ? 'participants' : props.module === 'questionnaires' ? 'responses' : 'points'
   const response = await fetch(`/api/admin/exports/${resource}`, { headers: uploadHeaders.value })
@@ -201,8 +205,9 @@ onBeforeUnmount(closeDialog)
         </div>
         <el-card v-else shadow="never"><el-table :data="rows" empty-text="暂无数据">
           <el-table-column v-for="c in columns" :key="c" :prop="c" :label="columnLabel(c)" min-width="130" show-overflow-tooltip><template #default="{ row }">{{ displayValue(c, row[c]) }}</template></el-table-column>
-          <el-table-column label="操作" fixed="right" width="240"><template #default="{ row }">
+          <el-table-column label="操作" fixed="right" :width="module === 'questionnaires' ? 300 : 240"><template #default="{ row }">
             <el-button v-if="['activities','questionnaires','products','content'].includes(module)" link type="primary" @click="edit(row)">编辑</el-button>
+            <el-button v-if="module === 'questionnaires'" link type="success" @click="showResults(row)">统计结果</el-button>
             <el-button v-if="module === 'users'" link type="primary" @click="adjust(row,'points')">调整积分</el-button>
             <el-button v-if="module === 'products'" link type="primary" @click="adjust(row,'stock')">调整库存</el-button>
             <el-button v-if="module === 'activities' && ['QR','BOTH'].includes(row.checkin_mode || 'QR')" link @click="showQr(row)">核销码</el-button>
@@ -257,4 +262,5 @@ onBeforeUnmount(closeDialog)
     </el-form>
     <template v-if="dialogMode !== 'qr'" #footer><el-button @click="dialog = false">取消</el-button><el-button type="primary" @click="save">保存</el-button></template>
   </el-dialog>
+  <QuestionnaireResults v-if="module === 'questionnaires'" v-model="resultsDialog" :questionnaire="resultsQuestionnaire" />
 </template>
