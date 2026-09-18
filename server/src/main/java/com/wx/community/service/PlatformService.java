@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.*; import org.springframework.jdbc.support.
 import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional;
 import javax.crypto.Mac; import javax.crypto.spec.SecretKeySpec; import java.nio.charset.StandardCharsets;
 import java.sql.*; import java.time.*; import java.time.temporal.ChronoUnit; import java.util.*;
+import java.time.format.DateTimeFormatter;
 
 @Service public class PlatformService {
  private final JdbcTemplate db; private final ObjectMapper json; private final ZoneId zone=ZoneId.of("Asia/Shanghai"); private final byte[] qrSecret;
@@ -19,6 +20,15 @@ import java.sql.*; import java.time.*; import java.time.temporal.ChronoUnit; imp
  public List<Map<String,Object>> orders(Long uid){expireOrders();return db.queryForList("select * from orders where user_id=? order by created_at desc",uid);}
  public Map<String,Object> home(Long uid){Map<String,Object> m=new LinkedHashMap<>();m.put("banners",content("BANNER"));m.put("about",content("ABOUT"));m.put("activities",activities(uid).stream().limit(3).toList());m.put("points",uid==null?0:profile(uid).get("points"));if(uid!=null)m.put("questionnaire",activeQuestionnaire(uid));return m;}
  public List<Map<String,Object>> content(String type){return db.queryForList("select * from content_items where content_type=? and enabled=true order by sort_order,id",type);}
+ public Map<String,Object> dashboardTrends(String dimension){
+  String d=Set.of("year","month","day").contains(dimension)?dimension:"month"; LocalDate today=LocalDate.now(zone); LocalDate start=d.equals("year")?today.withDayOfYear(1).minusYears(4):d.equals("month")?today.withDayOfMonth(1).minusMonths(11):today.minusDays(29); LocalDate end=today.plusDays(1); String format=d.equals("year")?"%Y":d.equals("month")?"%Y-%m":"%Y-%m-%d";
+  List<String> labels=new ArrayList<>(); DateTimeFormatter formatter=DateTimeFormatter.ofPattern(d.equals("year")?"yyyy":d.equals("month")?"yyyy-MM":"yyyy-MM-dd"); LocalDate cursor=start; while(cursor.isBefore(end)){labels.add(cursor.format(formatter));cursor=d.equals("year")?cursor.plusYears(1):d.equals("month")?cursor.plusMonths(1):cursor.plusDays(1);}
+  Map<String,Integer> users=counts("select date_format(created_at,'"+format+"') bucket,count(*) value from users where created_at>=? and created_at<? group by bucket",start,end);
+  Map<String,Integer> registrations=counts("select date_format(registered_at,'"+format+"') bucket,count(*) value from activity_participations where registered_at>=? and registered_at<? group by bucket",start,end);
+  Map<String,Integer> active=counts("select bucket,count(distinct user_id) value from (select user_id,created_at event_at from point_logs union all select user_id,created_at event_at from orders union all select user_id,registered_at event_at from activity_participations union all select user_id,submitted_at event_at from questionnaire_responses) events where event_at>=? and event_at<? group by bucket",start,end,format);
+  return Map.of("dimension",d,"labels",labels,"newUsers",labels.stream().map(x->users.getOrDefault(x,0)).toList(),"activeUsers",labels.stream().map(x->active.getOrDefault(x,0)).toList(),"registrations",labels.stream().map(x->registrations.getOrDefault(x,0)).toList());
+ }
+ private Map<String,Integer> counts(String sql,LocalDate start,LocalDate end,Object...suffix){String query=suffix.length>0?sql.replace("select bucket,count", "select date_format(event_at,'"+suffix[0]+"') bucket,count"):sql;List<Object> args=new ArrayList<>();args.add(Timestamp.valueOf(start.atStartOfDay()));args.add(Timestamp.valueOf(end.atStartOfDay()));return db.query(query,args.toArray(),rs->{Map<String,Integer> out=new HashMap<>();while(rs.next())out.put(rs.getString("bucket"),rs.getInt("value"));return out;});}
 
  @Transactional public Map<String,Object> registerActivity(Long uid,Long aid){Map<String,Object>a=activity(aid,uid);if(Set.of("REGISTERED","CHECKED_IN").contains(String.valueOf(a.get("participation_status"))))return a;LocalDateTime now=LocalDateTime.now(zone);if(!"PUBLISHED".equals(a.get("status"))||before(now,a.get("signup_start"))||after(now,a.get("signup_end")))throw new BusinessException("REGISTRATION_CLOSED","当前不在报名时间内");db.update("insert into activity_participations(user_id,activity_id,status,registered_at) values(?,?,'REGISTERED',?)",uid,aid,now);return activity(aid,uid);}
  public String qrToken(Long aid){String body=String.valueOf(aid);return body+":"+sign(body);}

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wx.community.api.BusinessException;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -104,6 +105,15 @@ class PlatformServiceQrTest {
   when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity);
   assertSame(activity,service(db).registerActivity(1L,9L));
   verify(db,never()).update(startsWith("insert into activity_participations"),any(Object[].class));
+ }
+
+ @Test void dashboardTrendUsesExpectedBucketCounts(){
+  JdbcTemplate db=mock(JdbcTemplate.class);
+  doReturn(Map.of()).when(db).query(anyString(),any(Object[].class),any(ResultSetExtractor.class));
+  PlatformService service=service(db);
+  assertEquals(5,((java.util.List<?>)service.dashboardTrends("year").get("labels")).size());
+  assertEquals(12,((java.util.List<?>)service.dashboardTrends("month").get("labels")).size());
+  assertEquals(30,((java.util.List<?>)service.dashboardTrends("day").get("labels")).size());
  }
 
  private PlatformService service(JdbcTemplate db){return new PlatformService(db,new ObjectMapper(),"a-qr-secret-that-is-long-enough-for-tests");}

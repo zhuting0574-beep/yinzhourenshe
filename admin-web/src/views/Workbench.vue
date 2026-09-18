@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import * as echarts from 'echarts'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../api'
@@ -20,6 +21,10 @@ const editing = reactive<any>({})
 const search = ref('')
 const qr = ref('')
 const qrImageUrl = ref('')
+const dashboardDimension = ref('month')
+const dashboardTrend = ref<any>(null)
+const dashboardChartEl = ref<HTMLElement | null>(null)
+let dashboardChart: echarts.ECharts | null = null
 const resultsDialog = ref(false)
 const resultsQuestionnaire = ref<any | null>(null)
 
@@ -69,10 +74,32 @@ const uploadHeaders = computed(() => ({ Authorization: `Bearer ${localStorage.ge
 async function load() {
   loading.value = true
   try {
-    if (props.module === 'dashboard') dashboard.value = await api.get('/admin/dashboard')
+    if (props.module === 'dashboard') {
+      dashboard.value = await api.get('/admin/dashboard')
+      await loadDashboardTrend()
+    }
     else rows.value = await api.get(`/admin/${props.module}`, { params: props.module === 'users' ? { phone: search.value } : {} })
   } catch (e: any) { ElMessage.error(e.message) } finally { loading.value = false }
 }
+async function loadDashboardTrend() {
+  dashboardTrend.value = await api.get('/admin/dashboard/trends', { params: { dimension: dashboardDimension.value } })
+  await nextTick()
+  if (!dashboardChartEl.value || !dashboardTrend.value) return
+  dashboardChart ||= echarts.init(dashboardChartEl.value)
+  dashboardChart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0, data: ['新增用户数', '活跃用户数', '活动报名人数'] },
+    grid: { left: 46, right: 24, top: 48, bottom: 34 },
+    xAxis: { type: 'category', boundaryGap: false, data: dashboardTrend.value.labels },
+    yAxis: { type: 'value', minInterval: 1 },
+    series: [
+      { name: '新增用户数', type: 'line', smooth: true, symbol: 'circle', data: dashboardTrend.value.newUsers },
+      { name: '活跃用户数', type: 'line', smooth: true, symbol: 'circle', data: dashboardTrend.value.activeUsers },
+      { name: '活动报名人数', type: 'line', smooth: true, symbol: 'circle', data: dashboardTrend.value.registrations }
+    ]
+  })
+}
+function resizeDashboardChart() { dashboardChart?.resize() }
 function go(key: string) { router.push('/' + key) }
 function resetEditing() { Object.keys(editing).forEach(k => delete editing[k]) }
 function normalizeDateTime(value: unknown) {
@@ -180,8 +207,10 @@ function uploadSuccess(result: any) {
   else editing.coverUrl = url
 }
 watch(() => props.module, load)
+watch(dashboardDimension, () => { if (props.module === 'dashboard') loadDashboardTrend() })
 onMounted(load)
-onBeforeUnmount(closeDialog)
+onMounted(() => window.addEventListener('resize', resizeDashboardChart))
+onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resizeDashboardChart); dashboardChart?.dispose() })
 </script>
 
 <template>
@@ -203,6 +232,10 @@ onBeforeUnmount(closeDialog)
           <el-card><small>注册用户</small><strong>{{ dashboard.users || 0 }}</strong></el-card><el-card><small>活动数量</small><strong>{{ dashboard.activities || 0 }}</strong></el-card>
           <el-card><small>兑换订单</small><strong>{{ dashboard.orders || 0 }}</strong></el-card><el-card><small>累计发放积分</small><strong>{{ dashboard.pointsIssued || 0 }}</strong></el-card>
         </div>
+        <el-card v-if="module === 'dashboard'" class="dashboard-trend" shadow="never">
+          <div class="dashboard-trend__head"><div><h2>运营趋势</h2><p>按时间维度查看用户与活动数据</p></div><el-radio-group v-model="dashboardDimension" size="small"><el-radio-button label="year">年</el-radio-button><el-radio-button label="month">月</el-radio-button><el-radio-button label="day">日</el-radio-button></el-radio-group></div>
+          <div ref="dashboardChartEl" class="dashboard-chart" v-loading="!dashboardTrend" />
+        </el-card>
         <el-card v-else shadow="never"><el-table :data="rows" empty-text="暂无数据">
           <el-table-column v-for="c in columns" :key="c" :prop="c" :label="columnLabel(c)" min-width="130" show-overflow-tooltip><template #default="{ row }">{{ displayValue(c, row[c]) }}</template></el-table-column>
           <el-table-column label="操作" fixed="right" :width="module === 'questionnaires' ? 300 : 240"><template #default="{ row }">
