@@ -42,7 +42,7 @@ const columns = computed(() => {
     products: ['id', 'name', 'points_cost', 'stock', 'locked_stock', 'redeemed_stock', 'status'],
     orders: ['order_no', 'product_name', 'nickname', 'phone', 'points', 'expire_at', 'status'],
     points: ['nickname', 'phone', 'amount', 'balance', 'type', 'remark', 'created_at'],
-    content: ['content_type', 'title', 'sort_order', 'enabled', 'updated_at']
+    content: ['title', 'content', 'updated_at']
   }
   return preferred[props.module] || Object.keys(rows.value[0] || {})
 })
@@ -53,7 +53,7 @@ const columnLabels: Record<string, Record<string, string>> = {
   products: { id: '商品编号', name: '商品名称', points_cost: '所需积分', stock: '可用库存', locked_stock: '锁定库存', redeemed_stock: '已兑换数量', status: '商品状态' },
   orders: { order_no: '订单编号', product_name: '商品名称', nickname: '用户昵称', phone: '手机号', points: '消耗积分', expire_at: '领取截止', status: '订单状态' },
   points: { nickname: '用户昵称', phone: '手机号', amount: '积分变动', balance: '积分余额', type: '变动类型', remark: '变动说明', created_at: '记录时间' },
-  content: { content_type: '内容类型', title: '标题', sort_order: '排序', enabled: '是否启用', updated_at: '更新时间' }
+  content: { title: '名称', content: '值', updated_at: '修改时间' }
 }
 const valueLabels: Record<string, string> = {
   ACTIVE: '正常', DRAFT: '草稿', PUBLISHED: '已发布', OFFLINE: '已下架', ENDED: '已结束',
@@ -67,6 +67,7 @@ function columnLabel(field: string) { return columnLabels[props.module]?.[field]
 function displayValue(field: string, value: any) {
   if (value === null || value === undefined || value === '') return '-'
   if (['enabled', 'pinned'].includes(field)) return value ? '是' : '否'
+  if (field === 'content') return String(value).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() || '-'
   return valueLabels[String(value)] || value
 }
 const uploadHeaders = computed(() => ({ Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` }))
@@ -226,7 +227,7 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
         <div class="heading"><div><h1>{{ title }}</h1><p>鄞领π业务数据与运营操作</p></div><div class="toolbar">
           <el-input v-if="module === 'users'" v-model="search" placeholder="手机号精确查询" clearable @keyup.enter="load" />
           <el-button v-if="['activities','questionnaires','points'].includes(module)" @click="exportData">导出 Excel</el-button>
-          <el-button v-if="['activities','questionnaires','products','content'].includes(module)" type="primary" @click="create">新增</el-button>
+          <el-button v-if="['activities','questionnaires','products'].includes(module)" type="primary" @click="create">新增</el-button>
         </div></div>
         <div v-if="module === 'dashboard'" class="stats">
           <el-card><small>注册用户</small><strong>{{ dashboard.users || 0 }}</strong></el-card><el-card><small>活动数量</small><strong>{{ dashboard.activities || 0 }}</strong></el-card>
@@ -288,9 +289,14 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
         <el-form-item label="状态"><el-select v-model="editing.status"><el-option label="上架" value="ON_SALE" /><el-option label="下架" value="OFFLINE" /></el-select></el-form-item><el-form-item label="说明"><RichTextEditor v-model="editing.description" /></el-form-item>
       </template>
       <template v-else>
-        <el-form-item label="内容类型"><el-select v-model="editing.contentType"><el-option v-for="t in ['BANNER','ABOUT','RULES','SERVICE','PICKUP']" :key="t" :value="t" /></el-select></el-form-item><el-form-item label="标题"><el-input v-model="editing.title" /></el-form-item>
+        <el-form-item label="内容类型"><el-select v-model="editing.contentType" disabled><el-option v-for="t in ['BANNER','ABOUT','RULES','SERVICE','PICKUP']" :key="t" :value="t" /></el-select></el-form-item><el-form-item label="名称"><el-input v-model="editing.title" disabled /></el-form-item>
         <el-form-item label="图片"><el-input v-model="editing.imageUrl" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" :on-success="uploadSuccess"><el-button>上传图片</el-button></el-upload></el-form-item>
-        <el-form-item label="内容"><el-input v-model="editing.content" type="textarea" :rows="6" /></el-form-item><el-form-item label="地址"><el-input v-model="editing.address" /></el-form-item><el-form-item label="启用"><el-switch v-model="editing.enabled" /></el-form-item>
+        <el-form-item label="内容"><RichTextEditor v-model="editing.content" /></el-form-item>
+        <el-form-item label="地址"><el-input v-model="editing.address" /></el-form-item>
+        <el-form-item v-if="editing.contentType === 'SERVICE'" label="地图位置"><AmapLocationPicker v-model:longitude="editing.longitude" v-model:latitude="editing.latitude" :address="editing.address" /></el-form-item>
+        <el-form-item v-if="editing.contentType === 'SERVICE'" label="经度"><el-input-number v-model="editing.longitude" :precision="7" :step="0.000001" /></el-form-item>
+        <el-form-item v-if="editing.contentType === 'SERVICE'" label="纬度"><el-input-number v-model="editing.latitude" :precision="7" :step="0.000001" /></el-form-item>
+        <el-form-item label="启用"><el-switch v-model="editing.enabled" /></el-form-item>
       </template>
     </el-form>
     <template v-if="dialogMode !== 'qr'" #footer><el-button @click="dialog = false">取消</el-button><el-button type="primary" @click="save">保存</el-button></template>

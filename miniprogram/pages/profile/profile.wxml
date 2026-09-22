@@ -1,5 +1,6 @@
 <view class="page-shell profile-page">
   <view class="profile-bg">
+    <image class="profile-silhouette" src="/assets/ux/profile-silhouette.png" mode="widthFix"/>
     <view class="safe-top"></view>
     <view class="mini-top">
       <view></view>
@@ -7,7 +8,7 @@
       <view class="capsule">•••　│　◎</view>
     </view>
     <view class="account" bindtap="login">
-      <image src="{{user.avatar_url||'/assets/ux/profile-avatar.png'}}"/>
+      <image src="{{user.avatar_url||'/assets/profile-avatar.png'}}"/>
       <view>
         <text class="strong">{{loggedIn?(user.nickname||'微信用户'):'未登录'}}</text>
         <text class="small">{{loggedIn?(user.phone||'授权手机号后可参与积分活动'):'登录后，兑换领取更多好礼~'}}</text>
@@ -21,13 +22,28 @@
         <text class="strong">{{user.points||0}}</text>
       </view>
       <view class="links">
-        <navigator url="/pages/points/points">▣<text>积分明细</text></navigator>
-        <navigator url="/pages/orders/orders">▤<text>兑换记录</text></navigator>
-        <navigator url="/pages/rules/rules">◇<text>积分规则</text></navigator>
+        <navigator url="/pages/points/points">
+          <image src="/assets/profile-points.png" mode="aspectFit"/>
+          <text>积分明细</text>
+        </navigator>
+        <navigator url="/pages/orders/orders">
+          <image src="/assets/profile-orders.png" mode="aspectFit"/>
+          <text>兑换记录</text>
+        </navigator>
+        <view class="profile-link" bindtap="showRules">
+          <image src="/assets/profile-rules.png" mode="aspectFit"/>
+          <text>积分规则</text>
+        </view>
       </view>
     </view>
     <view class="service" bindtap="navigate">
       <image src="/assets/ux/profile-navigation.jpg" mode="widthFix"/>
+    </view>
+  </view>
+  <view wx:if="{{rulesVisible}}" class="rules-mask" catchtap="closeRules">
+    <view class="rules-modal" catchtap="noop">
+      <view class="rules-modal__head"><text>积分使用规则</text><button class="rules-modal__close" bindtap="closeRules">×</button></view>
+      <scroll-view scroll-y class="rules-modal__body"><rich-text nodes="{{rulesContent}}" /></scroll-view>
     </view>
   </view>
 </view>
