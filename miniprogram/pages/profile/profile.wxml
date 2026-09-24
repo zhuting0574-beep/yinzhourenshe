@@ -14,6 +14,7 @@
       </view>
     </view>
     <button wx:if="{{loggedIn&&!user.phone}}" class="phone-btn" open-type="getPhoneNumber" bindgetphonenumber="phone">授权手机号并完成注册</button>
+    <button wx:if="{{loggedIn}}" class="logout-btn" bindtap="logout">退出登录</button>
     <view class="points-card">
       <view class="balance">
         <text>◉　可用积分</text>

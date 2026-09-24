@@ -39,6 +39,15 @@
   border-radius: 40rpx;
   font-size: 24rpx;
 }
+.logout-btn {
+  width: calc(100% - 60rpx);
+  margin: -4rpx 30rpx 24rpx;
+  background: #fff;
+  color: #1769e0;
+  border: 1rpx solid #1769e0;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+}
 .points-card {
   margin: 0 30rpx 34rpx;
   border-radius: 26rpx;

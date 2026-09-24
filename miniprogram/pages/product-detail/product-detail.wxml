@@ -46,7 +46,7 @@
   <view class="action">
     <view>
       <text class="strong">-{{item.points_cost}} <text class="small">积分</text></text>
-      <text>兑换后扣除</text>
+      <text>核销后扣除</text>
     </view>
     <button bindtap="redeem" loading="{{submitting}}" disabled="{{item.stock<=0}}">{{item.stock>0?'我要兑换':'已兑完'}}</button>
   </view>

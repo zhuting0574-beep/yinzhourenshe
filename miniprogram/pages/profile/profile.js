@@ -23,6 +23,15 @@ Page({
       wx.showToast({ title: '绑定成功，获得100积分' })
     })
   },
+  logout() {
+    const app = getApp();
+    app.globalData.token = '';
+    app.globalData.user = null;
+    wx.removeStorageSync('token');
+    wx.removeStorageSync('user');
+    this.setData({ user: null, loggedIn: false });
+    wx.showToast({ title: '已退出登录', icon: 'success' });
+  },
   navigate() {
     const s = this.data.service
     if (s)

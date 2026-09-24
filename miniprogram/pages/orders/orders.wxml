@@ -18,13 +18,13 @@
     <view wx:for="{{items}}" wx:key="id" class="record-card">
       <view class="record-head">
         <text class="strong">{{item.product_name}}</text>
-        <text class="status-pill {{item.status==='PICKED_UP'?'green':item.status==='CANCELED'?'gray':'pink'}}">{{item.status==='PENDING'?'待领取':item.status==='PICKED_UP'?'已领取':item.status==='CANCELED'?'已取消':item.status}}</text>
+        <text class="status-pill {{item.status==='PICKED_UP'?'green':item.status==='CANCELED'?'gray':'pink'}}">{{item.status==='PENDING'?'待核销':item.status==='PICKED_UP'?'已核销':item.status==='CANCELED'?'已取消':item.status}}</text>
       </view>
       <view class="line">订单编号：{{item.order_no}}</view>
       <view class="line">消耗积分：{{item.points}}</view>
       <view class="line">领取截止：{{item.expire_at}}</view>
       <view wx:if="{{item.cancel_reason}}" class="reason">取消原因：{{item.cancel_reason}}</view>
-      <view wx:if="{{item.status==='PENDING'}}" class="tip">领取时请出示订单编号和绑定手机号</view>
+      <view wx:if="{{item.status==='PENDING'}}" class="tip">核销时请出示订单编号和绑定手机号</view>
     </view>
   </view>
 </view>

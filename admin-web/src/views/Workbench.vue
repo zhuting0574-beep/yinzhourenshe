@@ -57,7 +57,7 @@ const columnLabels: Record<string, Record<string, string>> = {
 }
 const valueLabels: Record<string, string> = {
   ACTIVE: '正常', DRAFT: '草稿', PUBLISHED: '已发布', OFFLINE: '已下架', ENDED: '已结束',
-  ON_SALE: '已上架', PENDING: '待领取', PICKED_UP: '已领取', CANCELED: '已取消',
+  ON_SALE: '已上架', PENDING: '待核销', PICKED_UP: '已核销', CANCELED: '已取消',
   REGISTER: '注册奖励', DAILY_CHECKIN: '每日签到', QUESTIONNAIRE: '问卷奖励', ACTIVITY: '活动奖励',
   EXCHANGE: '兑换扣减', ADMIN_ADD: '管理员增加', ADMIN_SUBTRACT: '管理员扣减', EXPIRED: '过期清零', EXCHANGE_CANCEL: '兑换退还',
   BANNER: '轮播图', ABOUT: '关于我们', RULES: '积分规则', SERVICE: '服务点', PICKUP: '领取说明',
@@ -244,7 +244,7 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
             <el-button v-if="module === 'users'" link type="primary" @click="adjust(row,'points')">调整积分</el-button>
             <el-button v-if="module === 'products'" link type="primary" @click="adjust(row,'stock')">调整库存</el-button>
             <el-button v-if="module === 'activities' && ['QR','BOTH'].includes(row.checkin_mode || 'QR')" link @click="showQr(row)">核销码</el-button>
-            <el-button v-if="module === 'orders' && row.status === 'PENDING'" link type="success" @click="orderAction(row,'pickup')">确认领取</el-button>
+            <el-button v-if="module === 'orders' && row.status === 'PENDING'" link type="success" @click="orderAction(row,'pickup')">确认核销</el-button>
             <el-button v-if="module === 'orders' && row.status === 'PENDING'" link type="danger" @click="orderAction(row,'cancel')">取消</el-button>
           </template></el-table-column>
         </el-table></el-card>
