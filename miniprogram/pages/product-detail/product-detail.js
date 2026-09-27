@@ -23,9 +23,17 @@ Page({
         address: s.address,
       })
   },
+  openLogin() {
+    const item = this.data.item
+    const app = getApp()
+    if (item && item.id != null) app.globalData.pendingRoute = `/pages/product-detail/product-detail?id=${item.id}`
+    wx.navigateTo({ url: '/pages/login/login' })
+  },
   redeem() {
     const item = this.data.item
     if (!item || this.data.submitting) return
+    const app = getApp()
+    if (!app.globalData.token) return this.openLogin()
     wx.showModal({
       title: '确认兑换',
       content: `将使用${item.points_cost}积分兑换${item.name}`,
@@ -47,7 +55,12 @@ Page({
               success: () => wx.navigateTo({ url: '/pages/orders/orders' }),
             })
           )
-          .catch(() => this.setData({ submitting: false }))
+          .catch((error) => {
+            this.setData({ submitting: false })
+            if (error && (error.statusCode === 401 || error.statusCode === 403)) return this.openLogin()
+            const message = error && error.message ? String(error.message) : '兑换失败，请稍后重试'
+            wx.showModal({ title: '兑换失败', content: message, showCancel: false })
+          })
       },
     })
   },

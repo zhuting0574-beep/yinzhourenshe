@@ -16,9 +16,9 @@
   <view wx:if="{{!questionnaire}}" class="empty">本月暂无可填写问卷</view>
   <block wx:else>
     <view class="survey-head">
-      <view class="status-pill pink">问卷任务</view>
+      <view class="status-pill pink">{{questionnaire.headerTitle || '问卷任务'}}</view>
       <view class="title">{{questionnaire.name}}</view>
-      <view class="intro">{{questionnaire.description}}</view>
+      <view wx:if="{{questionnaire.description}}" class="intro">{{questionnaire.description}}</view>
       <view class="reward">完成奖励 <text class="strong">100</text> 积分</view>
     </view>
     <view wx:if="{{questionnaire.completedThisMonth}}" class="done">本月已完成问卷</view>

@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -114,6 +115,13 @@ class PlatformServiceQrTest {
   assertEquals(5,((java.util.List<?>)service.dashboardTrends("year").get("labels")).size());
   assertEquals(12,((java.util.List<?>)service.dashboardTrends("month").get("labels")).size());
   assertEquals(30,((java.util.List<?>)service.dashboardTrends("day").get("labels")).size());
+ }
+
+ @Test void activityListExcludesEventsThatHaveAlreadyEnded(){
+  JdbcTemplate db=mock(JdbcTemplate.class);
+  when(db.queryForList(anyString(),any(Object[].class))).thenReturn(List.of());
+  assertTrue(service(db).activities(null).isEmpty());
+  verify(db).queryForList(argThat(sql->sql.contains("a.end_time>=now()")),any(Object[].class));
  }
 
  private PlatformService service(JdbcTemplate db){return new PlatformService(db,new ObjectMapper(),"a-qr-secret-that-is-long-enough-for-tests");}

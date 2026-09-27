@@ -32,8 +32,19 @@
   <view class="action">
     <view class="reward">
       <text class="strong">+100 <text class="small">积分</text></text>
-      <text>{{item.checkin_mode==='LOCATION'?'定位签到后':item.checkin_mode==='BOTH'?'扫码或定位签到后':'扫码签到后'}}</text>
+      <text>{{rewardText}}</text>
     </view>
-    <button bindtap="primaryAction" loading="{{submitting}}" disabled="{{item.participation_status==='CHECKED_IN'}}">{{item.participation_status==='CHECKED_IN'?'已签到':item.participation_status==='REGISTERED'?(item.checkin_mode==='QR'?'扫码签到':'定位签到'):'我要报名'}}</button>
+    <button bindtap="primaryAction" loading="{{submitting}}" disabled="{{actionDisabled}}">{{actionText}}</button>
+  </view>
+  <view wx:if="{{showCheckinPicker}}" class="checkin-picker-mask" catchtap="closeCheckinPicker">
+    <view class="checkin-picker" catchtap="noop">
+      <view class="checkin-picker__title">选择签到方式</view>
+      <view class="checkin-picker__hint">请选择本次活动的签到方式</view>
+      <view class="checkin-picker__options">
+        <button class="checkin-picker__option" data-mode="LOCATION" bindtap="chooseCheckin">定位签到</button>
+        <button class="checkin-picker__option" data-mode="QR" bindtap="chooseCheckin">二维码签到</button>
+      </view>
+      <button class="checkin-picker__cancel" bindtap="closeCheckinPicker">取消</button>
+    </view>
   </view>
 </view>

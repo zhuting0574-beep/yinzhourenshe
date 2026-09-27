@@ -5,7 +5,27 @@
     <view class="i"></view>
     <text>◎</text>
   </view>
-  <image class="hero" src="/assets/ux/home-banner.jpg" mode="aspectFill"/>
+  <swiper
+    wx:if="{{banners.length}}"
+    class="hero"
+    autoplay="{{banners.length > 1}}"
+    circular="{{banners.length > 1}}"
+    indicator-dots="{{banners.length > 1}}"
+    indicator-active-color="#ffffff"
+    indicator-color="rgba(255, 255, 255, 0.55)"
+    interval="4000"
+    duration="500"
+  >
+    <swiper-item
+      wx:for="{{banners}}"
+      wx:for-item="banner"
+      wx:key="id"
+      data-activity-id="{{banner.activityId}}"
+      bindtap="openBanner"
+    >
+      <image class="hero-image" src="{{banner.imageUrl}}" mode="aspectFill"/>
+    </swiper-item>
+  </swiper>
   <view class="home-body">
     <view class="hello">Hi，{{userName||'欢迎来到鄞领π'}}</view>
     <view class="quick-grid">
@@ -22,18 +42,31 @@
         <text>每日签到</text>
       </navigator>
     </view>
-    <view class="about-wrap" bindtap="openActivities">
+    <view class="about-wrap" bindtap="openAbout">
       <image class="about" src="/assets/ux/home-about.jpg" mode="widthFix"/>
       <text class="more">查看更多 ›</text>
+    </view>
+  </view>
+  <view wx:if="{{showAbout}}" class="about-mask" catchtap="closeAbout">
+    <view class="about-modal" catchtap="noop">
+      <view class="about-modal__header">
+        <text>{{aboutTitle || '关于我们'}}</text>
+        <button class="about-modal__close" catchtap="closeAbout">×</button>
+      </view>
+      <scroll-view scroll-y class="about-modal__body">
+        <image wx:if="{{aboutImageUrl}}" class="about-modal__image" src="{{aboutImageUrl}}" mode="widthFix" />
+        <rich-text nodes="{{aboutContent || '欢迎了解鄞领π。'}}" />
+      </scroll-view>
     </view>
   </view>
   <view wx:if="{{showSurvey}}" class="survey-mask" bindtap="closeSurvey">
     <view class="survey-modal" bindtap="goSurvey">
       <button class="modal-close" catchtap="closeSurvey">×</button>
       <view class="modal-brand">鄞领π</view>
-      <view class="modal-icon">▤</view>
-      <view class="modal-title">填写调查问卷<text>得100积分</text></view>
-      <view class="modal-pi">π</view>
+      <image wx:if="{{questionnaire.popupImageUrl}}" class="modal-config-image" src="{{questionnaire.popupImageUrl}}" mode="aspectFit" />
+      <view wx:else class="modal-icon">▤</view>
+      <view class="modal-title">{{questionnaire.popupTitle || '填写调查问卷'}}<text>得100积分</text></view>
+      <view wx:if="{{!questionnaire.popupImageUrl}}" class="modal-pi">π</view>
       <button class="survey-go" catchtap="goSurvey">去填写 <text>+100积分</text></button>
     </view>
   </view>

@@ -2,9 +2,12 @@ const { request } = require('../../utils/request')
 Page({
   data: { rules: [], service: [] },
   onLoad() {
-    Promise.all([request('/mini/content/RULES'), request('/mini/content/SERVICE')]).then(
-      ([rules, service]) => this.setData({ rules, service })
-    )
+    request('/mini/content/RULES', { errorTitle: '积分规则获取失败' })
+      .then((rules) => this.setData({ rules }))
+      .catch((error) => console.warn('Points rules request failed', error))
+    request('/mini/content/SERVICE', { silent: true })
+      .then((service) => this.setData({ service }))
+      .catch((error) => console.warn('Service content request failed', error))
   },
   back() {
     wx.navigateBack({ fail: () => this.home() })

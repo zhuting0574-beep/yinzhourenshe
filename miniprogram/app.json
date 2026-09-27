@@ -10,7 +10,9 @@
     "pages/orders/orders",
     "pages/points/points",
     "pages/rules/rules",
-    "pages/profile/profile"
+    "pages/login/login",
+    "pages/profile/profile",
+    "pages/profile-edit/profile-edit"
   ],
   "window": {
     "navigationStyle": "custom",

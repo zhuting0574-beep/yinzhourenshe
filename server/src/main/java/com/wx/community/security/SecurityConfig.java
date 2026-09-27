@@ -12,8 +12,10 @@ import java.io.IOException; import java.util.List;
 @Configuration public class SecurityConfig {
  @Bean PasswordEncoder passwordEncoder(){return new BCryptPasswordEncoder();}
  @Bean SecurityFilterChain filter(HttpSecurity h,TokenFilter f)throws Exception{return h.csrf(x->x.disable()).cors(x->{}).sessionManagement(x->x.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(x->x
+  .requestMatchers(HttpMethod.GET,"/api","/api/").permitAll()
   .requestMatchers("/api/mini/auth/**","/api/admin/auth/login","/api/dev/**","/uploads/**").permitAll()
   .requestMatchers(HttpMethod.GET,"/api/mini/home","/api/mini/activities/**","/api/mini/products/**","/api/mini/content/**").permitAll()
+  .requestMatchers("/api/admin/orders","/api/admin/orders/**").hasAnyRole("ADMIN","ORDER_OPERATOR")
   .requestMatchers("/api/admin/**").hasRole("ADMIN").anyRequest().authenticated()).addFilterBefore(f,UsernamePasswordAuthenticationFilter.class).build();}
 }
 @Component class TokenFilter extends org.springframework.web.filter.OncePerRequestFilter {

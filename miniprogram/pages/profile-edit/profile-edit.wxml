@@ -1,0 +1,48 @@
+<view class="profile-edit-page">
+  <view class="safe-top"></view>
+  <view class="mini-top">
+    <view class="mini-nav">
+      <button class="mini-nav__button" bindtap="back" aria-label="返回上一页">
+        <view class="mini-nav__back"></view>
+      </button>
+      <view class="mini-nav__divider"></view>
+      <button class="mini-nav__button" bindtap="home" aria-label="返回首页">
+        <view class="mini-nav__home"></view>
+      </button>
+    </view>
+    <view class="mini-top__title">完善信息</view>
+    <view class="capsule">•••　│　◎</view>
+  </view>
+
+  <view class="profile-edit-head">
+    <view class="profile-edit-title">完善个人信息</view>
+    <view class="profile-edit-subtitle">完整填写可获得100积分奖励</view>
+  </view>
+
+  <view class="profile-form">
+    <view class="form-row">
+      <text class="form-label">真实姓名</text>
+      <input class="form-input" data-field="realName" value="{{form.realName}}" bindinput="input" placeholder="请输入真实姓名" maxlength="50" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">年龄</text>
+      <input class="form-input" data-field="age" value="{{form.age}}" bindinput="input" type="number" placeholder="请输入年龄" maxlength="3" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">毕业院校</text>
+      <input class="form-input" data-field="graduationSchool" value="{{form.graduationSchool}}" bindinput="input" placeholder="请输入毕业院校" maxlength="100" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">专业方向</text>
+      <input class="form-input" data-field="majorDirection" value="{{form.majorDirection}}" bindinput="input" placeholder="请输入专业方向" maxlength="100" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">所在城市</text>
+      <input class="form-input" data-field="city" value="{{form.city}}" bindinput="input" placeholder="请输入所在城市" maxlength="50" />
+    </view>
+  </view>
+
+  <view class="submit-bar">
+    <button bindtap="save" loading="{{saving}}">保存信息</button>
+  </view>
+</view>

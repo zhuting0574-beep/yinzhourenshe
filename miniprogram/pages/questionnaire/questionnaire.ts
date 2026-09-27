@@ -1,19 +1,31 @@
 import { request, requireLogin } from '../../utils/request'
+
+function normalizeDescription(value: unknown) {
+  if (value == null) return ''
+  const description = String(value).trim()
+  return description.toLowerCase() === 'null' ? '' : description
+}
+
 Page({
   data: { questionnaire: null, questions: [], answers: {} as any, submitting: false },
   onLoad() {
     requireLogin()
       .then(() => request<any>('/mini/questionnaires/active'))
       .then(
-        (q) =>
-          q &&
+        (q) => {
+          if (!q) return
           this.setData({
-            questionnaire: q,
-            questions: q.questions.map((x: any) => ({
+            questionnaire: {
+              ...q,
+              description: normalizeDescription(q.description),
+              headerTitle: q.header_title || q.headerTitle || '',
+            },
+            questions: (q.questions || []).map((x: any) => ({
               ...x,
               options: JSON.parse(x.options_json || '[]'),
             })),
           })
+        }
       )
   },
   back() {

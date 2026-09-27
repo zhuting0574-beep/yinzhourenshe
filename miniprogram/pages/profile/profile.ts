@@ -1,25 +1,33 @@
-import { request, login, scanActivity, bindPhone } from '../../utils/request'
+import { request, bindPhone } from '../../utils/request'
 Page({
-  data: { user: null as any, loggedIn: false, service: null as any, rulesVisible: false, rulesContent: '' },
+  data: { user: null as any, loggedIn: false, profileComplete: false, service: null as any, rulesVisible: false, rulesContent: '' },
   onShow() {
     const tab = this.getTabBar && this.getTabBar()
     if (tab) tab.setData({ selected: 4 })
     const app = getApp<IAppOption>()
-    Promise.all([request<any[]>('/mini/content/SERVICE'), request<any[]>('/mini/content/RULES')])
-      .then(([service, rules]) => this.setData({ service: service[0] || null, rulesContent: rules[0]?.content || '' }))
-      .catch(() => {})
-    if (!app.globalData.token) return this.setData({ user: null, loggedIn: false })
+    request<any[]>('/mini/content/SERVICE', { silent: true })
+      .then((service) => this.setData({ service: service[0] || null }))
+      .catch((error) => console.warn('Service content request failed', error))
+    request<any[]>('/mini/content/RULES', { errorTitle: '积分规则获取失败' })
+      .then((rules) => this.setData({ rulesContent: rules[0]?.content || '' }))
+      .catch((error) => console.warn('Points rules request failed', error))
+    if (!app.globalData.token) return this.setData({ user: null, loggedIn: false, profileComplete: false })
     request<any>('/mini/profile')
-      .then((user) => this.setData({ user, loggedIn: true }))
-      .catch(() => this.setData({ user: null, loggedIn: false }))
+      .then((user) => this.setData({ user, loggedIn: true, profileComplete: isProfileComplete(user) }))
+      .catch(() => this.setData({ user: null, loggedIn: false, profileComplete: false }))
   },
-  login() {
-    login().then((user) => this.setData({ user, loggedIn: true }))
+  openLogin() {
+    if (this.data.loggedIn) return
+    wx.navigateTo({ url: '/pages/login/login' })
+  },
+  editProfile() {
+    if (!this.data.loggedIn) return this.openLogin()
+    wx.navigateTo({ url: '/pages/profile-edit/profile-edit' })
   },
   phone(e: any) {
     if (!e.detail.code) return wx.showToast({ title: '未授权手机号', icon: 'none' })
     bindPhone(e.detail.code).then((user) => {
-      this.setData({ user, loggedIn: true })
+      this.setData({ user, loggedIn: true, profileComplete: isProfileComplete(user) })
       wx.showToast({ title: '绑定成功，获得100积分' })
     })
   },
@@ -29,7 +37,7 @@ Page({
     app.globalData.user = null
     wx.removeStorageSync('token')
     wx.removeStorageSync('user')
-    this.setData({ user: null, loggedIn: false })
+    this.setData({ user: null, loggedIn: false, profileComplete: false })
     wx.showToast({ title: '已退出登录', icon: 'success' })
   },
   navigate() {
@@ -50,3 +58,11 @@ Page({
   },
   noop() {},
 })
+
+function isProfileComplete(user: any) {
+  if (!user) return false
+  if (typeof user.profileComplete === 'boolean') return user.profileComplete
+  if (typeof user.profile_complete === 'boolean') return user.profile_complete
+  const values = [user.realName || user.real_name, user.age, user.graduationSchool || user.graduation_school, user.majorDirection || user.major_direction, user.city]
+  return values.every((value) => value !== null && value !== undefined && String(value).trim() !== '')
+}
