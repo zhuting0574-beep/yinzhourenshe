@@ -1,4 +1,4 @@
-import { request, bindPhone } from '../../utils/request'
+import { request, login, bindPhone, updateWechatProfile } from '../../utils/request'
 Page({
   data: { user: null as any, loggedIn: false, profileComplete: false, service: null as any, rulesVisible: false, rulesContent: '' },
   onShow() {
@@ -13,7 +13,10 @@ Page({
       .catch((error) => console.warn('Points rules request failed', error))
     if (!app.globalData.token) return this.setData({ user: null, loggedIn: false, profileComplete: false })
     request<any>('/mini/profile')
-      .then((user) => this.setData({ user, loggedIn: true, profileComplete: isProfileComplete(user) }))
+      .then((user) => {
+        app.globalData.user = { ...(app.globalData.user || {}), ...user }
+        this.setData({ user, loggedIn: true, profileComplete: isProfileComplete(user) })
+      })
       .catch(() => this.setData({ user: null, loggedIn: false, profileComplete: false }))
   },
   openLogin() {
@@ -25,11 +28,18 @@ Page({
     wx.navigateTo({ url: '/pages/profile-edit/profile-edit' })
   },
   phone(e: any) {
-    if (!e.detail.code) return wx.showToast({ title: '未授权手机号', icon: 'none' })
-    bindPhone(e.detail.code).then((user) => {
-      this.setData({ user, loggedIn: true, profileComplete: isProfileComplete(user) })
-      wx.showToast({ title: '绑定成功，获得100积分' })
-    })
+    const code = e.detail?.code
+    if (!code) return wx.showToast({ title: '请授权手机号', icon: 'none' })
+    const app = getApp<IAppOption>()
+    const signedIn = app.globalData.token ? Promise.resolve() : login().then(() => undefined)
+    signedIn
+      .then(() => bindPhone(code))
+      .then((user) => user.phoneAlreadyRegistered ? user : getWechatProfile().then((profile) => isUsableWechatProfile(profile) ? updateWechatProfile(profile.nickName, profile.avatarUrl) : user))
+      .then((user) => {
+        this.setData({ user, loggedIn: true, profileComplete: isProfileComplete(user) })
+        wx.showToast({ title: '注册成功', icon: 'success' })
+      })
+      .catch(() => {})
   },
   logout() {
     const app = getApp<IAppOption>()
@@ -59,10 +69,24 @@ Page({
   noop() {},
 })
 
+function getWechatProfile(): Promise<{ nickName: string; avatarUrl: string } | null> {
+  if (typeof wx.getUserProfile !== 'function') return Promise.resolve(null)
+  return new Promise((resolve) => wx.getUserProfile({
+    desc: '用于展示您的微信昵称和头像',
+    success: (result) => resolve(result.userInfo),
+    fail: () => resolve(null),
+  }))
+}
+
 function isProfileComplete(user: any) {
   if (!user) return false
   if (typeof user.profileComplete === 'boolean') return user.profileComplete
   if (typeof user.profile_complete === 'boolean') return user.profile_complete
   const values = [user.realName || user.real_name, user.age, user.graduationSchool || user.graduation_school, user.majorDirection || user.major_direction, user.city]
   return values.every((value) => value !== null && value !== undefined && String(value).trim() !== '')
+}
+
+function isUsableWechatProfile(profile: { nickName: string; avatarUrl: string } | null) {
+  const nickname = String(profile?.nickName || '').trim()
+  return !!profile && !!nickname && !['微信用户', '测试用户', '未设置昵称'].includes(nickname) && !!String(profile?.avatarUrl || '').trim()
 }

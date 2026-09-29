@@ -70,7 +70,12 @@ function login() {
             app.globalData.user = result.user
             wx.setStorageSync('token', result.token)
             wx.setStorageSync('user', result.user)
-            resolve(result.user)
+            return request('/mini/profile', { silent: true }).catch(() => result.user)
+          })
+          .then((user) => {
+            app.globalData.user = user
+            wx.setStorageSync('user', user)
+            resolve(user)
           })
           .catch(reject),
       fail: () => mockLogin()
@@ -79,7 +84,11 @@ function login() {
           app.globalData.user = result.user
           wx.setStorageSync('token', result.token)
           wx.setStorageSync('user', result.user)
-          resolve(result.user)
+          request('/mini/profile', { silent: true }).catch(() => result.user).then((user) => {
+            app.globalData.user = user
+            wx.setStorageSync('user', user)
+            resolve(user)
+          })
         })
         .catch(reject),
     })
@@ -95,8 +104,8 @@ function scanActivity() {
             request('/mini/activities/verify', { method: 'POST', data: { token: r.result } })
               .then((data) => {
                 wx.showModal({
-                  title: '核销成功',
-                  content: '活动已签到，获得100积分',
+                  title: data && data.alreadyCheckedIn ? '已签到' : '核销成功',
+                  content: data && data.alreadyCheckedIn ? '该活动已经签到，不能重复领取积分' : '活动已签到，获得100积分',
                   showCancel: false,
                 })
                 resolve(data)
@@ -116,4 +125,13 @@ function bindPhone(code) {
     return result.user
   })
 }
-module.exports = { request, requireLogin, login, scanActivity, bindPhone }
+function updateWechatProfile(nickname, avatarUrl) {
+  return request('/mini/auth/profile', { method: 'POST', data: { nickname, avatarUrl }, silent: true }).then((result) => {
+    app.globalData.token = result.token
+    app.globalData.user = result.user
+    wx.setStorageSync('token', result.token)
+    wx.setStorageSync('user', result.user)
+    return result.user
+  })
+}
+module.exports = { request, requireLogin, login, scanActivity, bindPhone, updateWechatProfile }

@@ -1,10 +1,16 @@
 import { request, requireLogin } from '../../utils/request'
 Page({
-  data: { item: null as any, submitting: false, service: null as any },
+  data: { item: null as any, submitting: false, service: null as any, pickupNotice: '<p>点击兑换后请在周一至周五 9:00-17:00</p><p>来“鄞领π”鄞州区大学生就业创业综合服务中心领取</p><p>暂不支持快递运输，敬请谅解！</p>', successNotice: '请在7个自然日内到服务点领取' },
   onLoad(o: any) {
     request<any>(`/mini/products/${o.id}`).then((item) => this.setData({ item }))
     request<any[]>('/mini/content/SERVICE')
       .then((items) => this.setData({ service: items[0] || null }))
+      .catch(() => {})
+    request<any[]>('/mini/content/PRODUCT_NOTICE')
+      .then((items) => this.setData({ pickupNotice: items[0]?.content || this.data.pickupNotice }))
+      .catch(() => {})
+    request<any[]>('/mini/content/ORDER_SUCCESS')
+      .then((items) => this.setData({ successNotice: stripHtml(items[0]?.content) || this.data.successNotice }))
       .catch(() => {})
   },
   back() {
@@ -50,7 +56,7 @@ Page({
           .then(() =>
             wx.showModal({
               title: '兑换成功',
-              content: '请在7个自然日内到服务点领取',
+              content: this.data.successNotice,
               showCancel: false,
               success: () => wx.navigateTo({ url: '/pages/orders/orders' }),
             })
@@ -65,3 +71,7 @@ Page({
     })
   },
 })
+
+function stripHtml(value: unknown) {
+  return String(value || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim()
+}

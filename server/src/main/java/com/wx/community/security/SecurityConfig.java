@@ -15,6 +15,7 @@ import java.io.IOException; import java.util.List;
   .requestMatchers(HttpMethod.GET,"/api","/api/").permitAll()
   .requestMatchers("/api/mini/auth/**","/api/admin/auth/login","/api/dev/**","/uploads/**").permitAll()
   .requestMatchers(HttpMethod.GET,"/api/mini/home","/api/mini/activities/**","/api/mini/products/**","/api/mini/content/**").permitAll()
+  .requestMatchers("/api/admin/uploads").authenticated()
   .requestMatchers("/api/admin/orders","/api/admin/orders/**").hasAnyRole("ADMIN","ORDER_OPERATOR")
   .requestMatchers("/api/admin/**").hasRole("ADMIN").anyRequest().authenticated()).addFilterBefore(f,UsernamePasswordAuthenticationFilter.class).build();}
 }

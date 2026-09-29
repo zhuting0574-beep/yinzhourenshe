@@ -51,11 +51,15 @@ Page({
           aboutImageUrl: d.about && d.about[0] ? (d.about[0].image_url || d.about[0].imageUrl || '') : '',
           aboutContent: d.about && d.about[0] && d.about[0].content ? d.about[0].content : '',
           loading: false,
-          userName: (user && user.nickname) || '',
+          userName: getDisplayName(d.user || user, !!getApp().globalData.token),
           showSurvey: !!(questionnaire && !questionnaire.completedThisMonth),
         })
+        if (d.user) {
+          const app = getApp()
+          app.globalData.user = Object.assign({}, app.globalData.user || {}, d.user)
+        }
       })
-      .catch(() => this.setData({ loading: false, banners: [], questionnaire: null, aboutImageUrl: '', showSurvey: false, userName: (user && user.nickname) || '' }))
+      .catch(() => this.setData({ loading: false, banners: [], questionnaire: null, aboutImageUrl: '', showSurvey: false, userName: getDisplayName(user, !!getApp().globalData.token) }))
   },
   openAbout() {
     this.setData({ showAbout: true })
@@ -76,3 +80,10 @@ Page({
   },
   noop() {},
 })
+
+function getDisplayName(user, loggedIn) {
+  if (!loggedIn) return ''
+  const realName = user && (user.realName || user.real_name)
+  const nickname = user && user.nickname
+  return String(realName || nickname || '微信用户').trim()
+}

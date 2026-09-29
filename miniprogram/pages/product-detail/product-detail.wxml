@@ -25,9 +25,7 @@
     <view class="notice">
       <view class="notice-title">温馨提示</view>
       <view class="notice-content">
-        <text>点击兑换后请在周一至周五 9:00-17:00</text>
-        <text>来“鄞领π”鄞州区大学生就业创业综合服务中心领取</text>
-        <text>暂不支持快递运输，敬请谅解！</text>
+        <rich-text nodes="{{pickupNotice}}" />
       </view>
     </view>
     <view class="description">

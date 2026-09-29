@@ -72,7 +72,12 @@ export function login() {
             app.globalData.user = result.user
             wx.setStorageSync('token', result.token)
             wx.setStorageSync('user', result.user)
-            resolve(result.user)
+            return request<any>('/mini/profile', { silent: true }).catch(() => result.user)
+          })
+          .then((user) => {
+            app.globalData.user = user
+            wx.setStorageSync('user', user)
+            resolve(user)
           })
           .catch(reject),
       fail: () => mockLogin()
@@ -81,7 +86,11 @@ export function login() {
           app.globalData.user = result.user
           wx.setStorageSync('token', result.token)
           wx.setStorageSync('user', result.user)
-          resolve(result.user)
+          request<any>('/mini/profile', { silent: true }).catch(() => result.user).then((user) => {
+            app.globalData.user = user
+            wx.setStorageSync('user', user)
+            resolve(user)
+          })
         })
         .catch(reject),
     })
@@ -97,8 +106,8 @@ export function scanActivity() {
             request('/mini/activities/verify', { method: 'POST', data: { token: r.result } })
               .then((data) => {
                 wx.showModal({
-                  title: '核销成功',
-                  content: '活动已签到，获得100积分',
+                  title: data && (data as any).alreadyCheckedIn ? '已签到' : '核销成功',
+                  content: data && (data as any).alreadyCheckedIn ? '该活动已经签到，不能重复领取积分' : '活动已签到，获得100积分',
                   showCancel: false,
                 })
                 resolve(data)
@@ -111,6 +120,15 @@ export function scanActivity() {
 }
 export function bindPhone(code: string) {
   return request<any>('/mini/auth/phone', { method: 'POST', data: { code } }).then((result) => {
+    app.globalData.token = result.token
+    app.globalData.user = result.user
+    wx.setStorageSync('token', result.token)
+    wx.setStorageSync('user', result.user)
+    return result.user
+  })
+}
+export function updateWechatProfile(nickname: string, avatarUrl: string) {
+  return request<any>('/mini/auth/profile', { method: 'POST', data: { nickname, avatarUrl }, silent: true }).then((result) => {
     app.globalData.token = result.token
     app.globalData.user = result.user
     wx.setStorageSync('token', result.token)

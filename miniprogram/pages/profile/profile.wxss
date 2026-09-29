@@ -45,14 +45,6 @@
   font-size: 24rpx;
   white-space: nowrap;
 }
-.phone-btn {
-  width: calc(100% - 60rpx);
-  margin: -12rpx 30rpx 24rpx;
-  background: #1769e0;
-  color: #fff;
-  border-radius: 40rpx;
-  font-size: 24rpx;
-}
 .account-actions {
   display: flex;
   gap: 18rpx;
@@ -62,24 +54,30 @@
   flex: 1;
   width: auto;
   margin: 0;
+  height: 80rpx;
+  padding: 0 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   border-radius: 40rpx;
   font-size: 24rpx;
-  line-height: 2.5;
+  line-height: 1;
   white-space: nowrap;
 }
-.profile-edit-btn {
+.account-action-btn--primary {
   background: #1769e0;
   color: #fff;
+}
+.account-action-btn--outline {
+  background: #fff;
+  color: #1769e0;
+  border: 2rpx solid #1769e0;
 }
 .profile-reward {
   margin-left: 8rpx;
   color: #ffe48b;
   font-size: 21rpx;
-}
-.logout-btn {
-  background: #fff;
-  color: #1769e0;
-  border: 1rpx solid #1769e0;
 }
 .points-card {
   margin: 0 30rpx 34rpx;

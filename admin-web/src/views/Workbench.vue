@@ -32,6 +32,9 @@ const dashboardChartEl = ref<HTMLElement | null>(null)
 let dashboardChart: echarts.ECharts | null = null
 const resultsDialog = ref(false)
 const resultsQuestionnaire = ref<any | null>(null)
+const userDetailDialog = ref(false)
+const userDetail = ref<any | null>(null)
+const userDetailLoading = ref(false)
 
 const menus = [
   ['dashboard', '数据概览'], ['users', '用户管理'], ['activities', '活动管理'],
@@ -68,7 +71,7 @@ const valueLabels: Record<string, string> = {
   ON_SALE: '已上架', PENDING: '待核销', PICKED_UP: '已核销', CANCELED: '已取消',
   REGISTER: '注册奖励', DAILY_CHECKIN: '每日签到', QUESTIONNAIRE: '问卷奖励', ACTIVITY: '活动奖励',
   EXCHANGE: '兑换扣减', ADMIN_ADD: '管理员增加', ADMIN_SUBTRACT: '管理员扣减', EXPIRED: '过期清零', EXCHANGE_CANCEL: '兑换退还',
-  BANNER: '轮播图', ABOUT: '关于我们', RULES: '积分规则', SERVICE: '服务点', PICKUP: '领取说明',
+  BANNER: '轮播图', ABOUT: '关于我们', RULES: '积分规则', SERVICE: '服务点', PRODUCT_NOTICE: '商品详情温馨提示', ORDER_SUCCESS: '兑换成功提示', ORDER_RECORD: '兑换记录提示',
   QR: '二维码签到', LOCATION: '定位签到', BOTH: '二维码或定位签到'
 }
 function columnLabel(field: string) { return columnLabels[props.module]?.[field] || field }
@@ -193,6 +196,19 @@ async function adjust(row: any, type: 'points' | 'stock') {
     await api.post(type === 'points' ? `/admin/users/${row.id}/points` : `/admin/products/${row.id}/stock`, { delta: Number(value), reason: type === 'points' ? '管理员调整' : '库存调整' })
     ElMessage.success('调整成功')
     load()
+  } catch (e: any) { if (!['cancel', 'close'].includes(e) && e?.message) ElMessage.error(e.message) }
+}
+async function showUserDetail(row: any) {
+  userDetailLoading.value = true
+  userDetailDialog.value = true
+  try { userDetail.value = await api.get(`/admin/users/${row.id}`) } catch (e: any) { userDetailDialog.value = false; ElMessage.error(e.message) } finally { userDetailLoading.value = false }
+}
+async function removeUser(row: any) {
+  try {
+    await ElMessageBox.confirm(`删除用户“${row.nickname || row.phone || row.id}”后，其报名、问卷、订单和积分记录都会删除，确定继续吗？`, '删除用户', { type: 'warning', confirmButtonText: '确认删除', cancelButtonText: '取消' })
+    await api.delete(`/admin/users/${row.id}`)
+    ElMessage.success('用户已删除')
+    await load()
   } catch (e: any) { if (!['cancel', 'close'].includes(e) && e?.message) ElMessage.error(e.message) }
 }
 async function orderAction(row: any, action: 'pickup' | 'cancel') {
@@ -361,6 +377,8 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
             <el-button v-if="module === 'questionnaires'" link type="success" @click="showResults(row)">统计结果</el-button>
             <el-button v-if="module === 'questionnaires'" link type="success" @click="exportQuestionnaire(row)">导出统计</el-button>
             <el-button v-if="module === 'users'" link type="primary" @click="adjust(row,'points')">调整积分</el-button>
+            <el-button v-if="module === 'users'" link type="primary" @click="showUserDetail(row)">详情</el-button>
+            <el-button v-if="module === 'users'" link type="danger" @click="removeUser(row)">删除</el-button>
             <el-button v-if="module === 'products'" link type="primary" @click="adjust(row,'stock')">调整库存</el-button>
             <el-button v-if="module === 'activities' && ['QR','BOTH'].includes(row.checkin_mode || 'QR')" link @click="showQr(row)">核销码</el-button>
             <el-button v-if="module === 'orders' && row.status === 'PENDING'" link type="success" @click="orderAction(row,'pickup')">确认核销</el-button>
@@ -419,7 +437,7 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
         <el-form-item label="排序"><el-input-number v-model="editing.sortOrder" :min="0" :precision="0" /></el-form-item>
       </template>
       <template v-else>
-        <el-form-item label="内容类型"><el-select v-model="editing.contentType" disabled><el-option v-for="t in ['ABOUT','RULES','SERVICE','PICKUP']" :key="t" :value="t" /></el-select></el-form-item><el-form-item label="名称"><el-input v-model="editing.title" disabled /></el-form-item>
+        <el-form-item label="内容类型"><el-select v-model="editing.contentType" disabled><el-option v-for="t in ['ABOUT','RULES','SERVICE','PRODUCT_NOTICE','ORDER_SUCCESS','ORDER_RECORD']" :key="t" :value="t" /></el-select></el-form-item><el-form-item label="名称"><el-input v-model="editing.title" disabled /></el-form-item>
         <el-form-item label="图片"><el-input v-model="editing.imageUrl" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" accept="image/*" :on-change="contentImageUploadChange" :on-success="contentImageUploadSuccess" :on-error="contentImageUploadError"><el-button :loading="aboutImageUploading" :disabled="aboutImageUploading">{{ aboutImageUploading ? '上传中...' : '上传图片' }}</el-button></el-upload><span class="upload-size-tip">建议宽度：1200 px，比例可按内容需要调整</span></el-form-item>
         <el-form-item label="内容"><RichTextEditor v-model="editing.content" /></el-form-item>
         <el-form-item label="地址"><el-input v-model="editing.address" /></el-form-item>
@@ -432,4 +450,30 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
     <template v-if="dialogMode !== 'qr'" #footer><el-button @click="dialog = false">取消</el-button><el-button type="primary" @click="save">保存</el-button></template>
   </el-dialog>
   <QuestionnaireResults v-if="module === 'questionnaires'" v-model="resultsDialog" :questionnaire="resultsQuestionnaire" />
+  <el-dialog v-model="userDetailDialog" title="用户详情" width="720px">
+    <div v-loading="userDetailLoading" class="user-detail" v-if="userDetail">
+      <div class="user-detail__summary">
+        <el-avatar :size="64" :src="userDetail.avatar_url || undefined">{{ (userDetail.nickname || '用户').slice(0, 1) }}</el-avatar>
+        <div><h3>{{ userDetail.nickname || '未设置昵称' }}</h3><p>{{ userDetail.phone || '未授权手机号' }}</p></div>
+        <div class="user-detail__points"><small>当前积分</small><strong>{{ userDetail.points || 0 }}</strong></div>
+      </div>
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="用户编号">{{ userDetail.id }}</el-descriptions-item>
+        <el-descriptions-item label="账号状态">{{ displayValue('status', userDetail.status) }}</el-descriptions-item>
+        <el-descriptions-item label="真实姓名">{{ userDetail.real_name || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="年龄">{{ userDetail.age || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="毕业院校">{{ userDetail.graduation_school || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="专业方向">{{ userDetail.major_direction || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="所在城市">{{ userDetail.city || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="注册时间">{{ userDetail.created_at || '-' }}</el-descriptions-item>
+      </el-descriptions>
+      <h4 class="user-detail__heading">积分明细</h4>
+      <el-table :data="(userDetail.pointLogs || []).slice(0, 20)" max-height="260" empty-text="暂无积分记录">
+        <el-table-column prop="created_at" label="时间" min-width="160" />
+        <el-table-column prop="amount" label="变动" width="90" />
+        <el-table-column prop="balance" label="余额" width="90" />
+        <el-table-column prop="remark" label="说明" min-width="220" show-overflow-tooltip />
+      </el-table>
+    </div>
+  </el-dialog>
 </template>

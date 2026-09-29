@@ -135,8 +135,12 @@ Page({
           },
         })
       )
-      .then(() => {
-        wx.showModal({ title: '签到成功', content: '活动已签到，获得100积分', showCancel: false })
+      .then((result) => {
+        wx.showModal({
+          title: result && result.alreadyCheckedIn ? '已签到' : '签到成功',
+          content: result && result.alreadyCheckedIn ? '该活动已经签到，不能重复领取积分' : '活动已签到，获得100积分',
+          showCancel: false,
+        })
         return this.load(item.id)
       })
       .catch((error) => {

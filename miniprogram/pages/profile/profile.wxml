@@ -8,18 +8,20 @@
       <view class="capsule">•••　│　◎</view>
     </view>
     <view class="account" bindtap="openLogin">
-      <image src="{{user.avatar_url||'/assets/profile-avatar.png'}}"/>
+      <image src="{{user.avatar_url||user.avatarUrl||'/assets/profile-avatar.png'}}"/>
       <view>
-        <text class="strong">{{loggedIn?(user.nickname||'微信用户'):'未登录'}}</text>
+        <text class="strong">{{loggedIn?(user.real_name||user.realName||user.nickname||'微信用户'):'未登录'}}</text>
         <text class="small">{{loggedIn?(user.phone||'授权手机号后可参与积分活动'):'登录后，兑换领取更多好礼~'}}</text>
       </view>
     </view>
-    <button wx:if="{{loggedIn&&!user.phone}}" class="phone-btn" open-type="getPhoneNumber" bindgetphonenumber="phone">授权手机号并完成注册</button>
+    <view wx:if="{{!loggedIn}}" class="account-actions">
+      <button class="account-action-btn account-action-btn--primary" open-type="getPhoneNumber" bindgetphonenumber="phone">授权手机号并完成注册</button>
+    </view>
     <view wx:if="{{loggedIn}}" class="account-actions">
-      <button class="profile-edit-btn" bindtap="editProfile">
+      <button class="account-action-btn account-action-btn--primary" bindtap="editProfile">
         完善信息<text wx:if="{{!profileComplete}}" class="profile-reward">+100积分</text>
       </button>
-      <button class="logout-btn" bindtap="logout">退出登录</button>
+      <button class="account-action-btn account-action-btn--outline" bindtap="logout">退出登录</button>
     </view>
     <view class="points-card">
       <view class="balance">

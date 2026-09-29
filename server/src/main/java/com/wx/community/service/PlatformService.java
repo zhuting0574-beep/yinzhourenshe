@@ -24,12 +24,14 @@ import java.time.format.DateTimeFormatter;
  }
  @Transactional public Map<String,Object> updateProfileDetails(Long uid,Map<String,Object> details){
   Map<String,Object> current=one("select * from users where id=? for update",uid);
+  String nickname=profileNicknamePreserve(details,"nickname",current.get("nickname"));
+  String avatarUrl=profileTextPreserve(details,"avatarUrl",current.get("avatar_url"));
   String realName=profileText(details,"realName",current.get("real_name"));
   Integer age=profileAge(details,current.get("age"));
   String graduationSchool=profileText(details,"graduationSchool",current.get("graduation_school"));
   String majorDirection=profileText(details,"majorDirection",current.get("major_direction"));
   String city=profileText(details,"city",current.get("city"));
-  db.update("update users set real_name=?,age=?,graduation_school=?,major_direction=?,city=? where id=?",realName,age,graduationSchool,majorDirection,city,uid);
+  db.update("update users set nickname=?,avatar_url=?,real_name=?,age=?,graduation_school=?,major_direction=?,city=? where id=?",nickname,avatarUrl,realName,age,graduationSchool,majorDirection,city,uid);
   boolean complete=profileComplete(realName,age,graduationSchool,majorDirection,city);
   boolean rewarded=Boolean.TRUE.equals(asBoolean(current.get("profile_rewarded")));
   boolean rewardGranted=false;
@@ -46,7 +48,7 @@ import java.time.format.DateTimeFormatter;
  }
  public List<Map<String,Object>> pointLogs(Long uid){expireUser(uid);return db.queryForList("select * from point_logs where user_id=? order by created_at desc",uid);}
  public List<Map<String,Object>> orders(Long uid){expireOrders();return db.queryForList("select * from orders where user_id=? order by created_at desc",uid);}
- public Map<String,Object> home(Long uid){Map<String,Object> m=new LinkedHashMap<>();m.put("banners",content("BANNER"));m.put("about",content("ABOUT"));m.put("activities",activities(uid).stream().limit(3).toList());m.put("points",uid==null?0:profile(uid).get("points"));if(uid!=null)m.put("questionnaire",activeQuestionnaire(uid));return m;}
+ public Map<String,Object> home(Long uid){Map<String,Object> m=new LinkedHashMap<>();m.put("banners",content("BANNER"));m.put("about",content("ABOUT"));m.put("activities",activities(uid).stream().limit(3).toList());if(uid!=null){Map<String,Object> user=profile(uid);m.put("points",user.get("points"));m.put("user",user);m.put("questionnaire",activeQuestionnaire(uid));}else m.put("points",0);return m;}
  public List<Map<String,Object>> content(String type){
   if("BANNER".equals(type))return activeBanners();
   return db.queryForList("select * from content_items where content_type=? and enabled=true order by sort_order,id",type);
@@ -70,7 +72,14 @@ import java.time.format.DateTimeFormatter;
  @Transactional public Map<String,Object> verifyActivity(Long uid,String token,String method){String[] p=token==null?new String[0]:token.split(":");if(p.length!=2||!constant(sign(p[0]),p[1]))throw new BusinessException("INVALID_QR","核销码无效");Long aid=parseLongObj(p[0]);Map<String,Object>a=activity(aid,uid);String mode=String.valueOf(a.getOrDefault("checkin_mode","QR"));if(!Set.of("QR","BOTH").contains(mode))throw new BusinessException("CHECKIN_METHOD_NOT_ALLOWED","该活动仅支持定位签到");return completeActivityCheckIn(uid,aid,a,"QR",null,null,null,null);}
  @Transactional public Map<String,Object> locationCheckIn(Long uid,Long aid,double latitude,double longitude,double accuracy){if(!Double.isFinite(latitude)||!Double.isFinite(longitude)||!Double.isFinite(accuracy)||Math.abs(latitude)>90||Math.abs(longitude)>180||accuracy<0)throw new BusinessException("INVALID_LOCATION","定位数据无效");Map<String,Object>a=activity(aid,uid);String mode=String.valueOf(a.getOrDefault("checkin_mode","QR"));if(!Set.of("LOCATION","BOTH").contains(mode))throw new BusinessException("CHECKIN_METHOD_NOT_ALLOWED","该活动仅支持二维码签到");if(a.get("latitude")==null||a.get("longitude")==null)throw new BusinessException("ACTIVITY_LOCATION_MISSING","活动签到地点尚未配置");double targetLatitude=((Number)a.get("latitude")).doubleValue(),targetLongitude=((Number)a.get("longitude")).doubleValue();double distance=distanceMeters(latitude,longitude,targetLatitude,targetLongitude);double radius=a.get("checkin_radius_m") instanceof Number n?n.doubleValue():200;if(distance>radius)throw new BusinessException("OUTSIDE_CHECKIN_RANGE","距离活动地点约"+Math.round(distance)+"米，超出"+Math.round(radius)+"米签到范围");return completeActivityCheckIn(uid,aid,a,"LOCATION",latitude,longitude,accuracy,distance);}
 
- private Map<String,Object> completeActivityCheckIn(Long uid,Long aid,Map<String,Object>a,String method,Double latitude,Double longitude,Double accuracy,Double distance){LocalDateTime now=LocalDateTime.now(zone);if(before(now,a.get("start_time"))||after(now,a.get("end_time")))throw new BusinessException("ACTIVITY_NOT_RUNNING","当前不在活动核销时间内");int n=db.update("update activity_participations set status='CHECKED_IN',checked_in_at=?,checkin_method=?,checkin_latitude=?,checkin_longitude=?,checkin_accuracy_m=?,checkin_distance_m=? where user_id=? and activity_id=? and status='REGISTERED'",now,method,latitude,longitude,accuracy,distance,uid,aid);if(n==0){Map<String,Object> existing=one("select * from activity_participations where user_id=? and activity_id=?",uid,aid);if(!"CHECKED_IN".equals(existing.get("status")))throw new BusinessException("NOT_REGISTERED","请先报名活动");return existing;}award(uid,100,"ACTIVITY","ACTIVITY",String.valueOf(aid),"activity:"+aid+":user:"+uid,"参加“"+a.get("title")+"”核销奖励",null);return one("select * from activity_participations where user_id=? and activity_id=?",uid,aid);}
+ private Map<String,Object> completeActivityCheckIn(Long uid,Long aid,Map<String,Object>a,String method,Double latitude,Double longitude,Double accuracy,Double distance){
+  // A participation can only transition from REGISTERED to CHECKED_IN once.
+  // Return the existing record before validating the activity window so retries
+  // remain idempotent even when the retry happens after the activity ends.
+  if("CHECKED_IN".equals(String.valueOf(a.get("participation_status"))))return existingCheckIn(uid,aid);
+  LocalDateTime now=LocalDateTime.now(zone);if(before(now,a.get("start_time"))||after(now,a.get("end_time")))throw new BusinessException("ACTIVITY_NOT_RUNNING","当前不在活动核销时间内");int n=db.update("update activity_participations set status='CHECKED_IN',checked_in_at=?,checkin_method=?,checkin_latitude=?,checkin_longitude=?,checkin_accuracy_m=?,checkin_distance_m=? where user_id=? and activity_id=? and status='REGISTERED'",now,method,latitude,longitude,accuracy,distance,uid,aid);if(n==0){Map<String,Object> existing=new LinkedHashMap<>(one("select * from activity_participations where user_id=? and activity_id=?",uid,aid));if(!"CHECKED_IN".equals(existing.get("status")))throw new BusinessException("NOT_REGISTERED","请先报名活动");existing.put("alreadyCheckedIn",true);return existing;}award(uid,100,"ACTIVITY","ACTIVITY",String.valueOf(aid),"activity:"+aid+":user:"+uid,"参加“"+a.get("title")+"”核销奖励",null);return one("select * from activity_participations where user_id=? and activity_id=?",uid,aid);}
+
+ private Map<String,Object> existingCheckIn(Long uid,Long aid){Map<String,Object> existing=new LinkedHashMap<>(one("select * from activity_participations where user_id=? and activity_id=?",uid,aid));existing.put("alreadyCheckedIn",true);return existing;}
 
  static double distanceMeters(double lat1,double lon1,double lat2,double lon2){double earth=6371000;double p1=Math.toRadians(lat1),p2=Math.toRadians(lat2);double dp=Math.toRadians(lat2-lat1),dl=Math.toRadians(lon2-lon1);double h=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);return earth*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));}
  @Transactional public Map<String,Object> dailyCheckIn(Long uid){LocalDate date=LocalDate.now(zone);db.update("insert into daily_checkins(user_id,check_date,points) values(?,?,10)",uid,date);award(uid,10,"DAILY_CHECKIN","CHECKIN",date.toString(),"checkin:"+uid+":"+date,"每日签到获得10积分",null);return checkinSummary(uid,date.getYear(),date.getMonthValue());}
@@ -139,7 +148,27 @@ import java.time.format.DateTimeFormatter;
  public void expireAll(){for(Map<String,Object>u:db.queryForList("select distinct user_id from point_lots where available_amount>0 and expires_at<=now()"))expireUser(((Number)u.get("user_id")).longValue());}
  @Transactional public void expireUser(Long uid){List<Map<String,Object>> lots=db.queryForList("select * from point_lots where user_id=? and available_amount>0 and expires_at<=now() for update",uid);int n=lots.stream().mapToInt(x->((Number)x.get("available_amount")).intValue()).sum();if(n==0)return;db.update("update point_lots set available_amount=0 where user_id=? and available_amount>0 and expires_at<=now()",uid);db.update("update users set points=greatest(points-?,0) where id=?",n,uid);insertLog(uid,-n,"EXPIRED","YEAR",String.valueOf(Year.now(zone).getValue()-1),"expire:"+uid+":"+LocalDate.now(zone),"年度积分到期清零",null,null);}
 
- @Transactional public Map<String,Object> createOrUpdateUser(String openid,String nickname,String avatar,String phone){Map<String,Object>u=first("select * from users where openid=? for update",openid);if(u==null){KeyHolder kh=new GeneratedKeyHolder();db.update(c->{PreparedStatement ps=c.prepareStatement("insert into users(openid,nickname,avatar_url,phone,points) values(?,?,?,?,0)",Statement.RETURN_GENERATED_KEYS);ps.setString(1,openid);ps.setString(2,nickname);ps.setString(3,avatar);ps.setString(4,phone);return ps;},kh);Long id=Objects.requireNonNull(kh.getKey()).longValue();if(phone!=null&&!phone.isBlank())award(id,100,"REGISTER","USER",String.valueOf(id),"register:"+id,"首次注册小程序",null);return profile(id);}Long id=((Number)u.get("id")).longValue();db.update("update users set nickname=coalesce(?,nickname),avatar_url=coalesce(?,avatar_url),phone=coalesce(?,phone) where id=?",nickname,avatar,phone,id);if(phone!=null&&!phone.isBlank())award(id,100,"REGISTER","USER",String.valueOf(id),"register:"+id,"首次注册小程序",null);return profile(id);}
+ @Transactional public Map<String,Object> createOrUpdateUser(String openid,String nickname,String avatar,String phone){String nNickname=nonNickname(nickname),nAvatar=nonBlank(avatar),nPhone=nonBlank(phone);Map<String,Object>u=first("select * from users where openid=? for update",openid);if(u==null){KeyHolder kh=new GeneratedKeyHolder();db.update(c->{PreparedStatement ps=c.prepareStatement("insert into users(openid,nickname,avatar_url,phone,points) values(?,?,?,?,0)",Statement.RETURN_GENERATED_KEYS);ps.setString(1,openid);ps.setString(2,nNickname);ps.setString(3,nAvatar);ps.setString(4,nPhone);return ps;},kh);Long id=Objects.requireNonNull(kh.getKey()).longValue();if(nPhone!=null)award(id,100,"REGISTER","USER",String.valueOf(id),"register:"+id,"首次注册小程序",null);return profile(id);}Long id=((Number)u.get("id")).longValue();db.update("update users set nickname=coalesce(?,nickname),avatar_url=coalesce(?,avatar_url),phone=coalesce(?,phone) where id=?",nNickname,nAvatar,nPhone,id);if(nPhone!=null)award(id,100,"REGISTER","USER",String.valueOf(id),"register:"+id,"首次注册小程序",null);return profile(id);}
+ @Transactional public Map<String,Object> bindPhone(Long uid,String phone){
+  String normalized=nonBlank(phone);if(normalized==null)throw new BusinessException("PHONE_REQUIRED","请授权手机号");
+  Map<String,Object> current=one("select * from users where id=? for update",uid);String openid=String.valueOf(current.get("openid"));
+  Map<String,Object> existing=first("select * from users where phone=? and id<>? for update",normalized,uid);
+  if(existing!=null){
+   Long existingId=((Number)existing.get("id")).longValue();
+   // Keep the phone owner's account and rebind this WeChat openid to it.
+   db.update("update users set openid=? where id=?", "unlinked:"+uid+":"+UUID.randomUUID(), uid);
+   db.update("update users set openid=?,phone=? where id=?", openid, normalized, existingId);
+   award(existingId,100,"REGISTER","USER",String.valueOf(existingId),"register:"+existingId,"首次注册小程序",null);
+   Map<String,Object> result=new LinkedHashMap<>(profile(existingId));
+   result.put("phoneAlreadyRegistered",true);
+   return result;
+  }
+  Map<String,Object> result=new LinkedHashMap<>(createOrUpdateUser(openid,null,null,normalized));
+  result.put("phoneAlreadyRegistered",false);
+  return result;
+ }
+ private String nonBlank(String value){return value==null||value.isBlank()?null:value.trim();}
+ private String nonNickname(String value){String normalized=nonBlank(value);return normalized!=null&&Set.of("微信用户","测试用户","未设置昵称").contains(normalized)?null:normalized;}
  @Transactional public Map<String,Object> adminAdjust(Long uid,int delta,String reason,Long adminId){if(delta==0)throw new BusinessException("INVALID_POINTS","调整值不能为0");String key="admin:"+adminId+":"+UUID.randomUUID();if(delta>0)award(uid,delta,"ADMIN_ADD","ADMIN",String.valueOf(adminId),key,"管理员增加："+reason,adminId);else{expireUser(uid);Map<String,Object>u=one("select * from users where id=? for update",uid);if(((Number)u.get("points")).intValue()<-delta)throw new BusinessException("INSUFFICIENT_POINTS","扣减值超过余额");int left=-delta;for(Map<String,Object>lot:db.queryForList("select * from point_lots where user_id=? and available_amount>0 and expires_at>now() order by expires_at,id for update",uid)){int take=Math.min(left,((Number)lot.get("available_amount")).intValue());db.update("update point_lots set available_amount=available_amount-? where id=?",take,lot.get("id"));left-=take;if(left==0)break;}db.update("update users set points=points+? where id=?",delta,uid);insertLog(uid,delta,"ADMIN_SUBTRACT","ADMIN",String.valueOf(adminId),key,"管理员减少："+reason,adminId,null);}return profile(uid);}
  @Transactional public Map<String,Object> manualCheckIn(Long uid,Long aid){Map<String,Object>a=activity(aid,uid);int n=db.update("update activity_participations set status='CHECKED_IN',checked_in_at=?,checkin_method='ADMIN' where user_id=? and activity_id=? and status='REGISTERED'",LocalDateTime.now(zone),uid,aid);if(n==0){Map<String,Object>p=one("select * from activity_participations where user_id=? and activity_id=?",uid,aid);if(!"CHECKED_IN".equals(p.get("status")))throw new BusinessException("NOT_REGISTERED","用户未报名");return p;}award(uid,100,"ACTIVITY","ACTIVITY",String.valueOf(aid),"activity:"+aid+":user:"+uid,"参加“"+a.get("title")+"”管理员补签奖励",null);return one("select * from activity_participations where user_id=? and activity_id=?",uid,aid);}
 
@@ -152,6 +181,14 @@ import java.time.format.DateTimeFormatter;
  private String profileText(Map<String,Object> details,String key,Object existing){
   if(!details.containsKey(key))return textOrNull(existing);
   Object value=details.get(key);return textOrNull(value);
+ }
+ private String profileTextPreserve(Map<String,Object> details,String key,Object existing){
+  String value=details.containsKey(key)?textOrNull(details.get(key)):null;
+  return value==null?textOrNull(existing):value;
+ }
+ private String profileNicknamePreserve(Map<String,Object> details,String key,Object existing){
+  Object raw=details.get(key);String value=details.containsKey(key)&&raw!=null?nonNickname(String.valueOf(raw)):null;
+  return value==null?textOrNull(existing):value;
  }
  private String textOrNull(Object value){if(value==null)return null;String text=String.valueOf(value).trim();return text.isEmpty()?null:text;}
  private Integer profileAge(Map<String,Object> details,Object existing){

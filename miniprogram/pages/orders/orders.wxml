@@ -24,7 +24,7 @@
       <view class="line">消耗积分：{{item.points}}</view>
       <view class="line">领取截止：{{item.expire_at}}</view>
       <view wx:if="{{item.cancel_reason}}" class="reason">取消原因：{{item.cancel_reason}}</view>
-      <view wx:if="{{item.status==='PENDING'}}" class="tip">核销时请出示订单编号和绑定手机号</view>
+      <view wx:if="{{item.status==='PENDING'}}" class="tip">{{recordNotice}}</view>
     </view>
   </view>
 </view>
