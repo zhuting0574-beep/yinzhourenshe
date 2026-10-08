@@ -2,9 +2,13 @@
 import { computed, onBeforeUnmount, shallowRef } from 'vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import type { IDomEditor, IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
+import { ElMessage } from 'element-plus'
+import { uploadAdminImage } from '../utils/imageUpload'
 import '@wangeditor/editor/dist/css/style.css'
 
-const props = defineProps<{ modelValue?: string | null }>()
+const props = defineProps<{
+  modelValue?: string | null
+}>()
 const emit = defineEmits<{ (event: 'update:modelValue', value: string): void }>()
 const editorRef = shallowRef<IDomEditor>()
 const editorValue = computed(() => props.modelValue || '<p><br></p>')
@@ -16,16 +20,12 @@ editorConfig.MENU_CONF = {
     maxFileSize: 10 * 1024 * 1024,
     allowedFileTypes: ['image/*'],
     async customUpload(file: File, insertFn: (url: string, alt?: string, href?: string) => void) {
-      const form = new FormData()
-      form.append('file', file)
-      const response = await fetch('/api/admin/uploads', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` },
-        body: form
-      })
-      const result = await response.json()
-      if (!response.ok || !result.success) throw new Error(result.message || '图片上传失败')
-      insertFn(result.data.url, file.name)
+      try {
+        const result = await uploadAdminImage(file)
+        insertFn(result.data.url, file.name)
+      } catch (error: any) {
+        ElMessage.error(error.message || '图片上传失败')
+      }
     }
   }
 }

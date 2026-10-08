@@ -46,13 +46,6 @@ function request(url, options = {}) {
     })
   )
 }
-function mockLogin() {
-  return request('/dev/auth/mock', {
-    method: 'POST',
-    silent: true,
-    data: { openid: 'developer', nickname: '测试用户', phone: '13800000000' },
-  })
-}
 function requireLogin(route) {
   if (app.globalData.token) return Promise.resolve(app.globalData.user)
   app.globalData.pendingRoute = route || ''
@@ -63,8 +56,8 @@ function login() {
     wx.login({
       success: ({ code }) =>
         (code
-          ? request('/mini/auth/wechat', { method: 'POST', silent: true, data: { code } }).catch(() => mockLogin())
-          : mockLogin())
+          ? request('/mini/auth/wechat', { method: 'POST', silent: true, data: { code } })
+          : Promise.reject(new Error('微信登录失败，请重试')))
           .then((result) => {
             app.globalData.token = result.token
             app.globalData.user = result.user
@@ -78,19 +71,7 @@ function login() {
             resolve(user)
           })
           .catch(reject),
-      fail: () => mockLogin()
-        .then((result) => {
-          app.globalData.token = result.token
-          app.globalData.user = result.user
-          wx.setStorageSync('token', result.token)
-          wx.setStorageSync('user', result.user)
-          request('/mini/profile', { silent: true }).catch(() => result.user).then((user) => {
-            app.globalData.user = user
-            wx.setStorageSync('user', user)
-            resolve(user)
-          })
-        })
-        .catch(reject),
+      fail: (error) => reject(error),
     })
   )
 }

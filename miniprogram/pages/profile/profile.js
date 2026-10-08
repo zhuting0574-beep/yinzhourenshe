@@ -15,7 +15,8 @@ Page({
     request('/mini/profile')
       .then((user) => {
         app.globalData.user = Object.assign({}, app.globalData.user || {}, user)
-        this.setData({ user, loggedIn: true, profileComplete: isProfileComplete(user) })
+        const registered = isRegisteredUser(user)
+        this.setData({ user: registered ? user : null, loggedIn: registered, profileComplete: registered && isProfileComplete(user) })
       })
       .catch(() => this.setData({ user: null, loggedIn: false, profileComplete: false }))
   },
@@ -29,9 +30,12 @@ Page({
   },
   phone(e) {
     const code = e.detail && e.detail.code
-    if (!code) return wx.showToast({ title: '请授权手机号', icon: 'none' })
-    const app = getApp()
-    const signedIn = app.globalData.token ? Promise.resolve() : login().then(() => undefined)
+    if (!code) {
+      const detail = String(e.detail && e.detail.errMsg || '')
+      console.warn('[getPhoneNumber failed]', e.detail)
+      return showPhonePermissionHelp(detail)
+    }
+    const signedIn = login().then(() => undefined)
     signedIn
       .then(() => bindPhone(code))
       .then((user) => user.phoneAlreadyRegistered ? user : getWechatProfile().then((profile) => isUsableWechatProfile(profile) ? updateWechatProfile(profile.nickName, profile.avatarUrl) : user))
@@ -39,7 +43,7 @@ Page({
         this.setData({ user, loggedIn: true, profileComplete: isProfileComplete(user) })
         wx.showToast({ title: '注册成功', icon: 'success' })
       })
-      .catch(() => {})
+      .catch((error) => wx.showToast({ title: error && error.message || '手机号授权失败，请重试', icon: 'none' }))
   },
   logout() {
     const app = getApp();
@@ -82,6 +86,26 @@ function isProfileComplete(user) {
   if (typeof user.profile_complete === 'boolean') return user.profile_complete
   const values = [user.realName || user.real_name, user.age, user.graduationSchool || user.graduation_school, user.majorDirection || user.major_direction, user.city]
   return values.every((value) => value !== null && value !== undefined && String(value).trim() !== '')
+}
+
+function isRegisteredUser(user) {
+  return !!user && !!String(user.phone || '').trim()
+}
+
+function showPhonePermissionHelp(detail) {
+  const denied = /deny|cancel|user deny/i.test(detail)
+  const unavailable = /no permission|not authorized|not support|invalid|fail/i.test(detail) && !denied
+  const reason = detail ? `\n\n微信返回：${detail}` : ''
+  wx.showModal({
+    title: '手机号授权失败',
+    content: denied
+      ? '你拒绝了手机号授权。手机号权限没有单独的微信设置开关，请重新点击按钮，在微信弹窗中选择允许。'
+      : unavailable
+        ? `当前小程序可能未开通微信手机号授权能力，请管理员在微信公众平台确认后再试。${reason}`
+        : `微信没有返回手机号授权凭证，请重新点击按钮。${reason}`,
+    confirmText: '知道了',
+    showCancel: false,
+  })
 }
 
 function isUsableWechatProfile(profile) {

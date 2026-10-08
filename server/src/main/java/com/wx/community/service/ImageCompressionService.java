@@ -21,7 +21,9 @@ import java.util.Iterator;
 public class ImageCompressionService {
     private static final int MAX_WIDTH = 1920;
     private static final long MAX_PIXELS = 40_000_000L;
-    private static final float JPEG_QUALITY = 0.90f;
+    private static final int MAX_OUTPUT_BYTES = 200_000;
+    private static final float[] JPEG_QUALITIES = {0.82f, 0.62f, 0.42f, 0.25f};
+    private static final int MIN_DIMENSION = 64;
 
     public ProcessedImage process(byte[] bytes, String contentType) throws IOException {
         if (bytes == null || bytes.length == 0) {
@@ -48,20 +50,38 @@ public class ImageCompressionService {
 
                 int width = reader.getWidth(0);
                 int height = reader.getHeight(0);
-                if (width <= 0 || height <= 0 || (long) width * height > MAX_PIXELS) {
-                    throw new BusinessException("IMAGE_TOO_LARGE", "图片分辨率过大，请先缩小图片");
-                }
+                if (width <= 0 || height <= 0) throw unsupportedImage();
 
-                BufferedImage source = reader.read(0);
-                BufferedImage resized = resize(source, width, height, format.equals("png"));
+                // Decode very large images with source subsampling instead of rejecting them.
+                // This keeps memory bounded while allowing the normal upload flow to compress them.
+                int sample = 1;
+                long pixels = (long) width * height;
+                if (pixels > MAX_PIXELS) {
+                    sample = (int) Math.ceil(Math.sqrt((double) pixels / MAX_PIXELS));
+                }
+                BufferedImage source;
+                if (sample > 1) {
+                    var params = reader.getDefaultReadParam();
+                    params.setSourceSubsampling(sample, sample, 0, 0);
+                    source = reader.read(0, params);
+                } else {
+                    source = reader.read(0);
+                }
+                if (source == null) throw unsupportedImage();
+                boolean png = format.equals("png");
+                BufferedImage resized = resize(source, source.getWidth(), source.getHeight(), format.equals("png"));
                 try {
-                    if (resized == source && !format.equals("png")) {
+                    if (sample == 1 && resized == source && bytes.length < MAX_OUTPUT_BYTES && !png) {
                         return original(bytes, contentType);
                     }
-                    byte[] encoded = encode(resized, format.equals("png") ? "png" : "jpeg");
-                    String extension = format.equals("png") ? "png" : "jpg";
-                    String mimeType = format.equals("png") ? "image/png" : "image/jpeg";
-                    return new ProcessedImage(encoded, extension, mimeType, true);
+                    if (png) {
+                        byte[] encodedPng = encode(resized, "png", null);
+                        if (encodedPng.length < MAX_OUTPUT_BYTES) {
+                            return new ProcessedImage(encodedPng, "png", "image/png", true);
+                        }
+                        return compressedJpeg(resized);
+                    }
+                    return compressedJpeg(resized);
                 } finally {
                     if (resized != source) resized.flush();
                     source.flush();
@@ -76,7 +96,11 @@ public class ImageCompressionService {
         double ratio = Math.min(1d, (double) MAX_WIDTH / width);
         int targetWidth = Math.max(1, (int) Math.round(width * ratio));
         int targetHeight = Math.max(1, (int) Math.round(height * ratio));
-        if (targetWidth == width && targetHeight == height) return source;
+        return resizeTo(source, targetWidth, targetHeight, preserveAlpha);
+    }
+
+    private BufferedImage resizeTo(BufferedImage source, int targetWidth, int targetHeight, boolean preserveAlpha) {
+        if (targetWidth == source.getWidth() && targetHeight == source.getHeight()) return source;
 
         int type = preserveAlpha ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
         BufferedImage target = new BufferedImage(targetWidth, targetHeight, type);
@@ -97,6 +121,10 @@ public class ImageCompressionService {
     }
 
     private byte[] encode(BufferedImage image, String format) throws IOException {
+        return encode(image, format, null);
+    }
+
+    private byte[] encode(BufferedImage image, String format, Float quality) throws IOException {
         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName(format);
         if (!writers.hasNext()) throw new BusinessException("IMAGE_COMPRESSION_FAILED", "图片压缩失败，请更换图片");
         ImageWriter writer = writers.next();
@@ -106,7 +134,7 @@ public class ImageCompressionService {
             ImageWriteParam params = writer.getDefaultWriteParam();
             if (format.equals("jpeg") && params.canWriteCompressed()) {
                 params.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                params.setCompressionQuality(JPEG_QUALITY);
+                params.setCompressionQuality(quality == null ? JPEG_QUALITIES[0] : quality);
             }
             writer.write(null, new IIOImage(image, null, null), params);
             output.flush();
@@ -114,6 +142,53 @@ public class ImageCompressionService {
         } finally {
             writer.dispose();
         }
+    }
+
+    private ProcessedImage compressedJpeg(BufferedImage image) throws IOException {
+        BufferedImage current = toOpaque(image);
+        try {
+            for (int attempt = 0; attempt < 8; attempt++) {
+                byte[] smallest = null;
+                for (float quality : JPEG_QUALITIES) {
+                    byte[] encoded = encode(current, "jpeg", quality);
+                    if (encoded.length < MAX_OUTPUT_BYTES) {
+                        return new ProcessedImage(encoded, "jpg", "image/jpeg", true);
+                    }
+                    if (smallest == null || encoded.length < smallest.length) smallest = encoded;
+                }
+                int width = current.getWidth();
+                int height = current.getHeight();
+                if (Math.max(width, height) <= MIN_DIMENSION) {
+                    throw new BusinessException("IMAGE_COMPRESSION_FAILED", "图片压缩后仍超过200KB，请更换图片");
+                }
+                double scale = Math.min(0.85, Math.max(0.50, Math.sqrt((double) MAX_OUTPUT_BYTES / smallest.length) * 0.90));
+                int nextWidth = Math.max(1, (int) Math.round(width * scale));
+                int nextHeight = Math.max(1, (int) Math.round(height * scale));
+                if (nextWidth == width && nextHeight == height) {
+                    throw new BusinessException("IMAGE_COMPRESSION_FAILED", "图片压缩后仍超过200KB，请更换图片");
+                }
+                BufferedImage next = resizeTo(current, nextWidth, nextHeight, false);
+                if (next != current) current.flush();
+                current = next;
+            }
+            throw new BusinessException("IMAGE_COMPRESSION_FAILED", "图片压缩后仍超过200KB，请更换图片");
+        } finally {
+            current.flush();
+        }
+    }
+
+    private BufferedImage toOpaque(BufferedImage source) {
+        if (source.getType() == BufferedImage.TYPE_INT_RGB) return source;
+        BufferedImage target = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = target.createGraphics();
+        try {
+            graphics.setColor(Color.WHITE);
+            graphics.fillRect(0, 0, target.getWidth(), target.getHeight());
+            graphics.drawImage(source, 0, 0, null);
+        } finally {
+            graphics.dispose();
+        }
+        return target;
     }
 
     private ProcessedImage original(byte[] bytes, String contentType) {

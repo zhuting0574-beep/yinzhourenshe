@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -112,6 +113,48 @@ class ImageCompressionServiceTest {
     }
 
     @Test
+    void oversizedJpegIsCompressedBelow200Kilobytes() throws Exception {
+        BufferedImage source = noisyImage(1200, 900);
+        byte[] original = encode(source, "jpeg");
+        assertTrue(original.length > 200_000);
+
+        ImageCompressionService.ProcessedImage processed = service.process(original, "image/jpeg");
+
+        assertTrue(processed.compressed());
+        assertTrue(processed.bytes().length <= 200_000);
+        assertNotNull(ImageIO.read(new ByteArrayInputStream(processed.bytes())));
+    }
+
+    @Test
+    void oversizedPngFallsBackToCompressedJpegWhenNeeded() throws Exception {
+        BufferedImage source = noisyImage(600, 400);
+        byte[] original = encode(source, "png");
+        assertTrue(original.length > 200_000);
+
+        ImageCompressionService.ProcessedImage processed = service.process(original, "image/png");
+
+        assertTrue(processed.compressed());
+        assertTrue(processed.bytes().length <= 200_000);
+        assertEquals("jpg", processed.extension());
+        assertEquals("image/jpeg", processed.contentType());
+    }
+
+    @Test
+    void veryLargeResolutionIsSubsampledInsteadOfRejected() throws Exception {
+        BufferedImage source = new BufferedImage(8000, 6000, BufferedImage.TYPE_BYTE_GRAY);
+        byte[] original = encode(source, "jpeg");
+        source.flush();
+
+        ImageCompressionService.ProcessedImage processed = service.process(original, "image/jpeg");
+        BufferedImage result = ImageIO.read(new ByteArrayInputStream(processed.bytes()));
+
+        assertTrue(processed.compressed());
+        assertTrue(processed.bytes().length < 200_000);
+        assertEquals(1920, result.getWidth());
+        assertEquals(1440, result.getHeight());
+    }
+
+    @Test
     void emptyFileIsRejected() {
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> service.process(new byte[0], "image/jpeg"));
@@ -131,5 +174,16 @@ class ImageCompressionServiceTest {
                 image.setRGB(x, y, color.getRGB());
             }
         }
+    }
+
+    private static BufferedImage noisyImage(int width, int height) {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Random random = new Random(42);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                image.setRGB(x, y, random.nextInt(0x1000000));
+            }
+        }
+        return image;
     }
 }

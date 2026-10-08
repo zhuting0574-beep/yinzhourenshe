@@ -3,11 +3,12 @@ import { request } from '../../utils/request'
 function normalizeBanners(banners: any) {
   if (!Array.isArray(banners)) return []
   return banners
-    .filter((banner: any) => banner && (banner.image_url || banner.imageUrl) && (banner.activity_id || banner.activityId))
+    // A banner can be display-only, so an activity relation is optional.
+    .filter((banner: any) => banner && (banner.image_url || banner.imageUrl))
     .map((banner: any) => ({
       ...banner,
       imageUrl: banner.image_url || banner.imageUrl,
-      activityId: banner.activity_id || banner.activityId,
+      activityId: banner.activity_id ?? banner.activityId ?? '',
     }))
 }
 
@@ -82,7 +83,7 @@ Page({
 })
 
 function getDisplayName(user: any, loggedIn: boolean) {
-  if (!loggedIn) return ''
+  if (!loggedIn || !String(user?.phone || '').trim()) return ''
   const realName = user?.realName || user?.real_name
   const nickname = user?.nickname
   return String(realName || nickname || '微信用户').trim()

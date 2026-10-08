@@ -73,16 +73,18 @@ import java.sql.*; import java.time.*; import java.util.*;
   if(scalar("select count(*) from content_items where content_type='BANNER'").intValue()>=4)throw new BusinessException("BANNER_LIMIT","banner最多4个");
   LocalDateTime start=parseBannerTime(b.get("startTime"),"开始时间"),end=parseBannerTime(b.get("endTime"),"结束时间");
   if(start.isAfter(end))throw new BusinessException("INVALID_BANNER_TIME","开始时间不能晚于结束时间");
-  String image=requiredText(b.get("imageUrl"),"图片不能为空");Long activityId=requiredId(b.get("activityId"));validateBannerActivity(activityId);
+  String image=requiredText(b.get("imageUrl"),"图片不能为空");Long activityId=optionalId(b.get("activityId"));if(activityId!=null)validateBannerActivity(activityId);
   Boolean enabled=optionalBoolean(b.get("enabled"),true);Integer sortOrder=optionalInteger(b.get("sortOrder"),0);
-  Long id=insert("insert into content_items(content_type,image_url,start_time,end_time,activity_id,enabled,sort_order) values('BANNER',?,?,?,?,?,?)",Map.of("imageUrl",image,"startTime",start,"endTime",end,"activityId",activityId,"enabled",enabled,"sortOrder",sortOrder),"imageUrl","startTime","endTime","activityId","enabled","sortOrder");
+  // LinkedHashMap permits a null activityId, which represents a purely visual banner.
+  Map<String,Object> values=new LinkedHashMap<>();values.put("imageUrl",image);values.put("startTime",start);values.put("endTime",end);values.put("activityId",activityId);values.put("enabled",enabled);values.put("sortOrder",sortOrder);
+  Long id=insert("insert into content_items(content_type,image_url,start_time,end_time,activity_id,enabled,sort_order) values('BANNER',?,?,?,?,?,?)",values,"imageUrl","startTime","endTime","activityId","enabled","sortOrder");
   return ApiResponse.ok(bannerById(id));
  }
  @PutMapping("/banners/{id}") @Transactional public ApiResponse<?> bannerUpdate(@PathVariable Long id,@RequestBody Map<String,Object>b){
   requireBanner(id);
   LocalDateTime start=parseBannerTime(b.get("startTime"),"开始时间"),end=parseBannerTime(b.get("endTime"),"结束时间");
   if(start.isAfter(end))throw new BusinessException("INVALID_BANNER_TIME","开始时间不能晚于结束时间");
-  String image=requiredText(b.get("imageUrl"),"图片不能为空");Long activityId=requiredId(b.get("activityId"));validateBannerActivity(activityId);
+  String image=requiredText(b.get("imageUrl"),"图片不能为空");Long activityId=optionalId(b.get("activityId"));if(activityId!=null)validateBannerActivity(activityId);
   Boolean enabled=optionalBoolean(b.get("enabled"),true);Integer sortOrder=optionalInteger(b.get("sortOrder"),0);
   db.update("update content_items set image_url=?,start_time=?,end_time=?,activity_id=?,enabled=?,sort_order=? where id=? and content_type='BANNER'",image,start,end,activityId,enabled,sortOrder,id);
   return ApiResponse.ok(bannerById(id));
@@ -101,7 +103,13 @@ import java.sql.*; import java.time.*; import java.util.*;
  private void requireBanner(Long id){if(db.queryForObject("select count(*) from content_items where id=? and content_type='BANNER'",Integer.class,id)==0)throw new BusinessException("NOT_FOUND","banner不存在");}
  private void validateBannerActivity(Long id){if(db.queryForObject("select count(*) from activities where id=?",Integer.class,id)==0)throw new BusinessException("INVALID_ACTIVITY","关联活动不存在");}
  private String requiredText(Object value,String message){if(value==null||String.valueOf(value).isBlank())throw new BusinessException("INVALID_BANNER","图片不能为空");return String.valueOf(value).trim();}
- private Long requiredId(Object value){try{long id=Long.parseLong(String.valueOf(value));if(id<=0)throw new NumberFormatException();return id;}catch(Exception e){throw new BusinessException("INVALID_ACTIVITY","请选择有效活动");}}
+ private Long optionalId(Object value){
+  if(value==null)return null;
+  String text=String.valueOf(value).trim();
+  if(text.isEmpty()||"null".equalsIgnoreCase(text))return null;
+  try{long id=Long.parseLong(text);if(id<=0)throw new NumberFormatException();return id;}
+  catch(Exception e){throw new BusinessException("INVALID_ACTIVITY","请选择有效活动");}
+ }
  private LocalDateTime parseBannerTime(Object value,String label){try{String text=String.valueOf(value).trim();if(text.isEmpty()||"null".equals(text))throw new IllegalArgumentException();return LocalDateTime.parse(text.replace(' ','T'));}catch(Exception e){throw new BusinessException("INVALID_BANNER_TIME",label+"不能为空或格式错误");}}
  private Boolean optionalBoolean(Object value,boolean fallback){if(value==null)return fallback;if(value instanceof Boolean b)return b;String text=String.valueOf(value);if("true".equalsIgnoreCase(text))return true;if("false".equalsIgnoreCase(text))return false;throw new BusinessException("INVALID_BANNER","启用状态格式无效");}
  private Integer optionalInteger(Object value,int fallback){if(value==null)return fallback;try{return Integer.valueOf(String.valueOf(value));}catch(Exception e){throw new BusinessException("INVALID_BANNER","排序值必须为整数");}}

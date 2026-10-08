@@ -55,7 +55,8 @@ import java.time.format.DateTimeFormatter;
  }
  private List<Map<String,Object>> activeBanners(){
   LocalDateTime now=LocalDateTime.now(zone);
-  return db.queryForList("select ci.* from content_items ci join activities a on a.id=ci.activity_id where ci.content_type='BANNER' and ci.enabled=true and ci.image_url is not null and trim(ci.image_url)<>'' and ci.start_time is not null and ci.end_time is not null and ? >= ci.start_time and ? <= ci.end_time order by ci.sort_order,ci.id",now,now);
+  // An activity is optional for banners; an unbound banner is display-only.
+  return db.queryForList("select ci.* from content_items ci left join activities a on a.id=ci.activity_id where ci.content_type='BANNER' and ci.enabled=true and ci.image_url is not null and trim(ci.image_url)<>'' and ci.start_time is not null and ci.end_time is not null and ? >= ci.start_time and ? <= ci.end_time order by ci.sort_order,ci.id",now,now);
  }
  public Map<String,Object> dashboardTrends(String dimension){
   String d=Set.of("year","month","day").contains(dimension)?dimension:"month"; LocalDate today=LocalDate.now(zone); LocalDate start=d.equals("year")?today.withDayOfYear(1).minusYears(4):d.equals("month")?today.withDayOfMonth(1).minusMonths(11):today.minusDays(29); LocalDate end=today.plusDays(1); String format=d.equals("year")?"%Y":d.equals("month")?"%Y-%m":"%Y-%m-%d";

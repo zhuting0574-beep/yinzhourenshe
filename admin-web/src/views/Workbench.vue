@@ -3,6 +3,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import * as echarts from 'echarts'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { UploadRequestOptions } from 'element-plus'
+import { imageUploading as uploading, uploadAdminImage } from '../utils/imageUpload'
 import api from '../api'
 import AmapLocationPicker from '../components/AmapLocationPicker.vue'
 import RichTextEditor from '../components/RichTextEditor.vue'
@@ -22,7 +24,6 @@ const dashboard = ref<any>({})
 const dialog = ref(false)
 const dialogMode = ref('')
 const editing = reactive<any>({})
-const aboutImageUploading = ref(false)
 const search = ref('')
 const qr = ref('')
 const qrImageUrl = ref('')
@@ -64,7 +65,7 @@ const columnLabels: Record<string, Record<string, string>> = {
   orders: { order_no: '订单编号', product_name: '商品名称', nickname: '用户昵称', phone: '手机号', points: '消耗积分', expire_at: '领取截止', status: '订单状态' },
   points: { nickname: '用户昵称', phone: '手机号', amount: '积分变动', balance: '积分余额', type: '变动类型', remark: '变动说明', created_at: '记录时间' },
   content: { title: '名称', content: '值', updated_at: '修改时间' },
-  banners: { image_url: '图片', start_time: '开始时间', end_time: '结束时间', activity_title: '关联活动', enabled: '启用', sort_order: '排序' }
+  banners: { image_url: '图片', start_time: '开始时间', end_time: '结束时间', activity_title: '关联活动（可选）', enabled: '启用', sort_order: '排序' }
 }
 const valueLabels: Record<string, string> = {
   ACTIVE: '正常', DRAFT: '草稿', PUBLISHED: '已发布', OFFLINE: '已下架', ENDED: '已结束',
@@ -144,7 +145,7 @@ function create() {
   if (props.module === 'activities') Object.assign(editing, { checkinMode: 'QR', checkinRadiusM: 200, description: '<p><br></p>' })
   if (props.module === 'questionnaires') Object.assign(editing, { questions: [], pinned: false })
   if (props.module === 'products') Object.assign(editing, { status: 'ON_SALE', stock: 0, pointsCost: 1, description: '<p><br></p>' })
-  if (props.module === 'banners') Object.assign(editing, { imageUrl: '', startTime: '', endTime: '', activityId: '', enabled: true, sortOrder: rows.value.length })
+  if (props.module === 'banners') Object.assign(editing, { imageUrl: '', startTime: '', endTime: '', activityId: null, enabled: true, sortOrder: rows.value.length })
   dialogMode.value = 'create'
   dialog.value = true
 }
@@ -173,9 +174,12 @@ async function save() {
     const body = { ...editing }
     if (props.module === 'banners') {
       if (!body.imageUrl) throw new Error('请上传 banner 图片')
-      if (!body.activityId) throw new Error('请选择关联活动')
       if (!body.startTime || !body.endTime) throw new Error('请选择开始时间和结束时间')
       if (normalizeDateTime(body.startTime) > normalizeDateTime(body.endTime)) throw new Error('结束时间不能早于开始时间')
+      // 未选择活动时提交 null，表示该 banner 仅展示，不绑定点击跳转。
+      body.activityId = body.activityId === '' || body.activityId === undefined || body.activityId === null
+        ? null
+        : Number(body.activityId)
     }
     if (props.module === 'activities') {
       body.points = 100
@@ -311,15 +315,19 @@ function uploadSuccess(result: any) {
   else if (['content', 'banners'].includes(props.module)) editing.imageUrl = url
   else editing.coverUrl = url
 }
-function contentImageUploadChange(file: any) {
-  if (editing.contentType === 'ABOUT' && file.status === 'ready') aboutImageUploading.value = true
+
+async function uploadImage(options: UploadRequestOptions) {
+  try {
+    const result = await uploadAdminImage(options.file)
+    options.onSuccess?.(result)
+    return result
+  } catch (error: any) {
+    options.onError?.(error)
+    throw error
+  }
 }
-function contentImageUploadSuccess(result: any) {
-  uploadSuccess(result)
-  aboutImageUploading.value = false
-}
-function contentImageUploadError(error: Error) {
-  aboutImageUploading.value = false
+
+function imageUploadError(error: any) {
   ElMessage.error(error.message || '图片上传失败')
 }
 async function removeBanner(row: any) {
@@ -394,7 +402,7 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
     <el-form v-else label-width="110px">
       <template v-if="module === 'activities'">
         <el-form-item label="标题"><el-input v-model="editing.title" /></el-form-item>
-        <el-form-item label="封面"><el-input v-model="editing.coverUrl" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" :on-success="uploadSuccess"><el-button>上传图片</el-button></el-upload><span class="upload-size-tip">建议尺寸：1380 × 560 px（约 2.5:1）；主体留出安全边距</span></el-form-item>
+        <el-form-item label="封面"><el-input v-model="editing.coverUrl" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" :disabled="uploading" :http-request="uploadImage" :on-success="uploadSuccess" :on-error="imageUploadError"><el-button :loading="uploading" :disabled="uploading">上传图片</el-button></el-upload><span class="upload-size-tip">建议尺寸：1380 × 560 px（约 2.5:1）；主体留出安全边距</span></el-form-item>
         <el-form-item label="报名开始"><el-date-picker v-model="editing.signupStart" class="date-time-picker" type="datetime" format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择报名开始时间" /></el-form-item>
         <el-form-item label="报名结束"><el-date-picker v-model="editing.signupEnd" class="date-time-picker" type="datetime" format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择报名结束时间" /></el-form-item>
         <el-form-item label="活动开始"><el-date-picker v-model="editing.startTime" class="date-time-picker" type="datetime" format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择活动开始时间" /></el-form-item>
@@ -410,7 +418,7 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
       </template>
       <template v-else-if="module === 'questionnaires'">
         <el-form-item label="名称"><el-input v-model="editing.name" /></el-form-item>
-        <el-form-item label="弹框图片"><el-input v-model="editing.popupImageUrl" placeholder="上传后自动填写图片地址" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" accept="image/*" :on-success="uploadSuccess"><el-button>上传图片</el-button></el-upload><el-image v-if="editing.popupImageUrl" :src="editing.popupImageUrl" fit="contain" style="width: 160px; height: 100px; margin-left: 12px" /><span class="upload-size-tip">建议尺寸：600 × 600 px（接近方形，主体居中）</span></el-form-item>
+        <el-form-item label="弹框图片"><el-input v-model="editing.popupImageUrl" placeholder="上传后自动填写图片地址" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" accept="image/*" :disabled="uploading" :http-request="uploadImage" :on-success="uploadSuccess" :on-error="imageUploadError"><el-button :loading="uploading" :disabled="uploading">上传图片</el-button></el-upload><el-image v-if="editing.popupImageUrl" :src="editing.popupImageUrl" fit="contain" style="width: 160px; height: 100px; margin-left: 12px" /><span class="upload-size-tip">建议尺寸：600 × 600 px（接近方形，主体居中）</span></el-form-item>
         <el-form-item label="弹框标题"><el-input v-model="editing.popupTitle" placeholder="默认：填写调查问卷" maxlength="200" /></el-form-item>
         <el-form-item label="问卷头部"><el-input v-model="editing.headerTitle" placeholder="默认：问卷任务" maxlength="200" /></el-form-item>
         <el-form-item label="置顶问卷"><el-switch v-model="editing.pinned" active-text="置顶" inactive-text="普通" /></el-form-item>
@@ -424,21 +432,21 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
         </div><el-button @click="addQuestion">+ 添加题目</el-button></div></el-form-item>
       </template>
       <template v-else-if="module === 'products'">
-        <el-form-item label="名称"><el-input v-model="editing.name" /></el-form-item><el-form-item label="图片"><el-input v-model="editing.coverUrl" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" :on-success="uploadSuccess"><el-button>上传图片</el-button></el-upload><span class="upload-size-tip">建议尺寸：600 × 600 px（接近方形，主体居中）</span></el-form-item>
+        <el-form-item label="名称"><el-input v-model="editing.name" /></el-form-item><el-form-item label="图片"><el-input v-model="editing.coverUrl" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" :disabled="uploading" :http-request="uploadImage" :on-success="uploadSuccess" :on-error="imageUploadError"><el-button :loading="uploading" :disabled="uploading">上传图片</el-button></el-upload><span class="upload-size-tip">建议尺寸：600 × 600 px（接近方形，主体居中）</span></el-form-item>
         <el-form-item label="所需积分"><el-input-number v-model="editing.pointsCost" :min="1" /></el-form-item><el-form-item v-if="dialogMode === 'create'" label="初始库存"><el-input-number v-model="editing.stock" :min="0" /></el-form-item>
         <el-form-item label="状态"><el-select v-model="editing.status"><el-option label="上架" value="ON_SALE" /><el-option label="下架" value="OFFLINE" /></el-select></el-form-item><el-form-item label="说明"><RichTextEditor v-model="editing.description" /></el-form-item>
       </template>
       <template v-else-if="module === 'banners'">
-        <el-form-item label="图片"><el-input v-model="editing.imageUrl" placeholder="上传后自动填写图片地址" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" accept="image/*" :on-success="uploadSuccess"><el-button>上传图片</el-button></el-upload><el-image v-if="editing.imageUrl" :src="editing.imageUrl" fit="contain" style="width: 220px; height: 100px; margin-left: 12px" /><span class="upload-size-tip">建议尺寸：1500 × 840 px（约 16:9）</span></el-form-item>
+        <el-form-item label="图片"><el-input v-model="editing.imageUrl" placeholder="上传后自动填写图片地址" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" accept="image/*" :disabled="uploading" :http-request="uploadImage" :on-success="uploadSuccess" :on-error="imageUploadError"><el-button :loading="uploading" :disabled="uploading">上传图片</el-button></el-upload><el-image v-if="editing.imageUrl" :src="editing.imageUrl" fit="contain" style="width: 220px; height: 100px; margin-left: 12px" /><span class="upload-size-tip">建议尺寸：1500 × 840 px（约 16:9）</span></el-form-item>
         <el-form-item label="开始时间"><el-date-picker v-model="editing.startTime" class="date-time-picker" type="datetime" format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择开始时间" /></el-form-item>
         <el-form-item label="结束时间"><el-date-picker v-model="editing.endTime" class="date-time-picker" type="datetime" format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择结束时间" /></el-form-item>
-        <el-form-item label="关联活动"><el-select v-model="editing.activityId" class="full-control" filterable placeholder="选择 banner 点击后打开的活动"><el-option v-for="activity in activities" :key="activity.id" :label="activity.title" :value="activity.id" /></el-select></el-form-item>
+        <el-form-item label="关联活动（可选）"><el-select v-model="editing.activityId" class="full-control" filterable clearable placeholder="不关联活动（纯展示）"><el-option v-for="activity in activities" :key="activity.id" :label="activity.title" :value="activity.id" /></el-select><span class="field-tip">可不选择活动；不关联时 banner 仅展示，不跳转</span></el-form-item>
         <el-form-item label="启用"><el-switch v-model="editing.enabled" /></el-form-item>
         <el-form-item label="排序"><el-input-number v-model="editing.sortOrder" :min="0" :precision="0" /></el-form-item>
       </template>
       <template v-else>
         <el-form-item label="内容类型"><el-select v-model="editing.contentType" disabled><el-option v-for="t in ['ABOUT','RULES','SERVICE','PRODUCT_NOTICE','ORDER_SUCCESS','ORDER_RECORD']" :key="t" :value="t" /></el-select></el-form-item><el-form-item label="名称"><el-input v-model="editing.title" disabled /></el-form-item>
-        <el-form-item label="图片"><el-input v-model="editing.imageUrl" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" accept="image/*" :on-change="contentImageUploadChange" :on-success="contentImageUploadSuccess" :on-error="contentImageUploadError"><el-button :loading="aboutImageUploading" :disabled="aboutImageUploading">{{ aboutImageUploading ? '上传中...' : '上传图片' }}</el-button></el-upload><span class="upload-size-tip">建议宽度：1200 px，比例可按内容需要调整</span></el-form-item>
+        <el-form-item label="图片"><el-input v-model="editing.imageUrl" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" accept="image/*" :disabled="uploading" :http-request="uploadImage" :on-success="uploadSuccess" :on-error="imageUploadError"><el-button :loading="uploading" :disabled="uploading">上传图片</el-button></el-upload><span class="upload-size-tip">建议宽度：1200 px，比例可按内容需要调整</span></el-form-item>
         <el-form-item label="内容"><RichTextEditor v-model="editing.content" /></el-form-item>
         <el-form-item label="地址"><el-input v-model="editing.address" /></el-form-item>
         <el-form-item v-if="editing.contentType === 'SERVICE'" label="地图位置"><AmapLocationPicker v-model:longitude="editing.longitude" v-model:latitude="editing.latitude" :address="editing.address" /></el-form-item>

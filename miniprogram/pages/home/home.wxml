@@ -20,7 +20,7 @@
       wx:for="{{banners}}"
       wx:for-item="banner"
       wx:key="id"
-      data-activity-id="{{banner.activityId}}"
+      data-activity-id="{{banner.activityId || ''}}"
       bindtap="openBanner"
     >
       <image class="hero-image" src="{{banner.imageUrl}}" mode="aspectFill"/>
