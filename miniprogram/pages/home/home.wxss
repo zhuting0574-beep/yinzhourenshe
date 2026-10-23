@@ -2,25 +2,6 @@
   position: relative;
   background: #e9f8ff;
 }
-.home-capsule {
-  position: absolute;
-  z-index: 3;
-  right: 26rpx;
-  top: calc(26rpx + env(safe-area-inset-top));
-  height: 56rpx;
-  padding: 0 17rpx;
-  display: flex;
-  align-items: center;
-  gap: 14rpx;
-  border-radius: 30rpx;
-  background: rgba(255, 255, 255, 0.72);
-  font-size: 22rpx;
-}
-.home-capsule .i {
-  width: 1rpx;
-  height: 28rpx;
-  background: #888;
-}
 .hero {
   width: 100%;
   height: 420rpx;

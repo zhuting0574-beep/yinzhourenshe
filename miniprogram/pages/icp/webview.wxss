@@ -1,0 +1,4 @@
+.icp-webview-page { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+.icp-webview { flex: 1; min-height: 0; }
+.icp-webview-fallback { min-height: 70vh; padding: 80rpx 40rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8194a1; text-align: center; }
+.icp-webview-fallback button { width: 100%; margin-top: 36rpx; }

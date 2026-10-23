@@ -7,6 +7,16 @@ import java.sql.*; import java.time.*; import java.util.*;
  private final JdbcTemplate db; private final PlatformService s; private final TokenService tokens; private final PasswordEncoder passwords; private final ObjectMapper json; private final HtmlSanitizer html;
  public AdminController(JdbcTemplate d,PlatformService s,TokenService t,PasswordEncoder p,ObjectMapper j,HtmlSanitizer h){db=d;this.s=s;tokens=t;passwords=p;json=j;html=h;}
  @PostMapping("/auth/login") public ApiResponse<?> login(@RequestBody Map<String,Object>b){List<Map<String,Object>>r=db.queryForList("select * from admins where username=? and status='ACTIVE'",b.get("username"));if(r.isEmpty()||!passwords.matches(String.valueOf(b.get("password")),String.valueOf(r.get(0).get("password_hash"))))throw new BusinessException("LOGIN_FAILED","账号或密码错误");Long id=((Number)r.get(0).get("id")).longValue();String role=String.valueOf(r.get(0).getOrDefault("role","ADMIN"));db.update("update admins set last_login_at=now() where id=?",id);return ApiResponse.ok(Map.of("token",tokens.issue(role,id),"username",r.get(0).get("username"),"role",role));}
+ @PutMapping("/auth/password") @Transactional public ApiResponse<?> changePassword(@AuthenticationPrincipal AuthUser admin,@RequestBody Map<String,Object>b){
+  String current=String.valueOf(b.getOrDefault("currentPassword",""));
+  String next=String.valueOf(b.getOrDefault("newPassword",""));
+  Map<String,Object> row=db.queryForMap("select password_hash from admins where id=? and status='ACTIVE'",admin.id());
+  if(!passwords.matches(current,String.valueOf(row.get("password_hash"))))throw new BusinessException("INVALID_CURRENT_PASSWORD","当前密码不正确");
+  AdminPasswordPolicy.validate(next);
+  if(passwords.matches(next,String.valueOf(row.get("password_hash"))))throw new BusinessException("PASSWORD_UNCHANGED","新密码不能与当前密码相同");
+  db.update("update admins set password_hash=? where id=?",passwords.encode(next),admin.id());
+  return ApiResponse.ok(true);
+ }
  @GetMapping("/dashboard") public ApiResponse<?> dashboard(){return ApiResponse.ok(Map.of("users",scalar("select count(*) from users"),"activities",scalar("select count(*) from activities"),"orders",scalar("select count(*) from orders"),"pointsIssued",scalar("select coalesce(sum(amount),0) from point_logs where amount>0")));}
  @GetMapping("/dashboard/trends") public ApiResponse<?> dashboardTrends(@RequestParam(defaultValue="month")String dimension){return ApiResponse.ok(s.dashboardTrends(dimension));}
  @GetMapping("/users") public ApiResponse<?> users(@RequestParam(defaultValue="")String phone){return ApiResponse.ok(db.queryForList("select id,nickname,avatar_url,phone,points,status,created_at from users where (?='' or phone=?) order by id desc limit 500",phone,phone));}

@@ -9,6 +9,7 @@ import api from '../api'
 import AmapLocationPicker from '../components/AmapLocationPicker.vue'
 import RichTextEditor from '../components/RichTextEditor.vue'
 import QuestionnaireResults from '../components/QuestionnaireResults.vue'
+import AdminPasswordDialog from '../components/AdminPasswordDialog.vue'
 import { useSession } from '../stores/session'
 
 const props = defineProps<{ module: string }>()
@@ -36,6 +37,7 @@ const resultsQuestionnaire = ref<any | null>(null)
 const userDetailDialog = ref(false)
 const userDetail = ref<any | null>(null)
 const userDetailLoading = ref(false)
+const passwordDialog = ref(false)
 
 const menus = [
   ['dashboard', '数据概览'], ['users', '用户管理'], ['activities', '活动管理'],
@@ -350,7 +352,7 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
     <el-aside width="238px">
       <div class="logo"><span>π</span><div><b>鄞领π</b><small>运营管理平台</small></div></div>
       <el-menu :default-active="module" @select="go"><el-menu-item v-for="m in visibleMenus" :key="m[0]" :index="m[0]">{{ m[1] }}</el-menu-item></el-menu>
-      <div class="operator">{{ session.username }}<el-button link @click="session.logout">退出</el-button></div>
+      <div class="operator"><span>{{ session.username }}</span><div><el-button link @click="passwordDialog = true">修改密码</el-button><el-button link @click="session.logout">退出</el-button></div></div>
     </el-aside>
     <el-container>
       <el-header><span>工作台 / <b>{{ title }}</b></span><span>{{ new Date().toLocaleDateString() }}</span></el-header>
@@ -484,4 +486,5 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
       </el-table>
     </div>
   </el-dialog>
+  <AdminPasswordDialog v-model="passwordDialog" />
 </template>

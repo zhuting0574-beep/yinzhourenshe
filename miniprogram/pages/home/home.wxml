@@ -1,10 +1,5 @@
 <view class="page-shell home-page">
-  <view class="safe-top"></view>
-  <view class="home-capsule">
-    <text>•••</text>
-    <view class="i"></view>
-    <text>◎</text>
-  </view>
+  <safe-area-top />
   <swiper
     wx:if="{{banners.length}}"
     class="hero"
@@ -73,4 +68,5 @@
       <button class="survey-go" catchtap="goSurvey">去填写 <text>+100积分</text></button>
     </view>
   </view>
+  <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
 </view>

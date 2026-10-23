@@ -1,11 +1,9 @@
 <view class="page-shell profile-page">
   <view class="profile-bg">
     <image class="profile-silhouette" src="/assets/ux/profile-silhouette.png" mode="widthFix"/>
-    <view class="safe-top"></view>
+    <safe-area-top />
     <view class="mini-top">
-      <view></view>
       <view class="mini-top__title">个人中心</view>
-      <view class="capsule">•••　│　◎</view>
     </view>
     <view class="account" bindtap="openLogin">
       <image src="{{user.avatar_url||user.avatarUrl||'/assets/profile-avatar.png'}}"/>
@@ -53,4 +51,5 @@
       <scroll-view scroll-y class="rules-modal__body"><rich-text nodes="{{rulesContent}}" /></scroll-view>
     </view>
   </view>
+  <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
 </view>

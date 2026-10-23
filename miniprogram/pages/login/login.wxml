@@ -1,11 +1,10 @@
 <view class="login-page">
-  <view class="safe-top"></view>
+  <safe-area-top />
   <view class="mini-top">
-    <button class="mini-nav__button" bindtap="back" aria-label="返回上一页">
-      <view class="mini-nav__back"></view>
+    <button class="login-back" bindtap="back" aria-label="返回上一页">
+      <view class="login-back__icon"></view>
     </button>
     <view class="mini-top__title">登录</view>
-    <view class="capsule">•••　│　◎</view>
   </view>
   <view class="login-content">
     <image class="login-avatar" src="/assets/profile-avatar.png" mode="aspectFill" />
@@ -14,4 +13,5 @@
     <button class="login-button" bindtap="submit" loading="{{submitting}}">微信一键登录</button>
     <view class="login-note">登录即表示同意鄞领π用户服务协议</view>
   </view>
+  <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
 </view>

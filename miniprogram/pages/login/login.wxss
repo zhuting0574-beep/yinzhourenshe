@@ -5,8 +5,25 @@
 .login-page .mini-top {
   padding: 0 28rpx;
 }
-.login-page .mini-nav__button {
+.login-back {
+  width: 56rpx;
+  height: 56rpx;
   margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+.login-back::after {
+  border: 0;
+}
+.login-back__icon {
+  width: 20rpx;
+  height: 20rpx;
+  border-left: 4rpx solid #222;
+  border-bottom: 4rpx solid #222;
+  transform: rotate(45deg);
 }
 .login-content {
   display: flex;

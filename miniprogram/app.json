@@ -12,8 +12,13 @@
     "pages/rules/rules",
     "pages/login/login",
     "pages/profile/profile",
-    "pages/profile-edit/profile-edit"
+    "pages/profile-edit/profile-edit",
+    "pages/icp/icp",
+    "pages/icp/webview"
   ],
+  "usingComponents": {
+    "safe-area-top": "/components/safe-area-top/index"
+  },
   "window": {
     "navigationStyle": "custom",
     "navigationBarTitleText": "鄞领π",
@@ -28,6 +33,7 @@
     }
   },
   "requiredPrivateInfos": ["getLocation"],
+  "lazyCodeLoading": "requiredComponents",
   "tabBar": {
     "custom": true,
     "color": "#8194a1",

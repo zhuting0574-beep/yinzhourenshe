@@ -1,0 +1,15 @@
+<view class="icp-page">
+  <safe-area-top />
+  <view class="mini-top">
+    <text class="mini-top__title">备案信息</text>
+  </view>
+  <view class="icp-card">
+    <text class="icp-card__title">网站备案信息</text>
+    <text class="icp-card__number">浙ICP备2026084324号-1</text>
+    <text class="icp-card__desc">备案信息可在工业和信息化部政务服务平台查询。</text>
+    <button class="primary icp-button" bindtap="copyUrl">复制查询网址</button>
+    <button class="icp-open" bindtap="openQuery">尝试打开备案查询</button>
+    <text class="icp-card__url">https://beian.miit.gov.cn/</text>
+  </view>
+  <view class="icp-footer">浙ICP备2026084324号-1</view>
+</view>

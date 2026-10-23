@@ -1,0 +1,8 @@
+.icp-page { min-height: 100vh; padding: 0 28rpx 40rpx; box-sizing: border-box; background: #e9f8ff; }
+.icp-card { margin-top: 80rpx; padding: 42rpx 32rpx; border-radius: 24rpx; background: #fff; display: flex; flex-direction: column; align-items: center; box-shadow: 0 7rpx 22rpx rgba(74,130,164,.1); }
+.icp-card__title { color: #667d8e; font-size: 26rpx; }
+.icp-card__number { margin-top: 20rpx; color: #1769e0; font-size: 32rpx; font-weight: 700; }
+.icp-card__desc { margin-top: 22rpx; color: #8194a1; font-size: 24rpx; text-align: center; }
+.icp-button { width: 100%; margin-top: 38rpx; }
+.icp-open { margin-top: 18rpx; color: #1769e0; background: transparent; font-size: 25rpx; }
+.icp-card__url { margin-top: 8rpx; color: #9aabb7; font-size: 20rpx; overflow-wrap: anywhere; }
