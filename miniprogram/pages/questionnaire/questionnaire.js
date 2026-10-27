@@ -1,19 +1,31 @@
 const { request, requireLogin } = require('../../utils/request')
+
+function normalizeDescription(value) {
+  if (value == null) return ''
+  const description = String(value).trim()
+  return description.toLowerCase() === 'null' ? '' : description
+}
+
 Page({
   data: { questionnaire: null, questions: [], answers: {}, submitting: false },
   onLoad() {
     requireLogin()
       .then(() => request('/mini/questionnaires/active'))
       .then(
-        (q) =>
-          q &&
+        (q) => {
+          if (!q) return
           this.setData({
-            questionnaire: q,
-            questions: q.questions.map((x) => ({
+            questionnaire: {
+              ...q,
+              description: normalizeDescription(q.description),
+              headerTitle: q.header_title || q.headerTitle || '',
+            },
+            questions: (q.questions || []).map((x) => ({
               ...x,
               options: JSON.parse(x.options_json || '[]'),
             })),
           })
+        }
       )
   },
   back() {

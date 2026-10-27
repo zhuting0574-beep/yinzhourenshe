@@ -9,5 +9,5 @@ function normalizeDateTimes(value:any):any {
 
 const api=axios.create({baseURL:'/api'})
 api.interceptors.request.use(c=>{const token=localStorage.getItem('adminToken');if(token)c.headers.Authorization=`Bearer ${token}`;return c})
-api.interceptors.response.use(r=>{if(r.data?.success===false)return Promise.reject(new Error(r.data.message));return normalizeDateTimes(r.data?.data??r.data)},e=>{if(e.response?.status===401){localStorage.removeItem('adminToken');location.href='/login'}return Promise.reject(new Error(e.response?.data?.message||e.message||'请求失败'))})
+api.interceptors.response.use(r=>{if(r.data?.success===false)return Promise.reject(new Error(r.data.message));return normalizeDateTimes(r.data?.data??r.data)},e=>{if(e.response?.status===401||e.response?.status===403){localStorage.removeItem('adminToken');localStorage.removeItem('adminName');localStorage.removeItem('adminRole');if(location.pathname!=='/login')location.href='/login'}return Promise.reject(new Error(e.response?.data?.message||e.message||'请求失败'))})
 export default api

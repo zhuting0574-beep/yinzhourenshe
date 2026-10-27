@@ -1,0 +1,7 @@
+ALTER TABLE users
+  ADD COLUMN real_name VARCHAR(80),
+  ADD COLUMN age INT,
+  ADD COLUMN graduation_school VARCHAR(200),
+  ADD COLUMN major_direction VARCHAR(200),
+  ADD COLUMN city VARCHAR(100),
+  ADD COLUMN profile_rewarded BOOLEAN NOT NULL DEFAULT FALSE;

@@ -1,10 +1,16 @@
 const { request, requireLogin } = require('../../utils/request')
 Page({
-  data: { item: null, submitting: false, service: null },
+  data: { item: null, submitting: false, service: null, pickupNotice: '<p>点击兑换后请在周一至周五 9:00-17:00</p><p>来“鄞领π”鄞州区大学生就业创业综合服务中心领取</p><p>暂不支持快递运输，敬请谅解！</p>', successNotice: '请在7个自然日内到服务点领取' },
   onLoad(o) {
     request(`/mini/products/${o.id}`).then((item) => this.setData({ item }))
     request('/mini/content/SERVICE')
       .then((items) => this.setData({ service: items[0] || null }))
+      .catch(() => {})
+    request('/mini/content/PRODUCT_NOTICE')
+      .then((items) => this.setData({ pickupNotice: items[0] && items[0].content ? items[0].content : this.data.pickupNotice }))
+      .catch(() => {})
+    request('/mini/content/ORDER_SUCCESS')
+      .then((items) => this.setData({ successNotice: stripHtml(items[0] && items[0].content) || this.data.successNotice }))
       .catch(() => {})
   },
   back() {
@@ -23,9 +29,17 @@ Page({
         address: s.address,
       })
   },
+  openLogin() {
+    const item = this.data.item
+    const app = getApp()
+    if (item && item.id != null) app.globalData.pendingRoute = `/pages/product-detail/product-detail?id=${item.id}`
+    wx.navigateTo({ url: '/pages/login/login' })
+  },
   redeem() {
     const item = this.data.item
     if (!item || this.data.submitting) return
+    const app = getApp()
+    if (!app.globalData.token) return this.openLogin()
     wx.showModal({
       title: '确认兑换',
       content: `将使用${item.points_cost}积分兑换${item.name}`,
@@ -42,13 +56,22 @@ Page({
           .then(() =>
             wx.showModal({
               title: '兑换成功',
-              content: '请在7个自然日内到服务点领取',
+              content: this.data.successNotice,
               showCancel: false,
               success: () => wx.navigateTo({ url: '/pages/orders/orders' }),
             })
           )
-          .catch(() => this.setData({ submitting: false }))
+          .catch((error) => {
+            this.setData({ submitting: false })
+            if (error && (error.statusCode === 401 || error.statusCode === 403)) return this.openLogin()
+            const message = error && error.message ? String(error.message) : '兑换失败，请稍后重试'
+            wx.showModal({ title: '兑换失败', content: message, showCancel: false })
+          })
       },
     })
   },
 })
+
+function stripHtml(value) {
+  return String(value || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim()
+}

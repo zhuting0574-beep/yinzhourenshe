@@ -2,9 +2,13 @@
 import { computed, onBeforeUnmount, shallowRef } from 'vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import type { IDomEditor, IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
+import { ElMessage } from 'element-plus'
+import { uploadAdminImage } from '../utils/imageUpload'
 import '@wangeditor/editor/dist/css/style.css'
 
-const props = defineProps<{ modelValue?: string | null }>()
+const props = defineProps<{
+  modelValue?: string | null
+}>()
 const emit = defineEmits<{ (event: 'update:modelValue', value: string): void }>()
 const editorRef = shallowRef<IDomEditor>()
 const editorValue = computed(() => props.modelValue || '<p><br></p>')
@@ -16,16 +20,12 @@ editorConfig.MENU_CONF = {
     maxFileSize: 10 * 1024 * 1024,
     allowedFileTypes: ['image/*'],
     async customUpload(file: File, insertFn: (url: string, alt?: string, href?: string) => void) {
-      const form = new FormData()
-      form.append('file', file)
-      const response = await fetch('/api/admin/uploads', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` },
-        body: form
-      })
-      const result = await response.json()
-      if (!response.ok || !result.success) throw new Error(result.message || '图片上传失败')
-      insertFn(result.data.url, file.name)
+      try {
+        const result = await uploadAdminImage(file)
+        insertFn(result.data.url, file.name)
+      } catch (error: any) {
+        ElMessage.error(error.message || '图片上传失败')
+      }
     }
   }
 }
@@ -36,6 +36,7 @@ onBeforeUnmount(() => editorRef.value?.destroy())
 
 <template>
   <div class="rich-editor">
+    <p class="rich-editor__tip">图文插图建议宽度：1200 px，高度和比例可按内容需要调整</p>
     <Toolbar :editor="editorRef" :default-config="toolbarConfig" mode="default" />
     <Editor :model-value="editorValue" :default-config="editorConfig" mode="default" @on-created="created" @update:model-value="value => emit('update:modelValue', value)" />
   </div>
@@ -43,6 +44,7 @@ onBeforeUnmount(() => editorRef.value?.destroy())
 
 <style scoped>
 .rich-editor { width: 100%; border: 1px solid #dcdfe6; border-radius: 6px; overflow: hidden; background: #fff; }
+.rich-editor__tip { margin: 0; padding: 8px 12px; color: #8796a5; background: #fafcff; font-size: 12px; line-height: 1.5; }
 .rich-editor :deep(.w-e-toolbar) { border-bottom: 1px solid #ebeef5; }
 .rich-editor :deep(.w-e-text-container) { min-height: 300px; }
 </style>

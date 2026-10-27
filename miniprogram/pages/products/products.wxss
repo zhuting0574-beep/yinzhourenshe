@@ -1,13 +1,6 @@
 .products-page {
   background: #e9f8ff;
 }
-.products-top {
-  height: 72rpx;
-  padding: 0 28rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
 .banner-link {
   display: block;
   margin: 12rpx 28rpx 26rpx;

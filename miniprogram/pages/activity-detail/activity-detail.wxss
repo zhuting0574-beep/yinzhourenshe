@@ -100,3 +100,62 @@
   background: #75a0d9;
   color: #fff;
 }
+.checkin-picker-mask {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 28rpx 28rpx calc(28rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: rgba(18, 42, 58, 0.42);
+}
+.checkin-picker {
+  width: 100%;
+  padding: 30rpx 28rpx 24rpx;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 -8rpx 36rpx rgba(18, 42, 58, 0.16);
+}
+.checkin-picker__title {
+  color: #222;
+  font-size: 30rpx;
+  font-weight: 700;
+  text-align: center;
+}
+.checkin-picker__hint {
+  margin-top: 10rpx;
+  color: #8a9aa6;
+  font-size: 22rpx;
+  text-align: center;
+}
+.checkin-picker__options {
+  display: flex;
+  gap: 18rpx;
+  margin-top: 28rpx;
+}
+.checkin-picker__option,
+.checkin-picker__cancel {
+  flex: 1;
+  height: 78rpx;
+  margin: 0;
+  padding: 0;
+  border-radius: 40rpx;
+  font-size: 27rpx;
+  line-height: 78rpx;
+}
+.checkin-picker__option::after,
+.checkin-picker__cancel::after {
+  border: 0;
+}
+.checkin-picker__option {
+  background: #1769e0;
+  color: #fff;
+}
+.checkin-picker__cancel {
+  width: 100%;
+  margin-top: 18rpx;
+  background: #f2f6f8;
+  color: #6d8290;
+}

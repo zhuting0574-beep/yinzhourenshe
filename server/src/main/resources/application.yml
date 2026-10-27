@@ -29,7 +29,7 @@ app:
   token-hours: ${TOKEN_HOURS:168}
   dev-auth-enabled: ${DEV_AUTH_ENABLED:true}
   upload-dir: ${UPLOAD_DIR:./uploads}
-  public-base-url: ${PUBLIC_BASE_URL:http://localhost:8081}
+  public-base-url: ${PUBLIC_BASE_URL:https://www.yinlinpai.com}
   wechat:
     app-id: ${WECHAT_APP_ID:}
     app-secret: ${WECHAT_APP_SECRET:}

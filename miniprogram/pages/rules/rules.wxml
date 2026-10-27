@@ -1,17 +1,7 @@
 <view class="rules-page">
-  <view class="safe-top"></view>
+  <safe-area-top />
   <view class="mini-top">
-    <view class="mini-nav">
-      <button class="mini-nav__button" bindtap="back" aria-label="返回上一页">
-        <view class="mini-nav__back"></view>
-      </button>
-      <view class="mini-nav__divider"></view>
-      <button class="mini-nav__button" bindtap="home" aria-label="返回首页">
-        <view class="mini-nav__home"></view>
-      </button>
-    </view>
     <view class="mini-top__title">积分使用规则</view>
-    <view class="capsule">•••　│　◎</view>
   </view>
   <view class="rules-card">
     <rich-text wx:if="{{rules.length}}" nodes="{{rules[0].content}}"/>
@@ -43,4 +33,5 @@
     </view>
     <text class="arrow">›</text>
   </view>
+  <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
 </view>

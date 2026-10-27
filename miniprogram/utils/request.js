@@ -10,28 +10,37 @@ function normalizeDateTimes(value) {
     }, {})
   return value
 }
+function clearAuth() {
+  app.globalData.token = ''
+  app.globalData.user = null
+  wx.removeStorageSync('token')
+  wx.removeStorageSync('user')
+}
 function request(url, options = {}) {
+  const { silent, errorTitle, ...requestOptions } = options
   return new Promise((resolve, reject) =>
     wx.request({
       url: app.globalData.apiBase + url,
-      ...options,
+      ...requestOptions,
       header: {
         ...(app.globalData.token ? { Authorization: `Bearer ${app.globalData.token}` } : {}),
         'content-type': 'application/json',
-        ...(options.header || {}),
+        ...(requestOptions.header || {}),
       },
       success: (r) => {
         const body = r.data || {}
         if (r.statusCode >= 200 && r.statusCode < 300 && body.success)
           resolve(normalizeDateTimes(body.data))
         else {
-          if (r.statusCode === 401 || body.code === 'LOGIN_REQUIRED') app.globalData.token = ''
-          wx.showToast({ title: body.message || '请求失败', icon: 'none' })
-          reject(body)
+          if (r.statusCode === 401 || r.statusCode === 403 || body.code === 'LOGIN_REQUIRED') clearAuth()
+          if (errorTitle) console.warn(`${url} failed`, r.statusCode, body)
+          if (!silent) wx.showToast({ title: errorTitle || body.message || '请求失败', icon: 'none' })
+          reject({ ...body, statusCode: r.statusCode })
         }
       },
       fail: (e) => {
-        wx.showToast({ title: '网络连接失败', icon: 'none' })
+        console.error('[wx.request failed]', requestOptions.method || 'GET', app.globalData.apiBase + url, e)
+        if (!silent) wx.showToast({ title: errorTitle || '网络连接失败', icon: 'none' })
         reject(e)
       },
     })
@@ -46,22 +55,23 @@ function login() {
   return new Promise((resolve, reject) =>
     wx.login({
       success: ({ code }) =>
-        request('/mini/auth/wechat', { method: 'POST', data: { code } })
-          .catch(() =>
-            request('/dev/auth/mock', {
-              method: 'POST',
-              data: { openid: 'developer', nickname: '测试用户', phone: '13800000000' },
-            })
-          )
+        (code
+          ? request('/mini/auth/wechat', { method: 'POST', silent: true, data: { code } })
+          : Promise.reject(new Error('微信登录失败，请重试')))
           .then((result) => {
             app.globalData.token = result.token
             app.globalData.user = result.user
             wx.setStorageSync('token', result.token)
             wx.setStorageSync('user', result.user)
-            resolve(result.user)
+            return request('/mini/profile', { silent: true }).catch(() => result.user)
+          })
+          .then((user) => {
+            app.globalData.user = user
+            wx.setStorageSync('user', user)
+            resolve(user)
           })
           .catch(reject),
-      fail: reject,
+      fail: (error) => reject(error),
     })
   )
 }
@@ -75,8 +85,8 @@ function scanActivity() {
             request('/mini/activities/verify', { method: 'POST', data: { token: r.result } })
               .then((data) => {
                 wx.showModal({
-                  title: '核销成功',
-                  content: '活动已签到，获得100积分',
+                  title: data && data.alreadyCheckedIn ? '已签到' : '核销成功',
+                  content: data && data.alreadyCheckedIn ? '该活动已经签到，不能重复领取积分' : '活动已签到，获得100积分',
                   showCancel: false,
                 })
                 resolve(data)
@@ -96,4 +106,13 @@ function bindPhone(code) {
     return result.user
   })
 }
-module.exports = { request, requireLogin, login, scanActivity, bindPhone }
+function updateWechatProfile(nickname, avatarUrl) {
+  return request('/mini/auth/profile', { method: 'POST', data: { nickname, avatarUrl }, silent: true }).then((result) => {
+    app.globalData.token = result.token
+    app.globalData.user = result.user
+    wx.setStorageSync('token', result.token)
+    wx.setStorageSync('user', result.user)
+    return result.user
+  })
+}
+module.exports = { request, requireLogin, login, scanActivity, bindPhone, updateWechatProfile }

@@ -1,8 +1,7 @@
 <view class="page-shell products-page">
-  <view class="safe-top"></view>
-  <view class="products-top">
-    <view></view>
-    <view class="capsule">•••　│　◎</view>
+  <safe-area-top />
+  <view class="mini-top">
+    <view class="mini-top__title">积分兑换</view>
   </view>
   <navigator class="banner-link" url="/pages/activities/activities" open-type="switchTab">
     <image src="/assets/ux/points-banner.jpg" mode="widthFix"/>
@@ -22,4 +21,5 @@
       </view>
     </view>
   </view>
+  <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
 </view>

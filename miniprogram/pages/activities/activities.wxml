@@ -1,9 +1,7 @@
 <view class="page-shell activities-page">
-  <view class="safe-top"></view>
+  <safe-area-top />
   <view class="mini-top">
-    <view></view>
     <view class="mini-top__title">活动报名</view>
-    <view class="capsule">•••　│　◎</view>
   </view>
   <view class="search">
     <text>⌕</text>
@@ -28,4 +26,5 @@
       </view>
     </view>
   </view>
+  <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
 </view>

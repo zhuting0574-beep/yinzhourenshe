@@ -2,30 +2,15 @@
   position: relative;
   background: #e9f8ff;
 }
-.home-capsule {
-  position: absolute;
-  z-index: 3;
-  right: 26rpx;
-  top: calc(26rpx + env(safe-area-inset-top));
-  height: 56rpx;
-  padding: 0 17rpx;
-  display: flex;
-  align-items: center;
-  gap: 14rpx;
-  border-radius: 30rpx;
-  background: rgba(255, 255, 255, 0.72);
-  font-size: 22rpx;
-}
-.home-capsule .i {
-  width: 1rpx;
-  height: 28rpx;
-  background: #888;
-}
 .hero {
-  display: block;
   width: 100%;
   height: 420rpx;
   margin-top: -1rpx;
+}
+.hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .home-body {
   padding: 24rpx 28rpx 34rpx;
@@ -76,6 +61,62 @@
   color: #737d85;
   font-size: 22rpx;
 }
+.about-mask {
+  position: fixed;
+  z-index: 110;
+  inset: 0;
+  background: rgba(16, 39, 65, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64rpx 42rpx;
+}
+.about-modal {
+  width: 100%;
+  max-height: 82vh;
+  border-radius: 28rpx;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 20rpx 50rpx rgba(24, 54, 83, 0.34);
+}
+.about-modal__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100rpx;
+  padding: 0 84rpx;
+  color: #153a61;
+  font-size: 34rpx;
+  font-weight: 700;
+  border-bottom: 1rpx solid #edf2f6;
+}
+.about-modal__close {
+  position: absolute;
+  right: 18rpx;
+  top: 22rpx;
+  width: 56rpx;
+  height: 56rpx;
+  padding: 0;
+  border-radius: 50%;
+  background: #f1f5f8;
+  color: #637587;
+  font-size: 38rpx;
+  line-height: 52rpx;
+}
+.about-modal__body {
+  box-sizing: border-box;
+  max-height: calc(82vh - 100rpx);
+  padding: 30rpx 32rpx 40rpx;
+  color: #4b5d6c;
+  font-size: 28rpx;
+  line-height: 1.8;
+}
+.about-modal__image {
+  display: block;
+  width: 100%;
+  margin: 0 0 24rpx;
+}
 .survey-mask {
   position: fixed;
   z-index: 120;
@@ -90,10 +131,27 @@
   position: relative;
   width: 100%;
   height: 620rpx;
-  border-radius: 28rpx;
+  border-radius: 32rpx;
   overflow: hidden;
   background: linear-gradient(#fff 0 63%, #ef6da5 63%);
   text-align: center;
+  box-shadow: 0 20rpx 50rpx rgba(24, 54, 83, 0.34);
+}
+.survey-image-modal {
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.survey-image-card {
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+  border-radius: 32rpx;
+  background: transparent;
   box-shadow: 0 20rpx 50rpx rgba(24, 54, 83, 0.34);
 }
 .modal-close {
@@ -110,6 +168,7 @@
   font-size: 36rpx;
   line-height: 43rpx;
 }
+.modal-close-image { width: 68rpx; height: 68rpx; margin-top: 48rpx; }
 .modal-brand {
   margin-top: 36rpx;
   font-size: 30rpx;
@@ -125,6 +184,13 @@
   color: #df4f91;
   font-size: 42rpx;
   line-height: 68rpx;
+}
+.modal-config-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  margin: 0;
 }
 .modal-title {
   color: #e85b98;

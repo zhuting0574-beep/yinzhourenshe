@@ -1,24 +1,14 @@
 <view class="survey-page">
-  <view class="safe-top"></view>
+  <safe-area-top />
   <view class="mini-top">
-    <view class="mini-nav">
-      <button class="mini-nav__button" bindtap="back" aria-label="返回上一页">
-        <view class="mini-nav__back"></view>
-      </button>
-      <view class="mini-nav__divider"></view>
-      <button class="mini-nav__button" bindtap="home" aria-label="返回首页">
-        <view class="mini-nav__home"></view>
-      </button>
-    </view>
     <view class="mini-top__title">调查问卷</view>
-    <view class="capsule">•••　│　◎</view>
   </view>
   <view wx:if="{{!questionnaire}}" class="empty">本月暂无可填写问卷</view>
   <block wx:else>
     <view class="survey-head">
-      <view class="status-pill pink">问卷任务</view>
+      <view class="status-pill pink">{{questionnaire.headerTitle || '问卷任务'}}</view>
       <view class="title">{{questionnaire.name}}</view>
-      <view class="intro">{{questionnaire.description}}</view>
+      <view wx:if="{{questionnaire.description}}" class="intro">{{questionnaire.description}}</view>
       <view class="reward">完成奖励 <text class="strong">100</text> 积分</view>
     </view>
     <view wx:if="{{questionnaire.completedThisMonth}}" class="done">本月已完成问卷</view>
@@ -46,4 +36,5 @@
       <button bindtap="submit" loading="{{submitting}}">提交问卷 · 获得100积分</button>
     </view>
   </block>
+  <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
 </view>

@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -71,7 +72,9 @@ class PlatformServiceQrTest {
   Map<String,Object> checkedIn=Map.of("status","CHECKED_IN","checkin_method","LOCATION");
   when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity,checkedIn);
   when(db.update(startsWith("update activity_participations"),any(Object[].class))).thenReturn(0);
-  assertSame(checkedIn,service(db).locationCheckIn(1L,9L,latitude,121.55,8));
+  Map<String,Object> result=service(db).locationCheckIn(1L,9L,latitude,121.55,8);
+  assertEquals("CHECKED_IN",result.get("status"));
+  assertEquals(true,result.get("alreadyCheckedIn"));
   verify(db,times(1)).update(startsWith("update activity_participations"),any(Object[].class));
   verify(db,never()).update(startsWith("update users set points"),any(Object[].class));
  }
@@ -84,6 +87,35 @@ class PlatformServiceQrTest {
   BusinessException error=assertThrows(BusinessException.class,()->service(db).locationCheckIn(1L,9L,29.817,121.55,10));
   assertEquals("ACTIVITY_NOT_RUNNING",error.code);
   verify(db,never()).update(anyString(),any(Object[].class));
+ }
+
+ @Test void repeatedQrCheckInReturnsExistingParticipationWithoutAwardingAgain(){
+  JdbcTemplate db=mock(JdbcTemplate.class);
+  Map<String,Object> activity=activity("QR",200);
+  activity.put("participation_status","CHECKED_IN");
+  Map<String,Object> checkedIn=Map.of("status","CHECKED_IN","checkin_method","QR");
+  when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity,checkedIn);
+
+  Map<String,Object> result=service(db).verifyActivity(1L,service(db).qrToken(9L),"QR");
+
+  assertEquals(true,result.get("alreadyCheckedIn"));
+  assertEquals("CHECKED_IN",result.get("status"));
+  verify(db,never()).update(anyString(),any(Object[].class));
+  verify(db,never()).queryForObject(startsWith("select count(*) from point_logs"),eq(Integer.class),any());
+ }
+
+ @Test void qrAndLocationCannotBothAwardTheSameActivity(){
+  JdbcTemplate db=mock(JdbcTemplate.class);
+  Map<String,Object> activity=activity("BOTH",200);
+  Map<String,Object> checkedIn=Map.of("status","CHECKED_IN","checkin_method","QR");
+  when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity,checkedIn,activity,checkedIn);
+  when(db.update(startsWith("update activity_participations"),any(Object[].class))).thenReturn(0);
+
+  PlatformService service=service(db);
+  assertEquals(true,service.verifyActivity(1L,service.qrToken(9L),"QR").get("alreadyCheckedIn"));
+  assertEquals(true,service.locationCheckIn(1L,9L,29.817,121.55,5).get("alreadyCheckedIn"));
+
+  verify(db,never()).update(startsWith("update users set points"),any(Object[].class));
  }
 
  @Test void registrationAcceptsLocalDateTimeValuesReturnedByMysql(){
@@ -114,6 +146,13 @@ class PlatformServiceQrTest {
   assertEquals(5,((java.util.List<?>)service.dashboardTrends("year").get("labels")).size());
   assertEquals(12,((java.util.List<?>)service.dashboardTrends("month").get("labels")).size());
   assertEquals(30,((java.util.List<?>)service.dashboardTrends("day").get("labels")).size());
+ }
+
+ @Test void activityListExcludesEventsThatHaveAlreadyEnded(){
+  JdbcTemplate db=mock(JdbcTemplate.class);
+  when(db.queryForList(anyString(),any(Object[].class))).thenReturn(List.of());
+  assertTrue(service(db).activities(null).isEmpty());
+  verify(db).queryForList(argThat(sql->sql.contains("a.end_time>=now()")),any(Object[].class));
  }
 
  private PlatformService service(JdbcTemplate db){return new PlatformService(db,new ObjectMapper(),"a-qr-secret-that-is-long-enough-for-tests");}

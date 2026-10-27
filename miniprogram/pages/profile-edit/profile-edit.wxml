@@ -1,0 +1,54 @@
+<view class="profile-edit-page">
+  <safe-area-top />
+  <view class="mini-top">
+    <view class="mini-top__title">完善信息</view>
+  </view>
+
+  <view class="profile-edit-head">
+    <view class="profile-edit-title">完善个人信息</view>
+    <view class="profile-edit-subtitle">完整填写可获得100积分奖励</view>
+  </view>
+
+  <view class="avatar-editor">
+    <button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="chooseAvatar">
+      <image class="avatar-picker__image" src="{{form.avatarUrl || '/assets/profile-avatar.png'}}" mode="aspectFill" />
+      <view class="avatar-picker__text">使用微信头像和昵称</view>
+    </button>
+  </view>
+
+  <view class="profile-form">
+    <view class="form-row">
+      <text class="form-label">用户昵称</text>
+      <input class="form-input" type="nickname" data-field="nickname" value="{{form.nickname}}" bindinput="input" placeholder="请输入用户昵称" maxlength="30" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">真实姓名</text>
+      <input class="form-input" data-field="realName" value="{{form.realName}}" bindinput="input" placeholder="请输入真实姓名" maxlength="50" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">年龄</text>
+      <picker class="form-picker" mode="selector" range="{{ageOptions}}" value="{{ageIndex}}" bindchange="ageChange">
+        <view class="picker-value {{form.age ? 'picker-value--selected' : ''}}">{{form.age ? form.age + '岁' : '请选择年龄'}}</view>
+      </picker>
+    </view>
+    <view class="form-row">
+      <text class="form-label">毕业院校</text>
+      <input class="form-input" data-field="graduationSchool" value="{{form.graduationSchool}}" bindinput="input" placeholder="请输入毕业院校" maxlength="100" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">专业方向</text>
+      <input class="form-input" data-field="majorDirection" value="{{form.majorDirection}}" bindinput="input" placeholder="请输入专业方向" maxlength="100" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">所在城市</text>
+      <picker class="form-picker" mode="region" level="city" value="{{region}}" bindchange="regionChange">
+        <view class="picker-value {{form.city ? 'picker-value--selected' : ''}}">{{form.city || '请选择所在城市'}}</view>
+      </picker>
+    </view>
+  </view>
+
+  <view class="submit-bar">
+    <button class="login-button profile-save-button" bindtap="save" loading="{{saving}}">保存信息</button>
+  </view>
+  <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
+</view>

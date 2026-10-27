@@ -1,0 +1,17 @@
+<view class="login-page">
+  <safe-area-top />
+  <view class="mini-top">
+    <button class="login-back" bindtap="back" aria-label="返回上一页">
+      <view class="login-back__icon"></view>
+    </button>
+    <view class="mini-top__title">登录</view>
+  </view>
+  <view class="login-content">
+    <image class="login-avatar" src="/assets/profile-avatar.png" mode="aspectFill" />
+    <view class="login-title">登录鄞领π</view>
+    <view class="login-subtitle">登录后即可报名活动、签到和兑换积分</view>
+    <button class="login-button" bindtap="submit" loading="{{submitting}}">微信一键登录</button>
+    <view class="login-note">登录即表示同意鄞领π用户服务协议</view>
+  </view>
+  <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
+</view>

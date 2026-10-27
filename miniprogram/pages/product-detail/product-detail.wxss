@@ -129,12 +129,14 @@
   padding: 16rpx 28rpx calc(16rpx + env(safe-area-inset-bottom));
   background: #fff;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   box-sizing: content-box;
 }
 .action > view {
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 .action .strong {
   font-size: 46rpx;
@@ -153,11 +155,17 @@
   width: 280rpx;
   height: 80rpx;
   margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   background: #1769e0;
   color: #fff;
   border-radius: 44rpx;
   font-size: 31rpx;
   font-weight: 700;
+  line-height: 1;
 }
 .action button[disabled] {
   background: #a5b6c4;

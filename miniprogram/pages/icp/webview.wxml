@@ -1,0 +1,12 @@
+<view class="icp-webview-page">
+  <safe-area-top />
+  <view class="mini-top">
+    <text class="mini-top__title">工信部备案查询</text>
+  </view>
+  <web-view wx:if="{{!failed}}" class="icp-webview" src="https://beian.miit.gov.cn/" binderror="onError"></web-view>
+  <view wx:if="{{failed}}" class="icp-webview-fallback">
+    <text>当前微信环境无法打开工信部备案查询页面。</text>
+    <button class="primary" bindtap="copyUrl">复制查询网址</button>
+  </view>
+  <view class="icp-footer">浙ICP备2026084324号-1</view>
+</view>
