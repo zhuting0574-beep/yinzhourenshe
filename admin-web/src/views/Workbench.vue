@@ -231,6 +231,7 @@ async function orderAction(row: any, action: 'pickup' | 'cancel') {
 }
 function isOrderSelectable(row: any) { return row.status === 'PENDING' }
 function onOrderSelectionChange(selection: any[]) { selectedOrders.value = selection }
+async function exportActivity(row: any) { const response = await fetch(`/api/admin/activities/${row.id}/participants/export`, { headers: uploadHeaders.value }); if (!response.ok) return ElMessage.error('导出失败'); const url = URL.createObjectURL(await response.blob()); const a = document.createElement('a'); a.href = url; const fileName = String(row.title || '活动参与人').replace(/[\\/:*?"<>|\r\n]/g, '_').trim() || '活动参与人'; a.download = `${fileName}.xlsx`; a.click(); URL.revokeObjectURL(url) }
 function selectAllPendingOrders() {
   const pending = rows.value.filter(isOrderSelectable)
   if (!pending.length) return
@@ -391,6 +392,7 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
             <el-button v-if="module === 'users'" link type="danger" @click="removeUser(row)">删除</el-button>
             <el-button v-if="module === 'products'" link type="primary" @click="adjust(row,'stock')">调整库存</el-button>
             <el-button v-if="module === 'activities' && ['QR','BOTH'].includes(row.checkin_mode || 'QR')" link @click="showQr(row)">核销码</el-button>
+            <el-button v-if="module === 'activities'" link type="success" @click="exportActivity(row)">导出参与人</el-button>
             <el-button v-if="module === 'orders' && row.status === 'PENDING'" link type="success" @click="orderAction(row,'pickup')">确认核销</el-button>
             <el-button v-if="module === 'orders' && row.status === 'PENDING'" link type="danger" @click="orderAction(row,'cancel')">取消</el-button>
           </template></el-table-column>
