@@ -1,6 +1,7 @@
 <view wx:if="{{item}}" class="detail-page">
   <safe-area-top />
   <view class="mini-top">
+    <button class="mini-top__back" bindtap="back" aria-label="返回上一页"><view class="mini-top__back-icon"></view></button>
     <view class="mini-top__title">活动详情</view>
   </view>
   <image
@@ -21,20 +22,29 @@
   </view>
   <view class="action">
     <view class="reward">
-      <text class="strong">+100 <text class="small">积分</text></text>
+      <text class="strong">+{{item.points || 100}} <text class="small">积分</text></text>
       <text>{{rewardText}}</text>
     </view>
     <button bindtap="primaryAction" loading="{{submitting}}" disabled="{{actionDisabled}}">{{actionText}}</button>
   </view>
-  <view wx:if="{{showCheckinPicker}}" class="checkin-picker-mask" catchtap="closeCheckinPicker">
-    <view class="checkin-picker" catchtap="noop">
-      <view class="checkin-picker__title">选择签到方式</view>
-      <view class="checkin-picker__hint">请选择本次活动的签到方式</view>
-      <view class="checkin-picker__options">
-        <button class="checkin-picker__option" data-mode="LOCATION" bindtap="chooseCheckin">定位签到</button>
-        <button class="checkin-picker__option" data-mode="QR" bindtap="chooseCheckin">二维码签到</button>
+  <view wx:if="{{showRegistrationDialog}}" class="registration-mask" catchtap="closeRegistrationDialog">
+    <view class="registration-dialog" catchtap="noop">
+      <view class="registration-dialog__header">
+        <text>{{registrationStep === 'confirm' ? '确认报名手机号' : '填写报名手机号'}}</text>
+        <view class="registration-dialog__close" bindtap="closeRegistrationDialog">×</view>
       </view>
-      <button class="checkin-picker__cancel" bindtap="closeCheckinPicker">取消</button>
+      <view wx:if="{{registrationStep === 'confirm'}}" class="registration-confirm">
+        <view class="registration-dialog__hint">是否使用当前手机号报名？</view>
+        <view class="registration-phone-current">{{currentPhone}}</view>
+        <button class="registration-button registration-button--primary" bindtap="useCurrentPhone" loading="{{submitting}}">是，使用当前手机号</button>
+        <button class="registration-button registration-button--secondary" bindtap="chooseOtherPhone">否，填写其他手机号</button>
+      </view>
+      <view wx:else class="registration-input-panel">
+        <view class="registration-dialog__hint">请输入本次活动报名使用的手机号</view>
+        <input class="registration-phone-input" type="number" maxlength="11" value="{{registrationPhone}}" bindinput="inputRegistrationPhone" placeholder="请输入11位手机号" />
+        <view wx:if="{{phoneError}}" class="registration-phone-error">{{phoneError}}</view>
+        <button class="registration-button registration-button--primary" bindtap="submitPhoneRegistration" loading="{{submitting}}">确认报名</button>
+      </view>
     </view>
   </view>
   <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>

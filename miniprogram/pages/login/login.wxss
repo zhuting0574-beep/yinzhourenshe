@@ -61,6 +61,20 @@
   font-weight: 700;
   line-height: 88rpx;
 }
+.agreement-row {
+  width: 100%;
+  margin-top: 42rpx;
+  color: #8294a0;
+  font-size: 21rpx;
+  line-height: 1.8;
+}
+.agreement-item {
+  display: flex;
+  align-items: center;
+  margin: 10rpx 0;
+}
+.agreement-item checkbox { transform: scale(.72); margin-right: 2rpx; }
+.agreement-link { color: #1769e0; text-decoration: underline; margin-left: 8rpx; }
 .login-button::after {
   border: 0;
 }
@@ -69,3 +83,9 @@
   color: #9aabb7;
   font-size: 20rpx;
 }
+.agreement-mask { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 48rpx; background: rgba(0,0,0,.45); box-sizing: border-box; }
+.agreement-dialog { width: 100%; max-height: 82vh; overflow: hidden; border-radius: 20rpx; background: #fff; }
+.agreement-dialog__header { display: flex; align-items: center; justify-content: space-between; padding: 30rpx 32rpx; font-size: 32rpx; font-weight: 700; color: #1c3f60; border-bottom: 1rpx solid #edf1f4; }
+.agreement-dialog__close { font-size: 48rpx; line-height: 36rpx; font-weight: 300; color: #8495a1; }
+.agreement-dialog__body { height: 58vh; padding: 28rpx 32rpx; box-sizing: border-box; color: #384b59; font-size: 25rpx; line-height: 1.75; }
+.agreement-dialog__button { margin: 18rpx 28rpx 28rpx; height: 78rpx; line-height: 78rpx; border-radius: 40rpx; background: #1769e0; color: #fff; font-size: 28rpx; }

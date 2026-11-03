@@ -10,8 +10,21 @@
     <image class="login-avatar" src="/assets/profile-avatar.png" mode="aspectFill" />
     <view class="login-title">登录鄞领π</view>
     <view class="login-subtitle">登录后即可报名活动、签到和兑换积分</view>
+    <view class="agreement-row">
+      <checkbox-group bindchange="agreementChange">
+        <label class="agreement-item"><checkbox value="service" checked="{{serviceAgreed}}" color="#1769e0" /><text>我已阅读</text><text class="agreement-link" data-type="service" catchtap="openAgreement">用户服务协议</text></label>
+        <label class="agreement-item"><checkbox value="privacy" checked="{{privacyAgreed}}" color="#1769e0" /><text>我已阅读</text><text class="agreement-link" data-type="privacy" catchtap="openAgreement">隐私政策</text></label>
+      </checkbox-group>
+    </view>
     <button class="login-button" bindtap="submit" loading="{{submitting}}">微信一键登录</button>
-    <view class="login-note">登录即表示同意鄞领π用户服务协议</view>
+    <view class="login-note">请阅读并同意上述协议后登录</view>
   </view>
   <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
+</view>
+<view wx:if="{{agreementVisible}}" class="agreement-mask" catchtap="closeAgreement">
+  <view class="agreement-dialog" catchtap="stopPropagation">
+    <view class="agreement-dialog__header"><text>{{agreementTitle}}</text><text class="agreement-dialog__close" bindtap="closeAgreement">×</text></view>
+    <scroll-view class="agreement-dialog__body" scroll-y="true"><rich-text nodes="{{agreementContent}}" /></scroll-view>
+    <button class="agreement-dialog__button" bindtap="closeAgreement">我已阅读</button>
+  </view>
 </view>

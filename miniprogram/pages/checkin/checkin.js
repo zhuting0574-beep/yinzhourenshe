@@ -9,7 +9,7 @@ Page({
     submitting: false,
     year: 0,
     month: 0,
-    scrollProgress: 0,
+    scrollProgress: 0, dailyCheckinPoints: 10,
   },
   onShow() {
     requireLogin('/pages/checkin/checkin').then(() => this.load())
@@ -46,6 +46,7 @@ Page({
     this.setData({ scrollProgress: Math.min(1, Math.max(0, e.detail.scrollLeft / max)) })
   },
   load() {
+    request('/mini/reward-config', { silent: true }).then((config) => this.setData({ dailyCheckinPoints: Number(config && config.dailyCheckinPoints) || 10 })).catch(() => {})
     request('/mini/check-ins').then((d) => {
       const days = d.days.map((x) => String(x.check_date).slice(8, 10))
       const now = new Date()
@@ -68,7 +69,7 @@ Page({
       .then((d) => {
         const days = d.days.map((x) => String(x.check_date).slice(8, 10))
         this.setData({ ...d, days, calendarDays: this.makeCalendar(days), submitting: false })
-        wx.showToast({ title: '签到成功 +10' })
+        wx.showToast({ title: `签到成功 +${this.data.dailyCheckinPoints}` })
       })
       .catch(() => this.setData({ submitting: false }))
   },

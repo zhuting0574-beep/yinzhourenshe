@@ -1,7 +1,10 @@
 import axios from 'axios'
 
 function normalizeDateTimes(value:any):any {
-  if (typeof value === 'string') return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value) ? value.replace('T',' ') : value
+  if (typeof value === 'string') {
+    const match=value.replace('T',' ').match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/)
+    return match?match[1]:value
+  }
   if (Array.isArray(value)) return value.map(normalizeDateTimes)
   if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,normalizeDateTimes(item)]))
   return value

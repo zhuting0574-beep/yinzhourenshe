@@ -6,7 +6,9 @@
 .balance {
   position: relative;
   margin: 8rpx 28rpx 24rpx;
-  padding: 30rpx 36rpx;
+  min-height: 148rpx;
+  padding: 24rpx 36rpx;
+  box-sizing: border-box;
   border-radius: 24rpx;
   background: #0750bd;
   color: #fff;
@@ -14,6 +16,7 @@
 .balance .small,
 .balance .strong {
   display: block;
+  position: static;
 }
 .balance .small {
   font-size: 22rpx;
@@ -22,11 +25,12 @@
 .balance .strong {
   font-size: 65rpx;
   margin-top: 5rpx;
+  line-height: 1.15;
 }
-.balance > text {
+.balance > text:last-child {
   position: absolute;
   right: 36rpx;
-  bottom: 31rpx;
+  bottom: 24rpx;
   font-size: 21rpx;
   opacity: 0.8;
 }

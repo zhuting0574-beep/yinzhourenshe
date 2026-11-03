@@ -1,12 +1,13 @@
 <view class="profile-edit-page">
   <safe-area-top />
   <view class="mini-top">
+    <button class="mini-top__back" bindtap="back" aria-label="返回上一页"><view class="mini-top__back-icon"></view></button>
     <view class="mini-top__title">完善信息</view>
   </view>
 
   <view class="profile-edit-head">
     <view class="profile-edit-title">完善个人信息</view>
-    <view class="profile-edit-subtitle">完整填写可获得100积分奖励</view>
+    <view class="profile-edit-subtitle">完整填写可获得{{profileRewardPoints}}积分奖励</view>
   </view>
 
   <view class="avatar-editor">
@@ -26,10 +27,16 @@
       <input class="form-input" data-field="realName" value="{{form.realName}}" bindinput="input" placeholder="请输入真实姓名" maxlength="50" />
     </view>
     <view class="form-row">
+      <text class="form-label">性别</text>
+      <view class="form-picker" bindtap="openGenderPicker">
+        <view class="picker-value {{form.gender ? 'picker-value--selected' : ''}}">{{form.gender || '请选择性别'}}</view>
+      </view>
+    </view>
+    <view class="form-row">
       <text class="form-label">年龄</text>
-      <picker class="form-picker" mode="selector" range="{{ageOptions}}" value="{{ageIndex}}" bindchange="ageChange">
+      <view class="form-picker" bindtap="openAgePicker">
         <view class="picker-value {{form.age ? 'picker-value--selected' : ''}}">{{form.age ? form.age + '岁' : '请选择年龄'}}</view>
-      </picker>
+      </view>
     </view>
     <view class="form-row">
       <text class="form-label">毕业院校</text>
@@ -51,4 +58,20 @@
     <button class="login-button profile-save-button" bindtap="save" loading="{{saving}}">保存信息</button>
   </view>
   <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
+
+  <view wx:if="{{pickerVisible}}" class="custom-picker" catchtouchmove="noop">
+    <view class="custom-picker__mask" catchtap="closePicker"></view>
+    <view class="custom-picker__sheet" catchtap="noop">
+      <view class="custom-picker__header">
+        <text class="custom-picker__cancel" bindtap="closePicker">取消</text>
+        <text class="custom-picker__title">{{pickerTitle}}</text>
+        <text class="custom-picker__confirm" bindtap="confirmPicker">确定</text>
+      </view>
+      <scroll-view class="custom-picker__list" scroll-y="true" scroll-into-view="{{pickerScrollId}}">
+        <view wx:for="{{pickerOptions}}" wx:key="*this" id="picker-option-{{index}}" class="custom-picker__option {{pickerIndex === index ? 'custom-picker__option--selected' : ''}}" data-index="{{index}}" bindtap="selectPickerOption">
+          {{item}}
+        </view>
+      </scroll-view>
+    </view>
+  </view>
 </view>

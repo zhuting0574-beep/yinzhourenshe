@@ -1,11 +1,15 @@
 const { request, updateWechatProfile } = require('../../utils/request')
 
-const emptyForm = () => ({ avatarUrl: '', nickname: '', realName: '', age: '', graduationSchool: '', majorDirection: '', city: '' })
+const emptyForm = () => ({ avatarUrl: '', nickname: '', realName: '', gender: '', age: '', graduationSchool: '', majorDirection: '', city: '' })
 const ageOptions = ['请选择年龄', ...Array.from({ length: 150 }, (_, index) => `${index + 1}`)]
+const genderOptions = ['男', '女']
 const defaultRegion = ['浙江省', '宁波市']
 
 Page({
-  data: { form: emptyForm(), saving: false, ageOptions, ageIndex: 0, region: defaultRegion },
+  data: {
+    form: emptyForm(), saving: false, ageOptions, genderOptions, ageIndex: 0, region: defaultRegion,
+    pickerVisible: false, pickerTitle: '', pickerOptions: [], pickerIndex: 0, pickerScrollId: '', pickerType: '', profileRewardPoints: 100,
+  },
   onLoad() {
     this.redirecting = false
   },
@@ -19,6 +23,7 @@ Page({
     }
     this.redirecting = false
     this.formInitialized = true
+    request('/mini/reward-config', { silent: true }).then((config) => this.setData({ profileRewardPoints: Number(config && config.profileRewardPoints) || 100 })).catch(() => {})
     request('/mini/profile')
       .then((profile) => {
         const form = toForm(profile, app.globalData.user)
@@ -37,12 +42,12 @@ Page({
     const avatarUrl = String(e.detail && e.detail.avatarUrl || '').trim()
     if (!avatarUrl) return wx.showToast({ title: '未获取到微信头像', icon: 'none' })
     this.setData({ 'form.avatarUrl': avatarUrl })
-    getWechatProfile().then((profile) => {
-      const nickname = String(profile && profile.nickName || '').trim()
-      if (!nickname || isPlaceholderNickname(nickname)) throw new Error('未获取到微信昵称，请允许微信资料授权')
-      this.setData({ 'form.nickname': nickname })
-      return this.uploadAvatar(avatarUrl, nickname)
-    }).catch((error) => wx.showToast({ title: error && error.message ? error.message : '微信资料获取失败', icon: 'none' }))
+    const nickname = String(this.data.form.nickname || '').trim()
+    if (!nickname || isPlaceholderNickname(nickname)) {
+      return wx.showToast({ title: '头像已获取，请输入昵称后保存', icon: 'none' })
+    }
+    this.uploadAvatar(avatarUrl, nickname)
+      .catch((error) => wx.showToast({ title: error && error.message ? error.message : '头像保存失败，请稍后重试', icon: 'none' }))
   },
   syncWechatProfile() {
     const app = getApp()
@@ -104,6 +109,31 @@ Page({
     this.formDirty = true
     this.setData({ ageIndex: index, 'form.age': index > 0 ? String(index) : '' })
   },
+  openGenderPicker() {
+    const pickerIndex = Math.max(0, genderOptions.indexOf(this.data.form.gender))
+    this.setData({ pickerVisible: true, pickerTitle: '选择性别', pickerOptions: genderOptions, pickerIndex, pickerType: 'gender', pickerScrollId: `picker-option-${pickerIndex}` })
+  },
+  openAgePicker() {
+    const pickerIndex = this.data.form.age ? Number(this.data.form.age) : 0
+    this.setData({ pickerVisible: true, pickerTitle: '选择年龄', pickerOptions: ageOptions, pickerIndex, pickerType: 'age', pickerScrollId: `picker-option-${pickerIndex}` })
+  },
+  selectPickerOption(e) {
+    this.setData({ pickerIndex: Number(e.currentTarget.dataset.index) })
+  },
+  closePicker() {
+    this.setData({ pickerVisible: false })
+  },
+  confirmPicker() {
+    const index = Number(this.data.pickerIndex)
+    this.formDirty = true
+    if (this.data.pickerType === 'gender') {
+      this.setData({ 'form.gender': genderOptions[index] || '', pickerVisible: false })
+    } else if (this.data.pickerType === 'age') {
+      this.setData({ ageIndex: index, 'form.age': index > 0 ? String(index) : '', pickerVisible: false })
+    }
+  },
+  noop() {},
+  genderChange(e) { this.setData({ 'form.gender': genderOptions[Number(e.detail.value)] }) },
   regionChange(e) {
     const region = e.detail.value || defaultRegion
     this.formDirty = true
@@ -122,7 +152,8 @@ Page({
       data: {
         avatarUrl: String(form.avatarUrl || '').trim(),
         nickname: String(form.nickname || '').trim(),
-        realName: String(form.realName || '').trim(),
+      realName: String(form.realName || '').trim(),
+      gender: String(form.gender || '').trim(),
         age: age ? Number(age) : null,
         graduationSchool: String(form.graduationSchool || '').trim(),
         majorDirection: String(form.majorDirection || '').trim(),
@@ -135,7 +166,7 @@ Page({
         this.formDirty = false
         this.formInitialized = true
         const rewarded = !!(result && result.rewardGranted)
-        wx.showToast({ title: rewarded ? '完善资料成功，获得100积分' : '信息保存成功', icon: 'success' })
+        wx.showToast({ title: rewarded ? `完善资料成功，获得${this.data.profileRewardPoints}积分` : '信息保存成功', icon: 'success' })
         const app = getApp()
         if (profile) app.globalData.user = { ...(app.globalData.user || {}), ...profile }
       })
@@ -165,6 +196,7 @@ function toForm(profile, fallback) {
     avatarUrl: firstNonBlank(profile.avatarUrl, profile.avatar_url, fallback && (fallback.avatarUrl || fallback.avatar_url)),
     nickname: firstNonBlank(profile.nickname, fallback && fallback.nickname),
     realName: profile.realName ?? profile.real_name ?? '',
+    gender: profile.gender ?? '',
     age: profile.age === null || profile.age === undefined ? '' : String(profile.age),
     graduationSchool: profile.graduationSchool ?? profile.graduation_school ?? '',
     majorDirection: profile.majorDirection ?? profile.major_direction ?? '',

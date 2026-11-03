@@ -4,7 +4,11 @@ Page({
   data: {
     item: null,
     submitting: false,
-    showCheckinPicker: false,
+    showRegistrationDialog: false,
+    registrationStep: 'confirm',
+    currentPhone: '',
+    registrationPhone: '',
+    phoneError: '',
     actionText: '我要报名',
     rewardText: '立即报名',
     actionDisabled: false,
@@ -25,8 +29,8 @@ Page({
     if (status === 'REGISTERED') {
       const mode = (item && item.checkin_mode) || 'QR'
       return {
-        actionText: mode === 'LOCATION' ? '定位签到' : mode === 'BOTH' ? '选择签到方式' : '扫码签到',
-        rewardText: mode === 'LOCATION' ? '定位签到后' : mode === 'BOTH' ? '扫码或定位签到后' : '扫码签到后',
+        actionText: '扫码签到',
+        rewardText: mode === 'BOTH' ? '扫码并定位后' : '扫码后',
         actionDisabled: false,
       }
     }
@@ -48,11 +52,7 @@ Page({
     const item = this.data.item
     if (!item || item.participation_status === 'CHECKED_IN' || this.data.submitting) return
     if (item.participation_status === 'REGISTERED') {
-      const mode = item.checkin_mode || 'QR'
-      if (mode === 'BOTH') return this.setData({ showCheckinPicker: true })
-      if (mode === 'QR') return this.qrCheckIn()
-      this.locationCheckIn()
-      return
+      return this.qrCheckIn()
     }
     this.register()
   },
@@ -64,15 +64,6 @@ Page({
       .then(() => this.load(item.id))
       .finally(() => this.setData({ submitting: false }))
   },
-  chooseCheckin(e) {
-    const mode = e.currentTarget.dataset.mode
-    this.setData({ showCheckinPicker: false })
-    if (mode === 'QR') this.qrCheckIn()
-    if (mode === 'LOCATION') this.locationCheckIn()
-  },
-  closeCheckinPicker() {
-    this.setData({ showCheckinPicker: false })
-  },
   noop() {},
   register() {
     const item = this.data.item
@@ -83,22 +74,72 @@ Page({
       return
     }
     this.setData({ submitting: true })
-    const submitRegistration = () => request(`/mini/activities/${item.id}/register`, { method: 'POST' })
     requireLogin()
-      .then(submitRegistration)
-      .catch((error) => {
-        if (error && (error.statusCode === 401 || error.statusCode === 403)) return requireLogin().then(submitRegistration)
-        throw error
+      .then((loginUser) => request('/mini/profile', { silent: true }).catch(() => loginUser).then((user) => user || loginUser))
+      .then((user) => {
+        app.globalData.user = { ...(app.globalData.user || {}), ...user }
+        wx.setStorageSync('user', app.globalData.user)
+        if (!isProfileComplete(user)) {
+          this.setData({ submitting: false })
+          return wx.showModal({
+            title: '请先完善信息',
+            content: '完成个人信息填写后才能报名活动，是否现在前往完善信息？',
+            confirmText: '现在填写',
+            cancelText: '暂不填写',
+            success: (result) => result.confirm && wx.navigateTo({ url: '/pages/profile-edit/profile-edit' }),
+          })
+        }
+        const current = (user && user.phone) || (app.globalData.user && app.globalData.user.phone)
+        this.setData({
+          submitting: false,
+          showRegistrationDialog: true,
+          registrationStep: current ? 'confirm' : 'phone',
+          currentPhone: current || '',
+          registrationPhone: current || '',
+          phoneError: '',
+        })
       })
+      .catch(() => this.setData({ submitting: false }))
+  },
+  closeRegistrationDialog() {
+    if (this.data.submitting) return
+    this.setData({ showRegistrationDialog: false, phoneError: '' })
+  },
+  chooseOtherPhone() {
+    this.setData({ registrationStep: 'phone', registrationPhone: '', phoneError: '' })
+  },
+  inputRegistrationPhone(e) {
+    this.setData({ registrationPhone: e.detail.value, phoneError: '' })
+  },
+  useCurrentPhone() {
+    this.submitRegistration(this.data.currentPhone)
+  },
+  submitPhoneRegistration() {
+    const phone = String(this.data.registrationPhone || '').trim()
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      this.setData({ phoneError: '请输入正确的11位手机号码' })
+      return
+    }
+    this.submitRegistration(phone)
+  },
+  submitRegistration(phone) {
+    const item = this.data.item
+    if (!item || this.data.submitting) return
+    this.setData({ submitting: true, phoneError: '' })
+    request(`/mini/activities/${item.id}/register`, { method: 'POST', data: { phone }, silent: true })
       .then((updated) => {
         const next = { ...(this.data.item || {}), ...(updated || {}) }
         if (!next.participation_status) next.participation_status = 'REGISTERED'
         this.setActivity(next)
-        this.setData({ submitting: false })
+        this.setData({ submitting: false, showRegistrationDialog: false })
         wx.showModal({ title: '报名成功', content: '您已成功报名该活动', showCancel: false })
       })
       .catch((error) => {
         this.setData({ submitting: false })
+        if (error && error.code === 'INVALID_PHONE') {
+          this.setData({ showRegistrationDialog: true, registrationStep: 'phone', phoneError: error.message || '请输入正确的手机号' })
+          return
+        }
         const message =
           error && error.message
             ? String(error.message)
@@ -107,55 +148,6 @@ Page({
               : '报名失败，请稍后重试'
         wx.showModal({ title: '报名失败', content: message, showCancel: false })
       })
-  },
-  locationCheckIn() {
-    const item = this.data.item
-    if (!item || this.data.submitting) return
-    this.setData({ submitting: true })
-    requireLogin()
-      .then(
-        () =>
-          new Promise((resolve, reject) =>
-            wx.getLocation({
-              type: 'gcj02',
-              isHighAccuracy: true,
-              highAccuracyExpireTime: 5000,
-              success: resolve,
-              fail: reject,
-            })
-          )
-      )
-      .then((location) =>
-        request(`/mini/activities/${item.id}/check-in/location`, {
-          method: 'POST',
-          data: {
-            latitude: location.latitude,
-            longitude: location.longitude,
-            accuracy: location.accuracy || 0,
-          },
-        })
-      )
-      .then((result) => {
-        wx.showModal({
-          title: result && result.alreadyCheckedIn ? '已签到' : '签到成功',
-          content: result && result.alreadyCheckedIn ? '该活动已经签到，不能重复领取积分' : '活动已签到，获得100积分',
-          showCancel: false,
-        })
-        return this.load(item.id)
-      })
-      .catch((error) => {
-        if (error && error.errMsg && String(error.errMsg).includes('getLocation'))
-          wx.showModal({
-            title: '无法获取位置',
-            content:
-              item.checkin_mode === 'BOTH'
-                ? '请开启定位权限后重试，或使用二维码签到。'
-                : '请开启定位权限后重试。',
-            confirmText: '去设置',
-            success: (r) => r.confirm && wx.openSetting(),
-          })
-      })
-      .finally(() => this.setData({ submitting: false }))
   },
   navigate() {
     const i = this.data.item
@@ -169,3 +161,11 @@ Page({
     else wx.showToast({ title: '活动地点尚未配置', icon: 'none' })
   },
 })
+
+function isProfileComplete(user) {
+  if (!user) return false
+  if (typeof user.profileComplete === 'boolean') return user.profileComplete
+  if (typeof user.profile_complete === 'boolean') return user.profile_complete
+  const values = [user.realName || user.real_name, user.age, user.graduationSchool || user.graduation_school, user.majorDirection || user.major_direction, user.city]
+  return values.every((value) => value !== null && value !== undefined && String(value).trim() !== '')
+}

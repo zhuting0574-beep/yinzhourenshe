@@ -41,7 +41,8 @@ Page({
     const tab = this.getTabBar && this.getTabBar()
     if (tab) tab.setData({ selected: 0 })
     const user = getApp().globalData.user
-    request('/mini/home')
+    request('/mini/home', { silent: true })
+      .catch((error) => error && error.code === 'NOT_FOUND' ? request('/mini/home', { silent: true }) : Promise.reject(error))
       .then((d) => {
         const questionnaire = normalizeQuestionnaire(d.questionnaire)
         this.setData({
@@ -83,7 +84,7 @@ Page({
 })
 
 function getDisplayName(user, loggedIn) {
-  if (!loggedIn || !String(user && user.phone || '').trim()) return ''
+  if (!loggedIn) return ''
   const realName = user && (user.realName || user.real_name)
   const nickname = user && user.nickname
   return String(realName || nickname || '微信用户').trim()

@@ -100,62 +100,82 @@
   background: #75a0d9;
   color: #fff;
 }
-.checkin-picker-mask {
+.registration-mask {
   position: fixed;
-  z-index: 20;
+  z-index: 30;
   inset: 0;
   display: flex;
-  align-items: flex-end;
-  padding: 28rpx 28rpx calc(28rpx + env(safe-area-inset-bottom));
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
   box-sizing: border-box;
-  background: rgba(18, 42, 58, 0.42);
+  background: rgba(18, 42, 58, 0.48);
 }
-.checkin-picker {
+.registration-dialog {
+  position: relative;
   width: 100%;
-  padding: 30rpx 28rpx 24rpx;
+  padding: 38rpx 30rpx 30rpx;
   box-sizing: border-box;
   background: #fff;
   border-radius: 24rpx;
-  box-shadow: 0 -8rpx 36rpx rgba(18, 42, 58, 0.16);
+  box-shadow: 0 12rpx 50rpx rgba(18, 42, 58, 0.2);
 }
-.checkin-picker__title {
+.registration-dialog__header {
   color: #222;
-  font-size: 30rpx;
+  font-size: 32rpx;
   font-weight: 700;
   text-align: center;
 }
-.checkin-picker__hint {
-  margin-top: 10rpx;
+.registration-dialog__close {
+  position: absolute;
+  top: 16rpx;
+  right: 20rpx;
+  width: 52rpx;
+  height: 52rpx;
   color: #8a9aa6;
-  font-size: 22rpx;
+  font-size: 48rpx;
+  font-weight: 300;
+  line-height: 46rpx;
   text-align: center;
 }
-.checkin-picker__options {
-  display: flex;
-  gap: 18rpx;
-  margin-top: 28rpx;
+.registration-dialog__hint {
+  margin-top: 18rpx;
+  color: #8a9aa6;
+  font-size: 24rpx;
+  text-align: center;
 }
-.checkin-picker__option,
-.checkin-picker__cancel {
-  flex: 1;
+.registration-phone-current {
+  margin: 18rpx 0 26rpx;
+  color: #1769e0;
+  font-size: 38rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+  text-align: center;
+}
+.registration-button {
+  width: 100%;
   height: 78rpx;
-  margin: 0;
+  margin: 18rpx 0 0;
   padding: 0;
   border-radius: 40rpx;
   font-size: 27rpx;
   line-height: 78rpx;
 }
-.checkin-picker__option::after,
-.checkin-picker__cancel::after {
-  border: 0;
+.registration-button::after { border: 0; }
+.registration-button--primary { background: #1769e0; color: #fff; }
+.registration-button--secondary { background: #f2f6f8; color: #6d8290; }
+.registration-phone-input {
+  height: 82rpx;
+  margin-top: 26rpx;
+  padding: 0 24rpx;
+  box-sizing: border-box;
+  border: 1rpx solid #d8e3e9;
+  border-radius: 12rpx;
+  color: #253746;
+  font-size: 30rpx;
 }
-.checkin-picker__option {
-  background: #1769e0;
-  color: #fff;
-}
-.checkin-picker__cancel {
-  width: 100%;
-  margin-top: 18rpx;
-  background: #f2f6f8;
-  color: #6d8290;
+.registration-phone-error {
+  margin-top: 12rpx;
+  color: #e24a4a;
+  font-size: 23rpx;
 }

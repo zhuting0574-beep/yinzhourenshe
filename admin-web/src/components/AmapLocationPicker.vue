@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import AMapLoader from '@amap/amap-jsapi-loader'
 
@@ -27,6 +27,7 @@ const amapKey = import.meta.env.VITE_AMAP_KEY?.trim() || ''
 let map: any
 let marker: any
 let geocoder: any
+let placeSearch: any
 let amapPromise: Promise<any> | undefined
 
 function validCoordinate(value: unknown) {
@@ -39,7 +40,7 @@ function loadAmap() {
   if (!amapKey) return Promise.reject(new Error('请配置高德地图 Web JS API Key'))
   const securityCode = import.meta.env.VITE_AMAP_SECURITY_CODE?.trim()
   if (securityCode) window._AMapSecurityConfig = { securityJsCode: securityCode }
-  amapPromise = AMapLoader.load({ key: amapKey, version: '2.0', plugins: ['AMap.Geocoder'] })
+  amapPromise = AMapLoader.load({ key: amapKey, version: '2.0', plugins: ['AMap.Geocoder', 'AMap.PlaceSearch'] })
   return amapPromise
 }
 
@@ -50,7 +51,10 @@ function setMarker(longitude: number, latitude: number, center = false) {
     marker = new window.AMap.Marker({ position, anchor: 'bottom-center' })
     map.add(marker)
   } else marker.setPosition(position)
-  if (center) map.setZoomAndCenter(16, position)
+  if (center) {
+    map.setZoomAndCenter(16, position)
+    requestAnimationFrame(() => map?.resize?.())
+  }
 }
 
 function updateLocation(longitude: number, latitude: number, center = false) {
@@ -66,13 +70,57 @@ async function locateAddress() {
   if (!address) return ElMessage.warning('请先填写上方地址')
   if (!geocoder) return ElMessage.error(mapError.value || '地图尚未加载完成')
   loadingAddress.value = true
-  geocoder.getLocation(address, (status: string, result: any) => {
-    loadingAddress.value = false
-    const location = result?.geocodes?.[0]?.location
-    if (status !== 'complete' || !location) return ElMessage.error('未找到该地址，请补充城市、区县和详细地址')
-    updateLocation(Number(location.lng), Number(location.lat), true)
+  const withTimeout = <T>(start: (resolve: (value: T) => void, reject: (reason?: any) => void) => void, ms: number, message: string) =>
+    new Promise<T>((resolve, reject) => {
+      const timer = window.setTimeout(() => reject(new Error(message)), ms)
+      try {
+        start(
+          value => { window.clearTimeout(timer); resolve(value) },
+          error => { window.clearTimeout(timer); reject(error) },
+        )
+      } catch (error) {
+        window.clearTimeout(timer)
+        reject(error)
+      }
+    })
+
+  try {
+    let location: any
+    try {
+      location = await withTimeout<any>((resolve, reject) => {
+        geocoder.getLocation(address, (status: string, result: any) => {
+          const found = result?.geocodes?.[0]?.location
+          if (status === 'complete' && found) resolve(found)
+          else reject(new Error('地址解析未找到匹配位置'))
+        })
+      }, 10000, '地址解析超时')
+    } catch (geocodeError) {
+      // Geocoding can miss place names such as universities; fall back to POI search.
+      if (!placeSearch) throw geocodeError
+      location = await withTimeout<any>((resolve, reject) => {
+        placeSearch.search(address, (status: string, result: any) => {
+          const found = result?.poiList?.pois?.[0]?.location
+          if (status === 'complete' && found) resolve(found)
+          else reject(new Error('地点搜索未找到匹配位置'))
+        })
+      }, 10000, '地点搜索超时')
+    }
+
+    const longitude = Number(typeof location?.getLng === 'function' ? location.getLng() : location?.lng)
+    const latitude = Number(typeof location?.getLat === 'function' ? location.getLat() : location?.lat)
+    if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) throw new Error('地图服务返回了无效坐标')
+    await nextTick()
+    updateLocation(longitude, latitude, true)
     ElMessage.success('已根据地址定位，请在地图上确认位置')
-  })
+  } catch (error: any) {
+    console.error('[AmapLocationPicker] address lookup failed', error)
+    const message = String(error?.message || '')
+    if (message.includes('超时')) ElMessage.error('地图查询超时，请检查网络后重试')
+    else if (message.includes('无效坐标')) ElMessage.error(message)
+    else ElMessage.error('未找到该地址，请补充城市、区县和详细地址后重试')
+  } finally {
+    loadingAddress.value = false
+  }
 }
 
 onMounted(async () => {
@@ -81,7 +129,9 @@ onMounted(async () => {
     const hasCoordinate = validCoordinate(props.longitude) && validCoordinate(props.latitude)
     const center = hasCoordinate ? [Number(props.longitude), Number(props.latitude)] : [121.55027, 29.87486]
     map = new AMap.Map(mapContainer.value, { zoom: hasCoordinate ? 16 : 11, center, resizeEnable: true })
-    geocoder = new AMap.Geocoder({ city: '宁波' })
+    // Do not pin address resolution to Ningbo: activity venues may be in any city.
+    geocoder = new AMap.Geocoder()
+    placeSearch = new AMap.PlaceSearch({ city: '全国', pageSize: 10 })
     if (hasCoordinate) setMarker(center[0], center[1])
     map.on('click', (event: any) => updateLocation(Number(event.lnglat.getLng()), Number(event.lnglat.getLat())))
   } catch (error: any) {
@@ -90,7 +140,7 @@ onMounted(async () => {
 })
 
 watch(() => [props.longitude, props.latitude], ([longitude, latitude]) => {
-  if (validCoordinate(longitude) && validCoordinate(latitude)) setMarker(Number(longitude), Number(latitude))
+  if (validCoordinate(longitude) && validCoordinate(latitude)) setMarker(Number(longitude), Number(latitude), true)
 })
 
 onBeforeUnmount(() => map?.destroy())
