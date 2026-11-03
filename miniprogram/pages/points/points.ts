@@ -9,7 +9,7 @@ Page({
       .then(([items, user]) => this.setData({ items, points: user.points }))
   },
   back() {
-    wx.navigateBack({ fail: () => this.home() })
+    wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/profile/profile', fail: () => wx.reLaunch({ url: '/pages/profile/profile' }) }) })
   },
   home() {
     wx.switchTab({ url: '/pages/home/home' })

@@ -44,22 +44,23 @@ class PlatformServiceQrTest {
  }
 
  @Test void invalidNonFiniteLocationIsRejectedBeforeDatabaseAccess(){
-  BusinessException error=assertThrows(BusinessException.class,()->service().locationCheckIn(1L,9L,Double.NaN,121.55,10));
+  BusinessException error=assertThrows(BusinessException.class,()->service().locationCheckIn(1L,9L,Double.NaN,121.55,10,null));
   assertEquals("INVALID_LOCATION",error.code);
  }
 
  @Test void qrOnlyActivityRejectsLocationCheckIn(){
   JdbcTemplate db=mock(JdbcTemplate.class);
   when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity("QR",200));
-  BusinessException error=assertThrows(BusinessException.class,()->service(db).locationCheckIn(1L,9L,29.817,121.55,10));
+  BusinessException error=assertThrows(BusinessException.class,()->service(db).locationCheckIn(1L,9L,29.817,121.55,10,null));
   assertEquals("CHECKIN_METHOD_NOT_ALLOWED",error.code);
   verify(db,never()).update(anyString(),any(Object[].class));
  }
 
  @Test void locationOutsideConfiguredRadiusIsRejected(){
   JdbcTemplate db=mock(JdbcTemplate.class);
-  when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity("LOCATION",100));
-  BusinessException error=assertThrows(BusinessException.class,()->service(db).locationCheckIn(1L,9L,29.818,121.55,10));
+  when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity("BOTH",100));
+  PlatformService service=service(db);
+  BusinessException error=assertThrows(BusinessException.class,()->service.locationCheckIn(1L,9L,29.818,121.55,10,service.qrToken(9L)));
   assertEquals("OUTSIDE_CHECKIN_RANGE",error.code);
   verify(db,never()).update(anyString(),any(Object[].class));
  }
@@ -72,7 +73,8 @@ class PlatformServiceQrTest {
   Map<String,Object> checkedIn=Map.of("status","CHECKED_IN","checkin_method","LOCATION");
   when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity,checkedIn);
   when(db.update(startsWith("update activity_participations"),any(Object[].class))).thenReturn(0);
-  Map<String,Object> result=service(db).locationCheckIn(1L,9L,latitude,121.55,8);
+  PlatformService service=service(db);
+  Map<String,Object> result=service.locationCheckIn(1L,9L,latitude,121.55,8,service.qrToken(9L));
   assertEquals("CHECKED_IN",result.get("status"));
   assertEquals(true,result.get("alreadyCheckedIn"));
   verify(db,times(1)).update(startsWith("update activity_participations"),any(Object[].class));
@@ -81,10 +83,11 @@ class PlatformServiceQrTest {
 
  @Test void locationCheckInOutsideActivityTimeIsRejected(){
   JdbcTemplate db=mock(JdbcTemplate.class);
-  Map<String,Object> activity=activity("LOCATION",200);
+  Map<String,Object> activity=activity("BOTH",200);
   activity.put("start_time",Timestamp.valueOf(LocalDateTime.now().plusHours(1)));
   when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity);
-  BusinessException error=assertThrows(BusinessException.class,()->service(db).locationCheckIn(1L,9L,29.817,121.55,10));
+  PlatformService service=service(db);
+  BusinessException error=assertThrows(BusinessException.class,()->service.locationCheckIn(1L,9L,29.817,121.55,10,service.qrToken(9L)));
   assertEquals("ACTIVITY_NOT_RUNNING",error.code);
   verify(db,never()).update(anyString(),any(Object[].class));
  }
@@ -107,15 +110,27 @@ class PlatformServiceQrTest {
  @Test void qrAndLocationCannotBothAwardTheSameActivity(){
   JdbcTemplate db=mock(JdbcTemplate.class);
   Map<String,Object> activity=activity("BOTH",200);
+  activity.put("participation_status","CHECKED_IN");
   Map<String,Object> checkedIn=Map.of("status","CHECKED_IN","checkin_method","QR");
   when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity,checkedIn,activity,checkedIn);
   when(db.update(startsWith("update activity_participations"),any(Object[].class))).thenReturn(0);
 
   PlatformService service=service(db);
   assertEquals(true,service.verifyActivity(1L,service.qrToken(9L),"QR").get("alreadyCheckedIn"));
-  assertEquals(true,service.locationCheckIn(1L,9L,29.817,121.55,5).get("alreadyCheckedIn"));
+  assertEquals(true,service.locationCheckIn(1L,9L,29.817,121.55,5,service.qrToken(9L)).get("alreadyCheckedIn"));
 
   verify(db,never()).update(startsWith("update users set points"),any(Object[].class));
+ }
+
+ @Test void qrScanForCombinedActivityRequiresLocation(){
+  JdbcTemplate db=mock(JdbcTemplate.class);
+  Map<String,Object> activity=activity("BOTH",200);
+  activity.put("participation_status","REGISTERED");
+  when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity);
+  PlatformService service=service(db);
+  Map<String,Object> result=service.verifyActivity(1L,service.qrToken(9L),"QR");
+  assertEquals(true,result.get("requiresLocation"));
+  verify(db,never()).update(anyString(),any(Object[].class));
  }
 
  @Test void registrationAcceptsLocalDateTimeValuesReturnedByMysql(){

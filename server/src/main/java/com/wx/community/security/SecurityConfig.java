@@ -14,7 +14,7 @@ import java.io.IOException; import java.util.List;
  @Bean SecurityFilterChain filter(HttpSecurity h,TokenFilter f)throws Exception{return h.csrf(x->x.disable()).cors(x->{}).sessionManagement(x->x.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(x->x
   .requestMatchers(HttpMethod.GET,"/api","/api/").permitAll()
   .requestMatchers("/api/mini/auth/**","/api/admin/auth/login","/api/dev/**","/uploads/**").permitAll()
-  .requestMatchers(HttpMethod.GET,"/api/mini/home","/api/mini/activities/**","/api/mini/products/**","/api/mini/content/**").permitAll()
+  .requestMatchers(HttpMethod.GET,"/api/mini/home","/api/mini/activities/**","/api/mini/products/**","/api/mini/content/**","/api/mini/reward-config").permitAll()
   .requestMatchers(HttpMethod.PUT,"/api/admin/auth/password").hasAnyRole("ADMIN","ORDER_OPERATOR")
   .requestMatchers("/api/admin/uploads").authenticated()
   .requestMatchers("/api/admin/orders","/api/admin/orders/**").hasAnyRole("ADMIN","ORDER_OPERATOR")

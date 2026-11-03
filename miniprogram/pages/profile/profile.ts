@@ -1,6 +1,6 @@
 import { request, login, bindPhone, updateWechatProfile } from '../../utils/request'
 Page({
-  data: { user: null as any, loggedIn: false, profileComplete: false, service: null as any, rulesVisible: false, rulesContent: '' },
+  data: { user: null as any, loggedIn: false, phoneBound: false, profileComplete: false, service: null as any, rulesVisible: false, rulesContent: '', profileRewardPoints: 100 },
   onShow() {
     const tab = this.getTabBar && this.getTabBar()
     if (tab) tab.setData({ selected: 4 })
@@ -11,14 +11,15 @@ Page({
     request<any[]>('/mini/content/RULES', { errorTitle: '积分规则获取失败' })
       .then((rules) => this.setData({ rulesContent: rules[0]?.content || '' }))
       .catch((error) => console.warn('Points rules request failed', error))
-    if (!app.globalData.token) return this.setData({ user: null, loggedIn: false, profileComplete: false })
-    request<any>('/mini/profile')
+    request<any>('/mini/reward-config', { silent: true }).then((config) => this.setData({ profileRewardPoints: Number(config?.profileRewardPoints) || 100 })).catch(() => {})
+    if (!app.globalData.token) return this.setData({ user: null, loggedIn: false, phoneBound: false, profileComplete: false })
+    request<any>('/mini/profile', { silent: true })
       .then((user) => {
         app.globalData.user = { ...(app.globalData.user || {}), ...user }
-        const registered = isRegisteredUser(user)
-        this.setData({ user: registered ? user : null, loggedIn: registered, profileComplete: registered && isProfileComplete(user) })
+        const phoneBound = hasBoundPhone(user)
+        this.setData({ user, loggedIn: true, phoneBound, profileComplete: phoneBound && isProfileComplete(user) })
       })
-      .catch(() => this.setData({ user: null, loggedIn: false, profileComplete: false }))
+      .catch(() => this.setData({ user: null, loggedIn: false, phoneBound: false, profileComplete: false }))
   },
   openLogin() {
     if (this.data.loggedIn) return
@@ -42,7 +43,7 @@ Page({
       .then(() => bindPhone(code))
       .then((user) => user.phoneAlreadyRegistered ? user : getWechatProfile().then((profile) => isUsableWechatProfile(profile) ? updateWechatProfile(profile.nickName, profile.avatarUrl) : user))
       .then((user) => {
-        this.setData({ user, loggedIn: true, profileComplete: isProfileComplete(user) })
+        this.setData({ user, loggedIn: true, phoneBound: true, profileComplete: isProfileComplete(user) })
         wx.showToast({ title: '注册成功', icon: 'success' })
       })
       .catch((error) => {
@@ -55,7 +56,7 @@ Page({
     app.globalData.user = null
     wx.removeStorageSync('token')
     wx.removeStorageSync('user')
-    this.setData({ user: null, loggedIn: false, profileComplete: false })
+    this.setData({ user: null, loggedIn: false, phoneBound: false, profileComplete: false })
     wx.showToast({ title: '已退出登录', icon: 'success' })
   },
   navigate() {
@@ -94,7 +95,7 @@ function isProfileComplete(user: any) {
   return values.every((value) => value !== null && value !== undefined && String(value).trim() !== '')
 }
 
-function isRegisteredUser(user: any) {
+function hasBoundPhone(user: any) {
   return !!user && !!String(user.phone || '').trim()
 }
 

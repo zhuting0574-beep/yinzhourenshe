@@ -1,6 +1,7 @@
 <view class="checkin-page">
   <safe-area-top />
   <view class="mini-top">
+    <button class="mini-top__back" bindtap="back" aria-label="返回上一页"><view class="mini-top__back-icon"></view></button>
     <view class="mini-top__title">每日签到</view>
   </view>
   <view class="score">
@@ -36,7 +37,7 @@
     </view>
     <button class="check-btn" bindtap="submit" disabled="{{todayChecked||submitting}}">
       <text>{{todayChecked?'今日已签到':'立即签到'}}</text>
-      <text class="small">每日签到奖励10积分</text>
+      <text class="small">每日签到奖励{{dailyCheckinPoints}}积分</text>
     </button>
   </view>
   <view class="tasks">

@@ -13,11 +13,15 @@
       </view>
     </view>
     <view wx:if="{{!loggedIn}}" class="account-actions">
-      <button class="account-action-btn account-action-btn--primary" open-type="getPhoneNumber" bindgetphonenumber="phone">授权手机号并完成注册</button>
+      <button class="account-action-btn account-action-btn--primary" bindtap="openLogin">微信一键登录</button>
     </view>
-    <view wx:if="{{loggedIn}}" class="account-actions">
+    <view wx:elif="{{!phoneBound}}" class="account-actions">
+      <button class="account-action-btn account-action-btn--primary" open-type="getPhoneNumber" bindgetphonenumber="phone">授权手机号并完成注册</button>
+      <button class="account-action-btn account-action-btn--outline" bindtap="logout">退出登录</button>
+    </view>
+    <view wx:else class="account-actions">
       <button class="account-action-btn account-action-btn--primary" bindtap="editProfile">
-        完善信息<text wx:if="{{!profileComplete}}" class="profile-reward">+100积分</text>
+        完善信息<text wx:if="{{!profileComplete}}" class="profile-reward">+{{profileRewardPoints}}积分</text>
       </button>
       <button class="account-action-btn account-action-btn--outline" bindtap="logout">退出登录</button>
     </view>

@@ -2,6 +2,7 @@
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import * as echarts from 'echarts'
 import api from '../api'
+import { formatDateTime } from '../utils/dateTime'
 
 const props = defineProps<{ questionnaire: any | null }>()
 const visible = defineModel<boolean>({ default: false })
@@ -34,7 +35,7 @@ function textAnswers(question: any) {
   return responses.value.map((response) => ({
     nickname: response.nickname || '匿名用户',
     phone: response.phone || '',
-    submittedAt: response.submitted_at || '',
+    submittedAt: formatDateTime(response.submitted_at, ''),
     answer: answerValues(parseAnswers(response.answers_json)[String(question.id)]).join('、')
   })).filter((item) => item.answer)
 }

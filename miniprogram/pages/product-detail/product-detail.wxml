@@ -1,6 +1,7 @@
 <view wx:if="{{item}}" class="detail-page">
   <safe-area-top />
   <view class="mini-top">
+    <button class="mini-top__back" bindtap="back" aria-label="返回上一页"><view class="mini-top__back-icon"></view></button>
     <view class="mini-top__title">积分兑换</view>
   </view>
   <view class="content">

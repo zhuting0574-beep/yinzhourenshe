@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 
 class PlatformServiceProfileTest {
     private static final long USER_ID = 23L;
-    private static final String PROFILE_SQL = "select id,nickname,avatar_url,phone,points,status,created_at,real_name,age,graduation_school,major_direction,city,profile_rewarded from users where id=?";
+    private static final String PROFILE_SQL = "select id,nickname,avatar_url,phone,points,status,created_at,real_name,gender,age,graduation_school,major_direction,city,profile_rewarded from users where id=?";
 
     @Test
     void rejectsAgeOutsideAllowedRange() {
@@ -41,6 +41,7 @@ class PlatformServiceProfileTest {
         Map<String, Object> result = new HashMap<>();
         result.put("id", USER_ID);
         result.put("real_name", "张三");
+        result.put("gender", "男");
         result.put("age", 30);
         result.put("graduation_school", "宁波大学");
         result.put("major_direction", "计算机");
@@ -71,6 +72,7 @@ class PlatformServiceProfileTest {
         Map<String, Object> actual = service.updateProfileDetails(USER_ID, details);
 
         assertEquals(true, actual.get("profileComplete"));
+        assertEquals("男", actual.get("gender"));
         assertEquals(true, actual.get("profileRewarded"));
         assertEquals(true, actual.get("rewardGranted"));
         verify(db).queryForObject("select count(*) from point_logs where idempotency_key=?", Integer.class, "profile:" + USER_ID);

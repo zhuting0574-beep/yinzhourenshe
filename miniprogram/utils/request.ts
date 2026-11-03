@@ -34,7 +34,7 @@ export function request<T>(url: string, options: RequestOptions = {}) {
         if (r.statusCode >= 200 && r.statusCode < 300 && body.success)
           resolve(normalizeDateTimes(body.data))
         else {
-          if (r.statusCode === 401 || r.statusCode === 403 || body.code === 'LOGIN_REQUIRED') clearAuth()
+          if (r.statusCode === 401 || r.statusCode === 403 || body.code === 'LOGIN_REQUIRED' || (body.code === 'NOT_FOUND' && ['/mini/home', '/mini/profile'].includes(url))) clearAuth()
           if (errorTitle) console.warn(`${url} failed`, r.statusCode, body)
           if (!silent) wx.showToast({ title: errorTitle || body.message || '请求失败', icon: 'none' })
           reject({ ...body, statusCode: r.statusCode })
@@ -83,21 +83,61 @@ export function scanActivity() {
       new Promise((resolve, reject) =>
         wx.scanCode({
           onlyFromCamera: false,
-          success: (r) =>
-            request('/mini/activities/verify', { method: 'POST', data: { token: r.result } })
+          success: (r) => {
+            const token = r.result
+            const sharedActivityId = activityIdFromShareLink(token)
+            if (sharedActivityId) {
+              wx.navigateTo({
+                url: `/pages/activity-detail/activity-detail?id=${encodeURIComponent(sharedActivityId)}`,
+                success: () => resolve({ activityId: sharedActivityId, navigated: true }),
+                fail: reject,
+              })
+              return
+            }
+            request<any>('/mini/activities/verify', { method: 'POST', data: { token } })
+              .then((verified) => {
+                if (!verified.requiresLocation) return verified
+                return new Promise<any>((locationResolve, locationReject) =>
+                  wx.getLocation({
+                    type: 'gcj02',
+                    isHighAccuracy: true,
+                    highAccuracyExpireTime: 5000,
+                    success: (location) => locationResolve(location),
+                    fail: (error) => {
+                      wx.showModal({
+                        title: '无法获取位置',
+                        content: '该活动需要扫码并完成定位签到，请开启定位权限后重新扫码。',
+                        confirmText: '去设置',
+                        success: (result) => result.confirm && wx.openSetting(),
+                      })
+                      locationReject(error)
+                    },
+                  })
+                ).then((location: any) =>
+                  request<any>(`/mini/activities/${verified.activityId}/check-in/location`, {
+                    method: 'POST',
+                    data: { token, latitude: location.latitude, longitude: location.longitude, accuracy: location.accuracy || 0 },
+                  })
+                )
+              })
               .then((data) => {
                 wx.showModal({
-                  title: data && (data as any).alreadyCheckedIn ? '已签到' : '核销成功',
-                  content: data && (data as any).alreadyCheckedIn ? '该活动已经签到，不能重复领取积分' : '活动已签到，获得100积分',
+                  title: data && (data as any).alreadyCheckedIn ? '已签到' : '签到成功',
+                  content: data && (data as any).alreadyCheckedIn ? '该活动已经签到，不能重复领取积分' : `活动已签到，获得${(data as any)?.points || 100}积分`,
                   showCancel: false,
                 })
                 resolve(data)
               })
-              .catch(reject),
+              .catch(reject)
+          },
           fail: reject,
         })
       )
   )
+}
+function activityIdFromShareLink(value: string) {
+  const match = String(value || '').match(/^https:\/\/(?:www\.)?yinlinpai\.com\/api\/mini\/activities\/(\d+)\/open(?:[?#].*)?$/i)
+  return match ? match[1] : ''
 }
 export function bindPhone(code: string) {
   return request<any>('/mini/auth/phone', { method: 'POST', data: { code } }).then((result) => {
