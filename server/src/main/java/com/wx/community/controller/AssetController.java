@@ -6,10 +6,10 @@ import java.io.*; import java.nio.file.*; import java.util.*;
 @RestController @RequestMapping("/api/admin") public class AssetController {
  private final Path root; private final String base; private final JdbcTemplate db; private final PlatformService platform; private final ImageCompressionService imageCompression; private final ObjectMapper json;
  public AssetController(@Value("${app.upload-dir:./uploads}")String root,@Value("${app.public-base-url:http://localhost:8081}")String base,JdbcTemplate db,PlatformService platform,ImageCompressionService imageCompression,ObjectMapper json)throws IOException{this.root=Path.of(root).toAbsolutePath().normalize();this.base=base;this.db=db;this.platform=platform;this.imageCompression=imageCompression;this.json=json;Files.createDirectories(this.root);}
- @PostMapping(value="/uploads",consumes=MediaType.MULTIPART_FORM_DATA_VALUE) public ApiResponse<?> upload(@RequestPart("file")MultipartFile file)throws IOException{
+ @PostMapping(value="/uploads",consumes=MediaType.MULTIPART_FORM_DATA_VALUE) public ApiResponse<?> upload(@RequestPart("file")MultipartFile file,@RequestParam(defaultValue="standard")String purpose)throws IOException{
   if(file.isEmpty())throw new BusinessException("EMPTY_FILE","请选择文件");
   byte[] originalBytes=file.getBytes();
-  ImageCompressionService.ProcessedImage processed=imageCompression.process(originalBytes,file.getContentType());
+  ImageCompressionService.ProcessedImage processed="activity-detail".equals(purpose)?imageCompression.processDetail(originalBytes,file.getContentType()):imageCompression.process(originalBytes,file.getContentType());
   String extension=processed.compressed()?"."+processed.extension():originalExtension(file.getOriginalFilename());
   String key=UUID.randomUUID()+extension;
   Path target=root.resolve(key);
@@ -65,8 +65,8 @@ import java.io.*; import java.nio.file.*; import java.util.*;
   Map<String,Object> activity;
   try{activity=db.queryForMap("select title from activities where id=?",id);}catch(org.springframework.dao.EmptyResultDataAccessException e){throw new BusinessException("NOT_FOUND","活动不存在");}
   String activityName=String.valueOf(activity.getOrDefault("title","活动参与人"));
-  List<Map<String,Object>> rows=db.queryForList("select u.real_name,u.gender,u.age,u.graduation_school,u.major_direction,coalesce(p.registration_phone,u.phone) registration_phone from activity_participations p join users u on u.id=p.user_id where p.activity_id=? order by p.registered_at",id);
-  return workbook(activityName,List.of("姓名","性别","年龄","学校","专业","报名活动电话"),rows,List.of("real_name","gender","age","graduation_school","major_direction","registration_phone"));
+  List<Map<String,Object>> rows=db.queryForList("select u.real_name,u.gender,u.age,u.graduation_school,u.major_direction,coalesce(p.registration_phone,u.phone) registration_phone,case when p.status='CHECKED_IN' or p.checked_in_at is not null then '是' else '否' end checked_in from activity_participations p join users u on u.id=p.user_id where p.activity_id=? order by p.registered_at",id);
+  return workbook(activityName,List.of("姓名","性别","年龄","学校","专业","报名活动电话","是否签到"),rows,List.of("real_name","gender","age","graduation_school","major_direction","registration_phone","checked_in"));
  }
  private ResponseEntity<byte[]> workbook(String name,List<String> headers,List<Map<String,Object>> rows,List<String> keys)throws IOException{org.apache.poi.xssf.usermodel.XSSFWorkbook book=new org.apache.poi.xssf.usermodel.XSSFWorkbook();try{var sheet=book.createSheet(safeSheetName(name));writeRow(sheet,0,headers);for(int i=0;i<rows.size();i++){List<String> values=new ArrayList<>();for(String key:keys){Object value=rows.get(i).get(key);values.add(value==null?"":String.valueOf(value));}writeRow(sheet,i+1,values);}for(int i=0;i<headers.size();i++)sheet.autoSizeColumn(i);ByteArrayOutputStream out=new ByteArrayOutputStream();book.write(out);String filename=safeFileName(name)+".xlsx";return ResponseEntity.ok().contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")).header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename*=UTF-8''"+java.net.URLEncoder.encode(filename,java.nio.charset.StandardCharsets.UTF_8).replace("+","%20")).body(out.toByteArray());}finally{book.close();}}
  private String safeFileName(String value){String name=String.valueOf(value==null?"活动参与人":value).replaceAll("[\\\\/:*?\"<>|\\r\\n]","_").trim();return name.isBlank()?"活动参与人":name;}

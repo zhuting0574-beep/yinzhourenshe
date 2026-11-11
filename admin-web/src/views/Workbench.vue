@@ -121,6 +121,10 @@ async function loadDashboardTrend() {
   dashboardTrend.value = await api.get('/admin/dashboard/trends', { params: { dimension: dashboardDimension.value } })
   await nextTick()
   if (!dashboardChartEl.value || !dashboardTrend.value) return
+  if (dashboardChart && dashboardChart.getDom() !== dashboardChartEl.value) {
+    dashboardChart.dispose()
+    dashboardChart = null
+  }
   dashboardChart ||= echarts.init(dashboardChartEl.value)
   dashboardChart.setOption({
     tooltip: { trigger: 'axis' },
@@ -136,6 +140,10 @@ async function loadDashboardTrend() {
   })
 }
 function resizeDashboardChart() { dashboardChart?.resize() }
+function disposeDashboardChart() {
+  dashboardChart?.dispose()
+  dashboardChart = null
+}
 function go(key: string) { router.push('/' + key) }
 function resetEditing() { Object.keys(editing).forEach(k => delete editing[k]) }
 function normalizeDateTime(value: unknown) {
@@ -263,6 +271,14 @@ function onPageChange(value: number) { page.value = value; load() }
 function onPageSizeChange(value: number) { pageSize.value = value; page.value = 1; load() }
 async function exportUsers(mode: 'range' | 'selected') { const query = mode === 'selected' ? `/api/admin/exports/users/selected?${Array.from(selectedIds.value).map(id => `ids=${id}`).join('&')}` : `/api/admin/exports/users?phone=${encodeURIComponent(search.value)}&createdStart=${encodeURIComponent(userCreatedRange.value[0] || '')}&createdEnd=${encodeURIComponent(userCreatedRange.value[1] || '')}`; const response = await fetch(query, { headers: uploadHeaders.value }); if (!response.ok) return ElMessage.error('导出失败'); const url = URL.createObjectURL(await response.blob()); const a = document.createElement('a'); a.href = url; a.download = 'users.xlsx'; a.click(); URL.revokeObjectURL(url) }
 async function exportActivity(row: any) { const response = await fetch(`/api/admin/activities/${row.id}/participants/export`, { headers: uploadHeaders.value }); if (!response.ok) return ElMessage.error('导出失败'); const url = URL.createObjectURL(await response.blob()); const a = document.createElement('a'); a.href = url; const fileName = String(row.title || '活动参与人').replace(/[\\/:*?"<>|\r\n]/g, '_').trim() || '活动参与人'; a.download = `${fileName}.xlsx`; a.click(); URL.revokeObjectURL(url) }
+async function deleteActivity(row: any) {
+  try {
+    await ElMessageBox.confirm(`删除活动“${row.title || row.id}”后，活动记录及所有用户报名、签到数据将永久删除且不可恢复，确定继续吗？`, '删除活动', { type: 'warning', confirmButtonText: '确认删除', cancelButtonText: '取消' })
+    await api.delete(`/admin/activities/${row.id}`)
+    ElMessage.success('活动及报名数据已删除')
+    await load()
+  } catch (e: any) { if (!['cancel', 'close'].includes(e) && e?.message) ElMessage.error(e.message) }
+}
 async function copyProducts() {
   if (!selectedProducts.value.length) return ElMessage.warning('请先选择商品')
   try {
@@ -416,11 +432,17 @@ async function removeBanner(row: any) {
     await load()
   } catch (e: any) { if (!['cancel', 'close'].includes(e) && e?.message) ElMessage.error(e.message) }
 }
-watch(() => props.module, load)
+watch(() => props.module, (module, previousModule) => {
+  if (previousModule === 'dashboard' && module !== 'dashboard') {
+    disposeDashboardChart()
+    dashboardTrend.value = null
+  }
+  load()
+})
 watch(dashboardDimension, () => { if (props.module === 'dashboard') loadDashboardTrend() })
 onMounted(load)
 onMounted(() => window.addEventListener('resize', resizeDashboardChart))
-onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resizeDashboardChart); dashboardChart?.dispose() })
+onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resizeDashboardChart); disposeDashboardChart() })
 </script>
 
 <template>
@@ -457,11 +479,12 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
         </el-card>
         <el-card v-else shadow="never"><el-table ref="ordersTable" :data="rows" row-key="id" empty-text="暂无数据" @selection-change="onTableSelectionChange">
           <el-table-column v-if="['orders','users','products'].includes(module)" type="selection" width="48" :selectable="module === 'orders' ? isOrderSelectable : undefined" reserve-selection />
-          <el-table-column v-for="c in columns" :key="c" :prop="c" :label="columnLabel(c)" :min-width="c === 'image_url' ? 150 : 130" show-overflow-tooltip><template #default="{ row }">
+          <el-table-column v-for="c in columns" :key="c" :prop="c" :label="columnLabel(c)" :min-width="c === 'image_url' ? 150 : 130" show-overflow-tooltip><template #default="{ row, $index }">
             <el-image v-if="module === 'banners' && c === 'image_url' && row[c]" :src="row[c]" fit="cover" style="width: 120px; height: 54px; border-radius: 6px" :preview-src-list="[row[c]]" preview-teleported />
+            <span v-else-if="module === 'activities' && c === 'id'">{{ $index + 1 }}</span>
             <span v-else>{{ displayValue(c, row[c]) }}</span>
           </template></el-table-column>
-          <el-table-column label="操作" fixed="right" :width="module === 'questionnaires' ? 360 : module === 'activities' ? 330 : module === 'banners' ? 180 : 240"><template #default="{ row }">
+          <el-table-column label="操作" fixed="right" header-align="center" :width="module === 'questionnaires' ? 360 : module === 'activities' ? 300 : module === 'banners' ? 180 : 240" :class-name="module === 'activities' ? 'activity-actions-column' : ''"><template #default="{ row }">
             <el-button v-if="['activities','questionnaires','products','content','banners'].includes(module)" link type="primary" @click="edit(row)">{{ module === 'banners' ? '修改' : '编辑' }}</el-button>
             <el-button v-if="module === 'banners'" link type="danger" @click="removeBanner(row)">删除</el-button>
             <el-button v-if="module === 'questionnaires'" link type="success" @click="showResults(row)">统计结果</el-button>
@@ -472,8 +495,9 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
             <el-button v-if="module === 'products'" link type="primary" @click="adjust(row,'stock')">调整库存</el-button>
             <el-button v-if="module === 'products'" link type="danger" @click="deleteProduct(row)">删除</el-button>
             <el-button v-if="module === 'activities' && ['QR','BOTH'].includes(row.checkin_mode || 'QR')" link @click="showQr(row)">核销码</el-button>
-            <el-button v-if="module === 'activities'" link type="primary" @click="showActivityQr(row)">活动二维码</el-button>
-            <el-button v-if="module === 'activities'" link type="success" @click="exportActivity(row)">导出参与人</el-button>
+            <el-button v-if="module === 'activities'" link type="primary" @click="showActivityQr(row)">活动码</el-button>
+            <el-button v-if="module === 'activities'" link type="success" @click="exportActivity(row)">导出</el-button>
+            <el-button v-if="module === 'activities'" link type="danger" @click="deleteActivity(row)">删除</el-button>
             <el-button v-if="module === 'orders' && row.status === 'PENDING'" link type="success" @click="orderAction(row,'pickup')">确认核销</el-button>
             <el-button v-if="module === 'orders' && row.status === 'PENDING'" link type="danger" @click="orderAction(row,'cancel')">取消</el-button>
             <el-button v-if="module === 'orders' && row.status === 'PICKED_UP'" link type="warning" @click="orderAction(row,'cancel-or-revert')">撤销核销</el-button>
@@ -501,7 +525,7 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
           <el-form-item label="签到范围"><el-input-number v-model="editing.checkinRadiusM" :min="1" :precision="0" /><span class="unit">米</span></el-form-item>
         </template>
         <el-form-item label="状态"><el-select v-model="editing.status"><el-option label="草稿" value="DRAFT" /><el-option label="已发布" value="PUBLISHED" /><el-option label="已下架" value="OFFLINE" /></el-select></el-form-item>
-        <el-form-item label="详情"><RichTextEditor v-model="editing.description" /></el-form-item>
+        <el-form-item label="详情"><RichTextEditor v-model="editing.description" upload-purpose="activity-detail" /></el-form-item>
       </template>
       <template v-else-if="module === 'questionnaires'">
         <el-form-item label="名称"><el-input v-model="editing.name" /></el-form-item>

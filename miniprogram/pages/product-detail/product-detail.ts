@@ -70,6 +70,8 @@ Page({
       },
     })
   },
+  onShareAppMessage() { const item: any = this.data.item || {}; return { title: item.name || '商品详情', path: `/pages/product-detail/product-detail?id=${item.id || ''}`, imageUrl: item.cover_url || item.coverUrl } },
+  onShareTimeline() { const item: any = this.data.item || {}; return { title: item.name || '商品详情', query: `id=${item.id || ''}`, imageUrl: item.cover_url || item.coverUrl } },
 })
 
 function stripHtml(value: unknown) {

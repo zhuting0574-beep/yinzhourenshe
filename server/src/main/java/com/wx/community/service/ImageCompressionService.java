@@ -22,10 +22,20 @@ public class ImageCompressionService {
     private static final int MAX_WIDTH = 1920;
     private static final long MAX_PIXELS = 40_000_000L;
     private static final int MAX_OUTPUT_BYTES = 200_000;
+    private static final int DETAIL_MAX_OUTPUT_BYTES = 2_000_000;
     private static final float[] JPEG_QUALITIES = {0.82f, 0.62f, 0.42f, 0.25f};
+    private static final float[] DETAIL_JPEG_QUALITIES = {0.92f, 0.85f, 0.75f, 0.62f};
     private static final int MIN_DIMENSION = 64;
 
     public ProcessedImage process(byte[] bytes, String contentType) throws IOException {
+        return process(bytes, contentType, MAX_OUTPUT_BYTES, JPEG_QUALITIES);
+    }
+
+    public ProcessedImage processDetail(byte[] bytes, String contentType) throws IOException {
+        return process(bytes, contentType, DETAIL_MAX_OUTPUT_BYTES, DETAIL_JPEG_QUALITIES);
+    }
+
+    private ProcessedImage process(byte[] bytes, String contentType, int maxOutputBytes, float[] jpegQualities) throws IOException {
         if (bytes == null || bytes.length == 0) {
             throw new BusinessException("EMPTY_FILE", "请选择文件");
         }
@@ -71,17 +81,17 @@ public class ImageCompressionService {
                 boolean png = format.equals("png");
                 BufferedImage resized = resize(source, source.getWidth(), source.getHeight(), format.equals("png"));
                 try {
-                    if (sample == 1 && resized == source && bytes.length < MAX_OUTPUT_BYTES && !png) {
+                    if (sample == 1 && resized == source && bytes.length < maxOutputBytes && !png) {
                         return original(bytes, contentType);
                     }
                     if (png) {
                         byte[] encodedPng = encode(resized, "png", null);
-                        if (encodedPng.length < MAX_OUTPUT_BYTES) {
+                        if (encodedPng.length < maxOutputBytes) {
                             return new ProcessedImage(encodedPng, "png", "image/png", true);
                         }
-                        return compressedJpeg(resized);
+                        return compressedJpeg(resized, maxOutputBytes, jpegQualities);
                     }
-                    return compressedJpeg(resized);
+                    return compressedJpeg(resized, maxOutputBytes, jpegQualities);
                 } finally {
                     if (resized != source) resized.flush();
                     source.flush();
@@ -144,14 +154,14 @@ public class ImageCompressionService {
         }
     }
 
-    private ProcessedImage compressedJpeg(BufferedImage image) throws IOException {
+    private ProcessedImage compressedJpeg(BufferedImage image, int maxOutputBytes, float[] qualities) throws IOException {
         BufferedImage current = toOpaque(image);
         try {
             for (int attempt = 0; attempt < 8; attempt++) {
                 byte[] smallest = null;
-                for (float quality : JPEG_QUALITIES) {
+                for (float quality : qualities) {
                     byte[] encoded = encode(current, "jpeg", quality);
-                    if (encoded.length < MAX_OUTPUT_BYTES) {
+                    if (encoded.length < maxOutputBytes) {
                         return new ProcessedImage(encoded, "jpg", "image/jpeg", true);
                     }
                     if (smallest == null || encoded.length < smallest.length) smallest = encoded;
@@ -159,22 +169,26 @@ public class ImageCompressionService {
                 int width = current.getWidth();
                 int height = current.getHeight();
                 if (Math.max(width, height) <= MIN_DIMENSION) {
-                    throw new BusinessException("IMAGE_COMPRESSION_FAILED", "图片压缩后仍超过200KB，请更换图片");
+                    throw compressionFailed(maxOutputBytes);
                 }
-                double scale = Math.min(0.85, Math.max(0.50, Math.sqrt((double) MAX_OUTPUT_BYTES / smallest.length) * 0.90));
+                double scale = Math.min(0.85, Math.max(0.50, Math.sqrt((double) maxOutputBytes / smallest.length) * 0.90));
                 int nextWidth = Math.max(1, (int) Math.round(width * scale));
                 int nextHeight = Math.max(1, (int) Math.round(height * scale));
                 if (nextWidth == width && nextHeight == height) {
-                    throw new BusinessException("IMAGE_COMPRESSION_FAILED", "图片压缩后仍超过200KB，请更换图片");
+                    throw compressionFailed(maxOutputBytes);
                 }
                 BufferedImage next = resizeTo(current, nextWidth, nextHeight, false);
                 if (next != current) current.flush();
                 current = next;
             }
-            throw new BusinessException("IMAGE_COMPRESSION_FAILED", "图片压缩后仍超过200KB，请更换图片");
+            throw compressionFailed(maxOutputBytes);
         } finally {
             current.flush();
         }
+    }
+
+    private BusinessException compressionFailed(int maxOutputBytes) {
+        return new BusinessException("IMAGE_COMPRESSION_FAILED", "图片压缩后仍超过" + (maxOutputBytes / 1_000_000d >= 1 ? maxOutputBytes / 1_000_000 + "MB" : maxOutputBytes / 1_000 + "KB") + "，请更换图片");
     }
 
     private BufferedImage toOpaque(BufferedImage source) {

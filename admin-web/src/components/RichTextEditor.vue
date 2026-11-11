@@ -8,6 +8,7 @@ import '@wangeditor/editor/dist/css/style.css'
 
 const props = defineProps<{
   modelValue?: string | null
+  uploadPurpose?: string
 }>()
 const emit = defineEmits<{ (event: 'update:modelValue', value: string): void }>()
 const editorRef = shallowRef<IDomEditor>()
@@ -21,7 +22,7 @@ editorConfig.MENU_CONF = {
     allowedFileTypes: ['image/*'],
     async customUpload(file: File, insertFn: (url: string, alt?: string, href?: string) => void) {
       try {
-        const result = await uploadAdminImage(file)
+        const result = await uploadAdminImage(file, props.uploadPurpose || 'standard')
         insertFn(result.data.url, file.name)
       } catch (error: any) {
         ElMessage.error(error.message || '图片上传失败')
@@ -47,4 +48,6 @@ onBeforeUnmount(() => editorRef.value?.destroy())
 .rich-editor__tip { margin: 0; padding: 8px 12px; color: #8796a5; background: #fafcff; font-size: 12px; line-height: 1.5; }
 .rich-editor :deep(.w-e-toolbar) { border-bottom: 1px solid #ebeef5; }
 .rich-editor :deep(.w-e-text-container) { min-height: 300px; }
+.rich-editor :deep(.w-e-text-container img) { display: block; max-width: 100%; height: auto; margin: 0; padding: 0; box-sizing: border-box; border: 0; vertical-align: top; }
+.rich-editor :deep(.w-e-text-container p:has(> img)) { margin: 0; padding: 0; }
 </style>

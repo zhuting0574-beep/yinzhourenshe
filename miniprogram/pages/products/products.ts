@@ -14,4 +14,6 @@ Page({
   scan() {
     scanActivity()
   },
+  onShareAppMessage() { return { title: '积分商品', path: '/pages/products/products' } },
+  onShareTimeline() { return { title: '积分商品', query: '' } },
 })

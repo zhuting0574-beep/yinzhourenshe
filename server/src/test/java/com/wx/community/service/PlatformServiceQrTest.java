@@ -84,12 +84,23 @@ class PlatformServiceQrTest {
  @Test void locationCheckInOutsideActivityTimeIsRejected(){
   JdbcTemplate db=mock(JdbcTemplate.class);
   Map<String,Object> activity=activity("BOTH",200);
-  activity.put("start_time",Timestamp.valueOf(LocalDateTime.now().plusHours(1)));
+  activity.put("start_time",Timestamp.valueOf(LocalDateTime.now().plusDays(1)));
   when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity);
   PlatformService service=service(db);
   BusinessException error=assertThrows(BusinessException.class,()->service.locationCheckIn(1L,9L,29.817,121.55,10,service.qrToken(9L)));
   assertEquals("ACTIVITY_NOT_RUNNING",error.code);
   verify(db,never()).update(anyString(),any(Object[].class));
+ }
+
+ @Test void combinedCheckInIsAllowedFromMidnightOnActivityDate(){
+  JdbcTemplate db=mock(JdbcTemplate.class);
+  Map<String,Object> activity=activity("BOTH",200);
+  activity.put("participation_status","REGISTERED");
+  activity.put("start_time",Timestamp.valueOf(LocalDateTime.now().withHour(23).withMinute(59).withSecond(0)));
+  when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity);
+  PlatformService service=service(db);
+  Map<String,Object> result=service.verifyActivity(1L,service.qrToken(9L),"QR");
+  assertEquals(true,result.get("requiresLocation"));
  }
 
  @Test void repeatedQrCheckInReturnsExistingParticipationWithoutAwardingAgain(){

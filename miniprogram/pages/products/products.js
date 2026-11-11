@@ -11,4 +11,6 @@ Page({
   open(e) {
     wx.navigateTo({ url: `/pages/product-detail/product-detail?id=${e.currentTarget.dataset.id}` })
   },
+  onShareAppMessage() { return { title: '积分商品', path: '/pages/products/products' } },
+  onShareTimeline() { return { title: '积分商品', query: '' } },
 })

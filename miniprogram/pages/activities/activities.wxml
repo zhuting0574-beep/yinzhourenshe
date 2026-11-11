@@ -9,22 +9,20 @@
   </view>
   <view wx:if="{{!loading && !displayItems.length}}" class="empty">暂无活动</view>
   <view class="activity-list">
-    <view
-      wx:for="{{displayItems}}"
-      wx:key="id"
-      class="activity-card"
-      data-id="{{item.id}}"
-      bindtap="open"
-    >
+    <block wx:for="{{displayItems}}" wx:key="id">
+    <view wx:if="{{item.endedSectionStart}}" class="past-title">往期活动</view>
+    <view class="activity-card" data-id="{{item.id}}" bindtap="open">
       <view class="cover-wrap">
         <image src="{{item.cover_url||'/assets/ux/activity-orange.jpg'}}" mode="aspectFill"/>
-        <text class="status-pill">{{item.participation_status==='REGISTERED'?'已报名':'活动报名中'}}</text>
+        <text class="status-pill">{{item.ended?'已结束':(item.participation_status==='REGISTERED'?'已报名':'活动报名中')}}</text>
       </view>
       <view class="activity-info">
         <view class="name">{{item.title}}</view>
         <view class="meta">活动时间：{{item.start_time}} - {{item.end_time}}</view>
       </view>
     </view>
+    </block>
   </view>
+  <view wx:if="{{endedLoading}}" class="empty">加载往期活动中...</view>
   <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
 </view>

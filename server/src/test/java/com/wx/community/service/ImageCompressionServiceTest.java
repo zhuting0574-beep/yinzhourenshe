@@ -126,6 +126,20 @@ class ImageCompressionServiceTest {
     }
 
     @Test
+    void activityDetailImageUsesTwoMegabyteQualityLimit() throws Exception {
+        BufferedImage source = noisyImage(1200, 3000);
+        byte[] original = encode(source, "jpeg");
+        assertTrue(original.length > 2_000_000);
+
+        ImageCompressionService.ProcessedImage processed = service.processDetail(original, "image/jpeg");
+
+        assertTrue(processed.compressed());
+        assertTrue(processed.bytes().length <= 2_000_000);
+        assertTrue(processed.bytes().length > 200_000);
+        assertNotNull(ImageIO.read(new ByteArrayInputStream(processed.bytes())));
+    }
+
+    @Test
     void oversizedPngFallsBackToCompressedJpegWhenNeeded() throws Exception {
         BufferedImage source = noisyImage(600, 400);
         byte[] original = encode(source, "png");
