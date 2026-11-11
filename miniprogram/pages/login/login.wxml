@@ -1,9 +1,7 @@
 <view class="login-page">
   <safe-area-top />
   <view class="mini-top">
-    <button class="login-back" bindtap="back" aria-label="返回上一页">
-      <view class="login-back__icon"></view>
-    </button>
+    <button class="mini-top__back" bindtap="back" aria-label="返回上一页"><view class="mini-top__back-icon"></view></button>
     <view class="mini-top__title">登录</view>
   </view>
   <view class="login-content">

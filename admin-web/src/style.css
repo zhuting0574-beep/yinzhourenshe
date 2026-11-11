@@ -38,4 +38,6 @@
 .user-detail__points small { color: #8798a6; }
 .user-detail__points strong { margin-top: 4px; color: #1769e0; font-size: 28px; }
 .user-detail__heading { margin: 22px 0 10px; color: #243e57; }
+.activity-actions-column .cell { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 10px; line-height: 24px; white-space: nowrap; }
+.activity-actions-column .el-button + .el-button { margin-left: 0; }
 @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, 1fr); } .login-page { grid-template-columns: 1fr; } .login-brand { display: none; } .login-form { width: min(440px, calc(100% - 32px)); margin: auto; } }

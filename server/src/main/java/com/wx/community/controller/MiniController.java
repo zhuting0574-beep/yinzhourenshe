@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets; import java.util.*;
  }
  @GetMapping("/mini/home") public ApiResponse<?> home(@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.home(uid(a)));}
  @GetMapping("/mini/activities") public ApiResponse<?> activities(@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.activities(uid(a)));}
+ @GetMapping("/mini/activities/ended") public ApiResponse<?> endedActivities(@AuthenticationPrincipal AuthUser a,@RequestParam(defaultValue="1") int page){return ApiResponse.ok(s.endedActivities(uid(a),page));}
  @GetMapping("/mini/activities/{id}") public ApiResponse<?> activity(@PathVariable Long id,@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.activity(id,uid(a)));}
  @PostMapping("/mini/activities/{id}/register") public ApiResponse<?> register(@PathVariable Long id,@AuthenticationPrincipal AuthUser a,@RequestBody Map<String,Object>b){return ApiResponse.ok(s.registerActivity(registered(a),id,str(b,"phone","")));}
  @PostMapping("/mini/activities/verify") public ApiResponse<?> verify(@AuthenticationPrincipal AuthUser a,@RequestBody Map<String,Object>b){return ApiResponse.ok(s.verifyActivity(registered(a),str(b,"token",""),"QR"));}

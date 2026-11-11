@@ -159,6 +159,8 @@ Page({
       })
     else wx.showToast({ title: '活动地点尚未配置', icon: 'none' })
   },
+  onShareAppMessage() { const item: any = this.data.item || {}; return { title: item.title || '活动详情', path: `/pages/activity-detail/activity-detail?id=${item.id || ''}`, imageUrl: item.cover_url || item.coverUrl } },
+  onShareTimeline() { const item: any = this.data.item || {}; return { title: item.title || '活动详情', query: `id=${item.id || ''}`, imageUrl: item.cover_url || item.coverUrl } },
 })
 
 function isProfileComplete(user: any) {

@@ -48,6 +48,19 @@
   color: #8295a2;
   overflow: hidden;
 }
+.rich-content image,
+.rich-content img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: 0;
+  vertical-align: top;
+}
+.rich-content p { margin: 0; padding: 0; }
 .action {
   position: fixed;
   z-index: 10;

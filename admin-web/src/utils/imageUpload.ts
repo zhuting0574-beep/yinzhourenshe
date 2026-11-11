@@ -10,7 +10,7 @@ function blockKeyboard(event: KeyboardEvent) {
   event.stopImmediatePropagation()
 }
 
-export async function uploadAdminImage(file: File) {
+export async function uploadAdminImage(file: File, purpose = 'standard') {
   if (uploading.value) throw new Error('已有图片正在上传，请稍候')
   uploading.value = true
   const controller = new AbortController()
@@ -24,6 +24,7 @@ export async function uploadAdminImage(file: File) {
   try {
     const form = new FormData()
     form.append('file', file)
+    form.append('purpose', purpose)
     const response = await fetch('/api/admin/uploads', {
       method: 'POST',
       headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` },

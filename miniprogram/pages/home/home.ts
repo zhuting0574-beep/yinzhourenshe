@@ -81,6 +81,8 @@ Page({
     wx.navigateTo({ url: '/pages/questionnaire/questionnaire' })
   },
   noop() {},
+  onShareAppMessage() { return { title: '鄞领π', path: '/pages/home/home' } },
+  onShareTimeline() { return { title: '鄞领π', query: '' } },
 })
 
 function getDisplayName(user: any, loggedIn: boolean) {

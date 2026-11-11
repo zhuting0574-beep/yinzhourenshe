@@ -23,6 +23,7 @@
 .activity-list {
   padding: 0 30rpx 24rpx;
 }
+.past-title { font-size: 34rpx; font-weight: 700; color: #222; margin: 18rpx 0 6rpx; }
 .activity-card {
   margin-bottom: 28rpx;
   border-radius: 20rpx;

@@ -55,4 +55,6 @@ Page({
       )
       .catch(() => this.setData({ submitting: false }))
   },
+  onShareAppMessage() { const q = this.data.questionnaire || {}; return { title: q.name || '调查问卷', path: '/pages/questionnaire/questionnaire' } },
+  onShareTimeline() { const q = this.data.questionnaire || {}; return { title: q.name || '调查问卷', query: '' } },
 })
