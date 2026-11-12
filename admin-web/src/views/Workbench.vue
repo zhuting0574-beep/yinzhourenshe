@@ -47,6 +47,16 @@ const userDetailDialog = ref(false)
 const userDetail = ref<any | null>(null)
 const userDetailLoading = ref(false)
 const passwordDialog = ref(false)
+const productTypeDialog = ref(false)
+const importInput = ref<HTMLInputElement | null>(null)
+const importKind = ref<'coupon' | 'questions'>('coupon')
+const reviewDialog = ref(false)
+const reviewActivity = ref<any>(null)
+const reviewRows = ref<any[]>([])
+const reviewSelected = ref<any[]>([])
+const reviewName = ref('')
+const reviewSchool = ref('')
+const reviewLoading = ref(false)
 
 const menus = [
   ['dashboard', '数据概览'], ['users', '用户管理'], ['activities', '活动管理'],
@@ -60,7 +70,7 @@ const columns = computed(() => {
     users: ['nickname', 'phone', 'points', 'status', 'created_at'],
     activities: ['id', 'title', 'signup_start', 'start_time', 'checkin_mode', 'status', 'registrations', 'checkins'],
     questionnaires: ['id', 'name', 'start_time', 'end_time', 'status', 'pinned', 'submissions'],
-    products: ['id', 'name', 'points_cost', 'stock', 'locked_stock', 'redeemed_stock', 'status'],
+    products: ['id', 'name', 'product_type', 'points_cost', 'stock', 'locked_stock', 'redeemed_stock', 'status'],
     orders: ['order_no', 'product_name', 'nickname', 'phone', 'points', 'expire_at', 'status', 'operator_name'],
     points: ['nickname', 'phone', 'amount', 'balance', 'type', 'remark', 'created_at'],
     content: ['title', 'content', 'updated_at'],
@@ -72,7 +82,7 @@ const columnLabels: Record<string, Record<string, string>> = {
   users: { id: '用户编号', nickname: '用户昵称', phone: '手机号', points: '可用积分', status: '账号状态', created_at: '注册时间' },
   activities: { id: '活动编号', title: '活动名称', signup_start: '报名开始', start_time: '活动开始', checkin_mode: '签到方式', status: '活动状态', registrations: '报名人数', checkins: '签到人数' },
   questionnaires: { id: '问卷编号', name: '问卷名称', start_time: '开始时间', end_time: '结束时间', status: '问卷状态', pinned: '是否置顶', submissions: '提交数量' },
-  products: { id: '商品编号', name: '商品名称', points_cost: '所需积分', stock: '可用库存', locked_stock: '锁定库存', redeemed_stock: '已兑换数量', status: '商品状态' },
+  products: { id: '商品编号', name: '商品名称', product_type: '商品类型', points_cost: '所需积分', stock: '可用库存', locked_stock: '锁定库存', redeemed_stock: '已兑换数量', status: '商品状态' },
   orders: { order_no: '订单编号', product_name: '商品名称', nickname: '用户昵称', phone: '手机号', points: '消耗积分', expire_at: '领取截止', status: '订单状态', operator_name: '操作人' },
   points: { nickname: '用户昵称', phone: '手机号', amount: '积分变动', balance: '积分余额', type: '变动类型', remark: '变动说明', created_at: '记录时间' },
   content: { title: '名称', content: '值', updated_at: '修改时间' },
@@ -80,11 +90,11 @@ const columnLabels: Record<string, Record<string, string>> = {
 }
 const valueLabels: Record<string, string> = {
   ACTIVE: '正常', DRAFT: '草稿', PUBLISHED: '已发布', OFFLINE: '已下架', ENDED: '已结束',
-  ON_SALE: '已上架', PENDING: '待核销', PICKED_UP: '已核销', CANCELED: '已取消',
+  ON_SALE: '已上架', SCHEDULED: '待上线', PENDING: '待核销', PICKED_UP: '已核销', CANCELED: '已取消',
   REGISTER: '注册奖励', PROFILE: '完善信息奖励', DAILY_CHECKIN: '每日签到', QUESTIONNAIRE: '问卷奖励', ACTIVITY: '活动奖励',
   EXCHANGE: '兑换扣减', ADMIN_ADD: '管理员增加', ADMIN_SUBTRACT: '管理员扣减', EXPIRED: '过期清零', EXCHANGE_CANCEL: '兑换退还',
   BANNER: '轮播图', ABOUT: '关于我们', RULES: '积分规则', SERVICE: '服务点', PRODUCT_NOTICE: '商品详情温馨提示', ORDER_SUCCESS: '兑换成功提示', ORDER_RECORD: '兑换记录提示', REWARD_PROFILE: '完善信息奖励积分', REWARD_DAILY_CHECKIN: '每日签到奖励积分',
-  QR: '二维码签到', BOTH: '二维码+定位签到'
+  QR: '二维码签到', BOTH: '二维码+定位签到', PHYSICAL: '实体商品', METRO_COUPON: '地铁券', COFFEE_COUPON: '咖啡券', PENDING_REVIEW: '已报名待审核', REGISTERED: '已报名', REJECTED: '已拒绝', CHECKED_IN: '已签到', DEFAULT_ACTIVITY_IMAGE: '活动默认图', DEFAULT_QUESTIONNAIRE_IMAGE: '问卷默认图'
 }
 function columnLabel(field: string) { return columnLabels[props.module]?.[field] || field }
 function displayValue(field: string, value: any) {
@@ -162,12 +172,19 @@ function create() {
     ElMessage.warning('banner最多4个')
     return
   }
+  if (props.module === 'products') { productTypeDialog.value = true; return }
   resetEditing()
   Object.assign(editing, { status: props.module === 'activities' ? 'PUBLISHED' : 'DRAFT', enabled: true, sortOrder: 0 })
-  if (props.module === 'activities') Object.assign(editing, { points: 100, checkinMode: 'QR', checkinRadiusM: 200, description: '<p><br></p>' })
+  if (props.module === 'activities') Object.assign(editing, { points: 100, checkinMode: 'QR', checkinRadiusM: 200, reviewRequired: false, description: '<p><br></p>' })
   if (props.module === 'questionnaires') Object.assign(editing, { questions: [], pinned: false })
-  if (props.module === 'products') Object.assign(editing, { status: 'ON_SALE', stock: 0, pointsCost: 1, description: '<p><br></p>' })
   if (props.module === 'banners') Object.assign(editing, { imageUrl: '', startTime: '', endTime: '', activityId: null, enabled: true, sortOrder: rows.value.length })
+  dialogMode.value = 'create'
+  dialog.value = true
+}
+function beginProductCreate(productType: string) {
+  productTypeDialog.value = false
+  resetEditing()
+  Object.assign(editing, { productType, status: 'ON_SALE', stock: 0, pointsCost: 1, publishMode: 'IMMEDIATE', publishAt: '', perUserLimit: 1, couponCodes: [], description: '<p><br></p>' })
   dialogMode.value = 'create'
   dialog.value = true
 }
@@ -181,7 +198,8 @@ async function edit(row: any) {
     startTime: normalizeDateTime(source.start_time), endTime: normalizeDateTime(source.end_time), placeName: source.place_name,
     pointsCost: source.points_cost, imageUrl: source.image_url, contentType: source.content_type,
     popupImageUrl: source.popup_image_url, popupTitle: source.popup_title, headerTitle: source.header_title,
-    pinned: !!source.pinned,
+    pinned: !!source.pinned, reviewRequired: !!source.review_required,
+    productType: source.product_type || 'PHYSICAL', publishMode: source.publish_mode || 'IMMEDIATE', publishAt: normalizeDateTime(source.publish_at), perUserLimit: source.per_user_limit || 1, couponCodes: [],
     sortOrder: source.sort_order, activityId: source.activity_id ?? source.activityId, checkinMode: source.checkin_mode || 'QR', checkinRadiusM: source.checkin_radius_m || 200,
     description: ['activities', 'products'].includes(props.module) ? normalizeRichText(source.description) : source.description
   })
@@ -211,6 +229,13 @@ async function save() {
       if (!Number.isInteger(body.points) || body.points <= 0) throw new Error('活动分值必须为正整数')
       if (body.checkinMode !== 'QR' && (!Number.isFinite(Number(body.latitude)) || !Number.isFinite(Number(body.longitude)))) throw new Error('二维码+定位签到活动必须设置有效经纬度')
       if (body.checkinMode !== 'QR' && Number(body.checkinRadiusM) <= 0) throw new Error('签到范围必须大于 0 米')
+    }
+    if (props.module === 'products') {
+      body.pointsCost = Number(body.pointsCost)
+      body.perUserLimit = Number(body.perUserLimit || 1)
+      body.stock = Number(body.stock || 0)
+      if (body.publishMode === 'SCHEDULED' && body.status !== 'OFFLINE' && !body.publishAt) throw new Error('请选择定时上线时间')
+      if (body.productType !== 'PHYSICAL' && dialogMode.value === 'create' && !(body.couponCodes || []).length) throw new Error('请至少添加或导入一个券码')
     }
     if (props.module === 'content' && String(body.contentType || '').startsWith('REWARD_')) {
       body.rewardPoints = Number(body.rewardPoints)
@@ -400,6 +425,27 @@ async function exportQuestionnaire(row: any) {
     URL.revokeObjectURL(url)
   } catch (e: any) { ElMessage.error(e.message || '导出失败') }
 }
+async function downloadFile(path: string, filename: string) { const response = await fetch(path, { headers: uploadHeaders.value }); if (!response.ok) throw new Error('下载失败'); const url = URL.createObjectURL(await response.blob()); const link = document.createElement('a'); link.href = url; link.download = filename; link.click(); URL.revokeObjectURL(url) }
+async function downloadQuestionnaireQr(row: any) { try { await downloadFile(`/api/admin/questionnaires/${row.id}/share-qr.png`, `${String(row.name || '问卷').replace(/[\\/:*?"<>|]/g, '_')}-二维码.png`) } catch (e: any) { ElMessage.error(e.message) } }
+function chooseImport(kind: 'coupon' | 'questions') { importKind.value = kind; if (importInput.value) { importInput.value.value = ''; importInput.value.click() } }
+async function onImportFile(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const form = new FormData(); form.append('file', file)
+  try {
+    const path = importKind.value === 'coupon' ? '/api/admin/products/coupon-codes/parse' : '/api/admin/questionnaires/questions/import'
+    const response = await fetch(path, { method: 'POST', headers: uploadHeaders.value, body: form })
+    const payload = await response.json()
+    if (!response.ok || payload.code !== 'OK') throw new Error(payload.message || '导入失败')
+    if (importKind.value === 'coupon') { editing.couponCodes = Array.from(new Set([...(editing.couponCodes || []), ...(payload.data?.codes || [])])); ElMessage.success(`已读取 ${payload.data?.codes?.length || 0} 个券码，保存商品后生效`) }
+    else { await ElMessageBox.confirm(`导入文件包含 ${payload.data?.questions?.length || 0} 道题，确认替换当前题目吗？`, '替换问卷题目', { type: 'warning', confirmButtonText: '确认替换', cancelButtonText: '取消' }); editing.questions = payload.data?.questions || []; ElMessage.success('题目已导入') }
+  } catch (e: any) { if (!['cancel', 'close'].includes(e) && e?.message) ElMessage.error(e.message) }
+}
+function addCouponCode() { (editing.couponCodes || (editing.couponCodes = [])).push('') }
+function removeCouponCode(index: number) { editing.couponCodes.splice(index, 1) }
+async function openReviews(row: any) { if (!row.review_required) return; reviewActivity.value = row; reviewName.value = ''; reviewSchool.value = ''; reviewSelected.value = []; reviewDialog.value = true; await loadReviews() }
+async function loadReviews() { if (!reviewActivity.value) return; reviewLoading.value = true; try { reviewRows.value = await api.get(`/admin/activities/${reviewActivity.value.id}/reviews`, { params: { name: reviewName.value, school: reviewSchool.value } }) } catch (e: any) { ElMessage.error(e.message) } finally { reviewLoading.value = false } }
+async function reviewBatch(action: 'APPROVE' | 'REJECT', selected = reviewSelected.value) { const ids = selected.map(row => row.id); if (!ids.length) return ElMessage.warning('请选择报名用户'); try { await ElMessageBox.confirm(`确认${action === 'APPROVE' ? '通过' : '拒绝'} ${ids.length} 名用户的报名吗？`, '活动报名审核', { type: action === 'REJECT' ? 'warning' : 'info' }); await api.post(`/admin/activities/${reviewActivity.value.id}/reviews/batch`, { ids, action }); ElMessage.success('审核成功'); await loadReviews(); await load() } catch (e: any) { if (!['cancel', 'close'].includes(e) && e?.message) ElMessage.error(e.message) } }
 function addQuestion() { (editing.questions || (editing.questions = [])).push({ questionType: 'SINGLE', title: '', options: ['选项一', '选项二'], required: true }) }
 function removeQuestion(i: number) { editing.questions.splice(i, 1) }
 function addOption(question: any) { (question.options || (question.options = [])).push('新选项') }
@@ -446,6 +492,7 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
 </script>
 
 <template>
+  <input ref="importInput" type="file" accept=".xlsx" hidden @change="onImportFile" />
   <el-container class="admin">
     <el-aside width="238px">
       <div class="logo"><span>π</span><div><b>鄞领π</b><small>运营管理平台</small></div></div>
@@ -484,23 +531,25 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
             <span v-else-if="module === 'activities' && c === 'id'">{{ $index + 1 }}</span>
             <span v-else>{{ displayValue(c, row[c]) }}</span>
           </template></el-table-column>
-          <el-table-column label="操作" fixed="right" header-align="center" :width="module === 'questionnaires' ? 360 : module === 'activities' ? 300 : module === 'banners' ? 180 : 240" :class-name="module === 'activities' ? 'activity-actions-column' : ''"><template #default="{ row }">
+          <el-table-column label="操作" fixed="right" header-align="center" :width="module === 'questionnaires' ? 430 : module === 'activities' ? 350 : module === 'banners' ? 180 : 260" :class-name="module === 'activities' ? 'activity-actions-column' : ''"><template #default="{ row }">
             <el-button v-if="['activities','questionnaires','products','content','banners'].includes(module)" link type="primary" @click="edit(row)">{{ module === 'banners' ? '修改' : '编辑' }}</el-button>
             <el-button v-if="module === 'banners'" link type="danger" @click="removeBanner(row)">删除</el-button>
             <el-button v-if="module === 'questionnaires'" link type="success" @click="showResults(row)">统计结果</el-button>
             <el-button v-if="module === 'questionnaires'" link type="success" @click="exportQuestionnaire(row)">导出统计</el-button>
+            <el-button v-if="module === 'questionnaires'" link type="primary" @click="downloadQuestionnaireQr(row)">二维码下载</el-button>
             <el-button v-if="module === 'users'" link type="primary" @click="adjust(row,'points')">调整积分</el-button>
             <el-button v-if="module === 'users'" link type="primary" @click="showUserDetail(row)">详情</el-button>
             <el-button v-if="module === 'users'" link type="danger" @click="removeUser(row)">删除</el-button>
-            <el-button v-if="module === 'products'" link type="primary" @click="adjust(row,'stock')">调整库存</el-button>
+            <el-button v-if="module === 'products'" link type="primary" :disabled="row.product_type !== 'PHYSICAL'" @click="adjust(row,'stock')">调整库存</el-button>
             <el-button v-if="module === 'products'" link type="danger" @click="deleteProduct(row)">删除</el-button>
             <el-button v-if="module === 'activities' && ['QR','BOTH'].includes(row.checkin_mode || 'QR')" link @click="showQr(row)">核销码</el-button>
             <el-button v-if="module === 'activities'" link type="primary" @click="showActivityQr(row)">活动码</el-button>
             <el-button v-if="module === 'activities'" link type="success" @click="exportActivity(row)">导出</el-button>
+            <el-button v-if="module === 'activities'" link type="warning" :disabled="!row.review_required" @click="openReviews(row)">审核</el-button>
             <el-button v-if="module === 'activities'" link type="danger" @click="deleteActivity(row)">删除</el-button>
             <el-button v-if="module === 'orders' && row.status === 'PENDING'" link type="success" @click="orderAction(row,'pickup')">确认核销</el-button>
             <el-button v-if="module === 'orders' && row.status === 'PENDING'" link type="danger" @click="orderAction(row,'cancel')">取消</el-button>
-            <el-button v-if="module === 'orders' && row.status === 'PICKED_UP'" link type="warning" @click="orderAction(row,'cancel-or-revert')">撤销核销</el-button>
+            <el-button v-if="module === 'orders' && row.status === 'PICKED_UP' && (!row.product_type || row.product_type === 'PHYSICAL')" link type="warning" @click="orderAction(row,'cancel-or-revert')">撤销核销</el-button>
           </template></el-table-column>
         </el-table><el-pagination v-if="module === 'users'" layout="total, sizes, prev, pager, next" :total="total" :current-page="page" :page-size="pageSize" :page-sizes="[10,20,50,100]" @current-change="onPageChange" @size-change="onPageSizeChange" /></el-card>
       </el-main>
@@ -520,6 +569,7 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
         <el-form-item label="活动结束"><el-date-picker v-model="editing.endTime" class="date-time-picker" type="datetime" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择活动结束时间" /></el-form-item>
         <el-form-item label="地点"><el-input v-model="editing.placeName" /></el-form-item><el-form-item label="地址"><el-input v-model="editing.address" /></el-form-item>
         <el-form-item label="签到方式"><el-select v-model="editing.checkinMode" class="full-control"><el-option label="二维码签到" value="QR" /><el-option label="二维码+定位签到" value="BOTH" /></el-select></el-form-item>
+        <el-form-item label="报名审核"><el-switch v-model="editing.reviewRequired" active-text="需要审核" inactive-text="无需审核" /></el-form-item>
         <template v-if="editing.checkinMode !== 'QR'">
           <el-form-item label="签到位置"><AmapLocationPicker v-model:longitude="editing.longitude" v-model:latitude="editing.latitude" :address="editing.address" /></el-form-item>
           <el-form-item label="签到范围"><el-input-number v-model="editing.checkinRadiusM" :min="1" :precision="0" /><span class="unit">米</span></el-form-item>
@@ -537,15 +587,20 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
         <el-form-item label="结束时间"><el-date-picker v-model="editing.endTime" class="date-time-picker" type="datetime" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择结束时间" /></el-form-item>
         <el-form-item label="状态"><el-select v-model="editing.status"><el-option label="草稿" value="DRAFT" /><el-option label="已发布" value="PUBLISHED" /><el-option label="已结束" value="ENDED" /></el-select></el-form-item>
         <el-form-item label="说明"><el-input v-model="editing.description" type="textarea" /></el-form-item>
-        <el-form-item label="题目"><div class="question-editor"><div v-for="(q, i) in editing.questions" :key="i" class="question-row">
+        <el-form-item label="题目"><div class="question-editor"><div class="question-import-actions"><el-button @click="chooseImport('questions')">导入 Excel</el-button><el-button link type="primary" @click="downloadFile('/api/admin/questionnaires/questions/template', '问卷题目导入模板.xlsx')">下载模板</el-button></div><div v-for="(q, i) in editing.questions" :key="i" class="question-row">
           <div class="question-head"><el-select v-model="q.questionType"><el-option label="单选" value="SINGLE" /><el-option label="多选" value="MULTIPLE" /><el-option label="文本" value="TEXT" /></el-select><el-input v-model="q.title" placeholder="题目标题" /><el-switch v-model="q.required" active-text="必填" /><el-button link type="danger" @click="removeQuestion(i)">删除</el-button></div>
           <div v-if="q.questionType !== 'TEXT'" class="option-list"><el-input v-for="(_, oi) in q.options" :key="oi" v-model="q.options[oi]" /><el-button link @click="addOption(q)">+ 选项</el-button></div>
         </div><el-button @click="addQuestion">+ 添加题目</el-button></div></el-form-item>
       </template>
       <template v-else-if="module === 'products'">
+        <el-form-item label="商品类型"><el-tag>{{ displayValue('product_type', editing.productType) }}</el-tag></el-form-item>
         <el-form-item label="名称"><el-input v-model="editing.name" /></el-form-item><el-form-item label="图片"><el-input v-model="editing.coverUrl" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" :disabled="uploading" :http-request="uploadImage" :on-success="uploadSuccess" :on-error="imageUploadError"><el-button :loading="uploading" :disabled="uploading">上传图片</el-button></el-upload><span class="upload-size-tip">建议尺寸：600 × 600 px（接近方形，主体居中）</span></el-form-item>
-        <el-form-item label="所需积分"><el-input-number v-model="editing.pointsCost" :min="1" /></el-form-item><el-form-item v-if="dialogMode === 'create'" label="初始库存"><el-input-number v-model="editing.stock" :min="0" /></el-form-item>
-        <el-form-item label="状态"><el-select v-model="editing.status"><el-option label="上架" value="ON_SALE" /><el-option label="下架" value="OFFLINE" /></el-select></el-form-item><el-form-item label="说明"><RichTextEditor v-model="editing.description" /></el-form-item>
+        <el-form-item label="所需积分"><el-input-number v-model="editing.pointsCost" :min="1" /></el-form-item><el-form-item v-if="dialogMode === 'create' && editing.productType === 'PHYSICAL'" label="初始库存"><el-input-number v-model="editing.stock" :min="0" /></el-form-item>
+        <el-form-item v-if="editing.productType !== 'PHYSICAL'" :label="editing.productType === 'METRO_COUPON' ? '乘车码编号' : '兑换码编号'"><div class="coupon-editor"><div class="coupon-actions"><el-button @click="addCouponCode">+ 新增一条</el-button><el-button @click="chooseImport('coupon')">Excel 导入</el-button><el-button link type="primary" @click="downloadFile('/api/admin/products/coupon-codes/template', '券码导入模板.xlsx')">下载模板</el-button></div><div v-for="(_, index) in editing.couponCodes" :key="index" class="coupon-row"><el-input v-model="editing.couponCodes[index]" :placeholder="editing.productType === 'METRO_COUPON' ? '请输入乘车码编号' : '请输入兑换码编号'" /><el-button link type="danger" @click="removeCouponCode(index)">删除</el-button></div><el-empty v-if="!editing.couponCodes?.length" description="暂未添加券码" :image-size="52" /></div></el-form-item>
+        <el-form-item v-if="editing.productType !== 'PHYSICAL'" label="每人限领"><el-input-number v-model="editing.perUserLimit" :min="1" :precision="0" /><span class="unit">张</span></el-form-item>
+        <el-form-item label="上线类型"><el-radio-group v-model="editing.publishMode"><el-radio-button label="IMMEDIATE">实时上线</el-radio-button><el-radio-button label="SCHEDULED">定时上线</el-radio-button></el-radio-group></el-form-item>
+        <el-form-item v-if="editing.publishMode === 'SCHEDULED' && editing.status !== 'OFFLINE'" label="上线时间"><el-date-picker v-model="editing.publishAt" type="datetime" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" /></el-form-item>
+        <el-form-item label="状态"><el-select v-model="editing.status"><el-option label="上架" value="ON_SALE" /><el-option v-if="editing.status === 'SCHEDULED'" label="待上线" value="SCHEDULED" /><el-option label="下架" value="OFFLINE" /></el-select></el-form-item><el-form-item label="说明"><RichTextEditor v-model="editing.description" /></el-form-item>
       </template>
       <template v-else-if="module === 'banners'">
         <el-form-item label="图片"><el-input v-model="editing.imageUrl" placeholder="上传后自动填写图片地址" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" accept="image/*" :disabled="uploading" :http-request="uploadImage" :on-success="uploadSuccess" :on-error="imageUploadError"><el-button :loading="uploading" :disabled="uploading">上传图片</el-button></el-upload><el-image v-if="editing.imageUrl" :src="editing.imageUrl" fit="contain" style="width: 220px; height: 100px; margin-left: 12px" /><span class="upload-size-tip">建议尺寸：1500 × 840 px（约 16:9）</span></el-form-item>
@@ -564,6 +619,11 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
         <el-form-item label="配置项"><el-input v-model="editing.title" disabled /></el-form-item>
         <el-form-item label="奖励积分"><el-input-number v-model="editing.rewardPoints" :min="1" :max="100000" :precision="0" /><span class="unit">积分</span></el-form-item>
       </template>
+      <template v-else-if="module === 'content' && ['DEFAULT_ACTIVITY_IMAGE','DEFAULT_QUESTIONNAIRE_IMAGE'].includes(editing.contentType)">
+        <el-form-item label="配置项"><el-input v-model="editing.title" disabled /></el-form-item>
+        <el-form-item label="默认图片"><el-input v-model="editing.imageUrl" placeholder="上传后自动填写图片地址" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" accept="image/*" :disabled="uploading" :http-request="uploadImage" :on-success="uploadSuccess" :on-error="imageUploadError"><el-button :loading="uploading" :disabled="uploading">上传图片</el-button></el-upload><el-image v-if="editing.imageUrl" :src="editing.imageUrl" fit="contain" style="width:220px;height:120px;margin-left:12px" /></el-form-item>
+        <el-form-item label="启用"><el-switch v-model="editing.enabled" /></el-form-item>
+      </template>
       <template v-else>
         <el-form-item label="内容类型"><el-select v-model="editing.contentType" disabled><el-option v-for="t in ['ABOUT','RULES','SERVICE','PRODUCT_NOTICE','ORDER_SUCCESS','ORDER_RECORD']" :key="t" :value="t" /></el-select></el-form-item><el-form-item label="名称"><el-input v-model="editing.title" disabled /></el-form-item>
         <el-form-item label="图片"><el-input v-model="editing.imageUrl" /><el-upload class="inline-upload" action="/api/admin/uploads" :headers="uploadHeaders" :show-file-list="false" accept="image/*" :disabled="uploading" :http-request="uploadImage" :on-success="uploadSuccess" :on-error="imageUploadError"><el-button :loading="uploading" :disabled="uploading">上传图片</el-button></el-upload><span class="upload-size-tip">建议宽度：1200 px，比例可按内容需要调整</span></el-form-item>
@@ -576,6 +636,17 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
       </template>
     </el-form>
     <template v-if="!['qr','activityQr'].includes(dialogMode)" #footer><el-button @click="dialog = false">取消</el-button><el-button type="primary" @click="save">保存</el-button></template>
+  </el-dialog>
+  <el-dialog v-model="productTypeDialog" title="选择商品类型" width="520px">
+    <div class="product-type-grid">
+      <button type="button" @click="beginProductCreate('PHYSICAL')"><strong>实体商品</strong><span>使用现有库存及人工核销流程</span></button>
+      <button type="button" @click="beginProductCreate('METRO_COUPON')"><strong>地铁券</strong><span>导入乘车码，领取后展示二维码</span></button>
+      <button type="button" @click="beginProductCreate('COFFEE_COUPON')"><strong>咖啡券</strong><span>导入兑换码，领取后展示编号</span></button>
+    </div>
+  </el-dialog>
+  <el-dialog v-model="reviewDialog" :title="`报名审核 - ${reviewActivity?.title || ''}`" width="980px">
+    <div class="review-toolbar"><el-input v-model="reviewName" placeholder="姓名模糊查询" clearable @keyup.enter="loadReviews" /><el-input v-model="reviewSchool" placeholder="学校模糊查询" clearable @keyup.enter="loadReviews" /><el-button @click="loadReviews">查询</el-button><el-button type="primary" :disabled="!reviewSelected.length" @click="reviewBatch('APPROVE')">批量通过</el-button><el-button type="danger" :disabled="!reviewSelected.length" @click="reviewBatch('REJECT')">批量拒绝</el-button></div>
+    <el-table v-loading="reviewLoading" :data="reviewRows" row-key="id" @selection-change="reviewSelected = $event"><el-table-column type="selection" width="48" :selectable="(row: any) => row.status !== 'CHECKED_IN'" /><el-table-column prop="real_name" label="姓名" /><el-table-column prop="graduation_school" label="学校" min-width="160" /><el-table-column prop="major_direction" label="专业" min-width="140" /><el-table-column prop="grade_year" label="级数"><template #default="{ row }">{{ row.grade_year ? `${row.grade_year}级` : '-' }}</template></el-table-column><el-table-column prop="status" label="状态"><template #default="{ row }">{{ displayValue('status', row.status) }}</template></el-table-column><el-table-column label="操作" width="140"><template #default="{ row }"><el-button link type="success" :disabled="row.status === 'CHECKED_IN' || row.status === 'REGISTERED'" @click="reviewBatch('APPROVE', [row])">通过</el-button><el-button link type="danger" :disabled="row.status === 'CHECKED_IN' || row.status === 'REJECTED'" @click="reviewBatch('REJECT', [row])">拒绝</el-button></template></el-table-column></el-table>
   </el-dialog>
   <QuestionnaireResults v-if="module === 'questionnaires'" v-model="resultsDialog" :questionnaire="resultsQuestionnaire" />
   <el-dialog v-model="userDetailDialog" title="用户详情" width="720px">
@@ -590,6 +661,8 @@ onBeforeUnmount(() => { closeDialog(); window.removeEventListener('resize', resi
         <el-descriptions-item label="账号状态">{{ displayValue('status', userDetail.status) }}</el-descriptions-item>
         <el-descriptions-item label="真实姓名">{{ userDetail.real_name || '-' }}</el-descriptions-item>
         <el-descriptions-item label="年龄">{{ userDetail.age || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="出生日期">{{ userDetail.birth_date || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="级数">{{ userDetail.grade_year ? `${userDetail.grade_year}级` : '-' }}</el-descriptions-item>
         <el-descriptions-item label="毕业院校">{{ userDetail.graduation_school || '-' }}</el-descriptions-item>
         <el-descriptions-item label="专业方向">{{ userDetail.major_direction || '-' }}</el-descriptions-item>
         <el-descriptions-item label="所在城市">{{ userDetail.city || '-' }}</el-descriptions-item>

@@ -26,6 +26,10 @@ Page({
     const status = item && item.participation_status
     if (status === 'CHECKED_IN')
       return { actionText: '已签到', rewardText: '已完成签到', actionDisabled: true }
+    if (status === 'PENDING_REVIEW')
+      return { actionText: '已报名待审核', rewardText: '审核通过并签到后', actionDisabled: true }
+    if (status === 'REJECTED')
+      return { actionText: '报名未通过', rewardText: '报名审核未通过', actionDisabled: true }
     if (status === 'REGISTERED') {
       const mode = (item && item.checkin_mode) || 'QR'
       return {
@@ -132,7 +136,7 @@ Page({
         if (!next.participation_status) next.participation_status = 'REGISTERED'
         this.setActivity(next)
         this.setData({ submitting: false, showRegistrationDialog: false })
-        wx.showModal({ title: '报名成功', content: '您已成功报名该活动', showCancel: false })
+        wx.showModal({ title: next.participation_status === 'PENDING_REVIEW' ? '报名已提交' : '报名成功', content: next.participation_status === 'PENDING_REVIEW' ? '报名信息已提交，请等待审核' : '您已成功报名该活动', showCancel: false })
       })
       .catch((error: any) => {
         this.setData({ submitting: false })
@@ -159,14 +163,14 @@ Page({
       })
     else wx.showToast({ title: '活动地点尚未配置', icon: 'none' })
   },
-  onShareAppMessage() { const item: any = this.data.item || {}; return { title: item.title || '活动详情', path: `/pages/activity-detail/activity-detail?id=${item.id || ''}`, imageUrl: item.cover_url || item.coverUrl } },
-  onShareTimeline() { const item: any = this.data.item || {}; return { title: item.title || '活动详情', query: `id=${item.id || ''}`, imageUrl: item.cover_url || item.coverUrl } },
+  onShareAppMessage() { const item: any = this.data.item || {}; return { title: item.title || '活动详情', path: `/pages/activity-detail/activity-detail?id=${item.id || ''}`, imageUrl: item.effective_cover_url || item.cover_url || item.coverUrl } },
+  onShareTimeline() { const item: any = this.data.item || {}; return { title: item.title || '活动详情', query: `id=${item.id || ''}`, imageUrl: item.effective_cover_url || item.cover_url || item.coverUrl } },
 })
 
 function isProfileComplete(user: any) {
   if (!user) return false
   if (typeof user.profileComplete === 'boolean') return user.profileComplete
   if (typeof user.profile_complete === 'boolean') return user.profile_complete
-  const values = [user.realName || user.real_name, user.age, user.graduationSchool || user.graduation_school, user.majorDirection || user.major_direction, user.city]
+  const values = [user.realName || user.real_name, user.gender, user.birthDate || user.birth_date, user.gradeYear || user.grade_year, user.graduationSchool || user.graduation_school, user.majorDirection || user.major_direction, user.city]
   return values.every((value) => value !== null && value !== undefined && String(value).trim() !== '')
 }

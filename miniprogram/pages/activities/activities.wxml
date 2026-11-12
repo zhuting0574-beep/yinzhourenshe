@@ -13,8 +13,8 @@
     <view wx:if="{{item.endedSectionStart}}" class="past-title">往期活动</view>
     <view class="activity-card" data-id="{{item.id}}" bindtap="open">
       <view class="cover-wrap">
-        <image src="{{item.cover_url||'/assets/ux/activity-orange.jpg'}}" mode="aspectFill"/>
-        <text class="status-pill">{{item.ended?'已结束':(item.participation_status==='REGISTERED'?'已报名':'活动报名中')}}</text>
+        <image src="{{item.effective_cover_url||item.cover_url||'/assets/ux/activity-orange.jpg'}}" mode="aspectFill"/>
+        <text class="status-pill">{{item.ended?'已结束':(item.participation_status==='PENDING_REVIEW'?'待审核':item.participation_status==='REJECTED'?'未通过':item.participation_status==='REGISTERED'?'已报名':item.participation_status==='CHECKED_IN'?'已签到':'活动报名中')}}</text>
       </view>
       <view class="activity-info">
         <view class="name">{{item.title}}</view>

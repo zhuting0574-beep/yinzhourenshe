@@ -91,7 +91,7 @@ function isProfileComplete(user: any) {
   if (!user) return false
   if (typeof user.profileComplete === 'boolean') return user.profileComplete
   if (typeof user.profile_complete === 'boolean') return user.profile_complete
-  const values = [user.realName || user.real_name, user.age, user.graduationSchool || user.graduation_school, user.majorDirection || user.major_direction, user.city]
+  const values = [user.realName || user.real_name, user.gender, user.birthDate || user.birth_date, user.gradeYear || user.grade_year, user.graduationSchool || user.graduation_school, user.majorDirection || user.major_direction, user.city, user.phone]
   return values.every((value) => value !== null && value !== undefined && String(value).trim() !== '')
 }
 

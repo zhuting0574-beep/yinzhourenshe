@@ -8,9 +8,10 @@ function normalizeDescription(value: unknown) {
 
 Page({
   data: { questionnaire: null, questions: [], answers: {} as any, submitting: false },
-  onLoad() {
+  onLoad(options: any) {
+    const questionnaireId = String(options?.id || '').trim()
     requireLogin()
-      .then(() => request<any>('/mini/questionnaires/active'))
+      .then(() => request<any>(questionnaireId ? `/mini/questionnaires/${encodeURIComponent(questionnaireId)}` : '/mini/questionnaires/active'))
       .then(
         (q) => {
           if (!q) return
@@ -19,6 +20,7 @@ Page({
               ...q,
               description: normalizeDescription(q.description),
               headerTitle: q.header_title || q.headerTitle || '',
+              effectiveImageUrl: q.effective_image_url || q.popup_image_url || '',
             },
             questions: (q.questions || []).map((x: any) => ({
               ...x,
@@ -55,6 +57,6 @@ Page({
       )
       .catch(() => this.setData({ submitting: false }))
   },
-  onShareAppMessage() { const q: any = this.data.questionnaire || {}; return { title: q.name || '调查问卷', path: '/pages/questionnaire/questionnaire' } },
-  onShareTimeline() { const q: any = this.data.questionnaire || {}; return { title: q.name || '调查问卷', query: '' } },
+  onShareAppMessage() { const q: any = this.data.questionnaire || {}; return { title: q.name || '调查问卷', path: `/pages/questionnaire/questionnaire${q.id ? `?id=${q.id}` : ''}`, imageUrl: q.effectiveImageUrl } },
+  onShareTimeline() { const q: any = this.data.questionnaire || {}; return { title: q.name || '调查问卷', query: q.id ? `id=${q.id}` : '', imageUrl: q.effectiveImageUrl } },
 })

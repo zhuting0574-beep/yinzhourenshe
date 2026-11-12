@@ -1,24 +1,27 @@
-import { request, updateWechatProfile } from '../../utils/request'
+import { bindPhone, request, updateWechatProfile } from '../../utils/request'
 
 type ProfileForm = {
   avatarUrl: string
   nickname: string
   realName: string
   gender: string
-  age: string
+  phone: string
+  birthDate: string
+  gradeYear: string
   graduationSchool: string
   majorDirection: string
   city: string
 }
 
-const emptyForm = (): ProfileForm => ({ avatarUrl: '', nickname: '', realName: '', gender: '', age: '', graduationSchool: '', majorDirection: '', city: '' })
-const ageOptions = ['请选择年龄', ...Array.from({ length: 150 }, (_, index) => `${index + 1}`)]
+const emptyForm = (): ProfileForm => ({ avatarUrl: '', nickname: '', realName: '', gender: '', phone: '', birthDate: '', gradeYear: '', graduationSchool: '', majorDirection: '', city: '' })
+const currentYear = new Date().getFullYear()
+const gradeOptions = ['请选择级数', ...Array.from({ length: currentYear + 10 - 1950 + 1 }, (_, index) => `${currentYear + 10 - index}级`)]
 const genderOptions = ['男', '女']
 const defaultRegion = ['浙江省', '宁波市']
 
 Page({
   data: {
-    form: emptyForm(), saving: false, ageOptions, genderOptions, ageIndex: 0, region: defaultRegion,
+    form: emptyForm(), saving: false, gradeOptions, genderOptions, gradeIndex: 0, region: defaultRegion, currentDate: new Date().toISOString().slice(0, 10),
     pickerVisible: false, pickerTitle: '', pickerOptions: [] as string[], pickerIndex: 0, pickerScrollId: '', pickerType: '', profileRewardPoints: 100,
   },
   onLoad() {
@@ -40,7 +43,7 @@ Page({
         const form = toForm(profile, app.globalData.user)
         const current = this.data.form
         const merged = (this as any).formDirty ? mergeForm(form, current) : form
-        this.setData({ form: merged, ageIndex: merged.age ? Number(merged.age) : 0, region: regionForCity(merged.city) })
+        this.setData({ form: merged, gradeIndex: gradeIndexFor(merged.gradeYear), region: regionForCity(merged.city) })
       })
       .catch(() => {})
   },
@@ -118,18 +121,13 @@ Page({
       fail: reject,
     }))
   },
-  ageChange(e: any) {
-    const index = Number(e.detail.value)
-    ;(this as any).formDirty = true
-    this.setData({ ageIndex: index, 'form.age': index > 0 ? String(index) : '' })
-  },
   openGenderPicker() {
     const pickerIndex = Math.max(0, genderOptions.indexOf(this.data.form.gender))
     this.setData({ pickerVisible: true, pickerTitle: '选择性别', pickerOptions: genderOptions, pickerIndex, pickerType: 'gender', pickerScrollId: `picker-option-${pickerIndex}` })
   },
-  openAgePicker() {
-    const pickerIndex = this.data.form.age ? Number(this.data.form.age) : 0
-    this.setData({ pickerVisible: true, pickerTitle: '选择年龄', pickerOptions: ageOptions, pickerIndex, pickerType: 'age', pickerScrollId: `picker-option-${pickerIndex}` })
+  openGradePicker() {
+    const pickerIndex = gradeIndexFor(this.data.form.gradeYear)
+    this.setData({ pickerVisible: true, pickerTitle: '选择级数', pickerOptions: gradeOptions, pickerIndex, pickerType: 'grade', pickerScrollId: `picker-option-${pickerIndex}` })
   },
   selectPickerOption(e: any) {
     this.setData({ pickerIndex: Number(e.currentTarget.dataset.index) })
@@ -142,8 +140,8 @@ Page({
     ;(this as any).formDirty = true
     if (this.data.pickerType === 'gender') {
       this.setData({ 'form.gender': genderOptions[index] || '', pickerVisible: false })
-    } else if (this.data.pickerType === 'age') {
-      this.setData({ ageIndex: index, 'form.age': index > 0 ? String(index) : '', pickerVisible: false })
+    } else if (this.data.pickerType === 'grade') {
+      this.setData({ gradeIndex: index, 'form.gradeYear': index > 0 ? gradeOptions[index].replace('级', '') : '', pickerVisible: false })
     }
   },
   noop() {},
@@ -153,14 +151,21 @@ Page({
     ;(this as any).formDirty = true
     this.setData({ region, 'form.city': region[1] || '' })
   },
+  birthDateChange(e: any) { ;(this as any).formDirty = true; this.setData({ 'form.birthDate': e.detail.value }) },
+  getPhoneNumber(e: any) { const code = e.detail?.code; if (!code) return wx.showToast({ title: '未获取到手机号', icon: 'none' }); bindPhone(code).then(() => request<any>('/mini/profile')).then((profile) => { this.setData({ form: toForm(profile), gradeIndex: gradeIndexFor(String(profile?.grade_year || '')), region: regionForCity(profile?.city || '') }); (this as any).formDirty = false; wx.showToast({ title: '手机号已获取', icon: 'success' }) }).catch(() => {}) },
   save() {
     if (this.data.saving) return
+    const form = this.data.form
+    const phone = String(form.phone || '').trim()
+    if (phone && !/^1[3-9]\d{9}$/.test(phone)) return wx.showToast({ title: '请输入正确的11位手机号', icon: 'none' })
+    const labels: Record<string,string> = { realName: '真实姓名', gender: '性别', phone: '手机号', birthDate: '出生日期', gradeYear: '级数', graduationSchool: '毕业院校', majorDirection: '专业方向', city: '所在城市' }
+    const missing = Object.keys(labels).filter(key => !String((form as any)[key] || '').trim()).map(key => labels[key])
+    if (missing.length) return wx.showModal({ title: '信息尚未完善', content: `未填写：${missing.join('、')}。未完善资料将无法报名活动，是否仍要保存？`, confirmText: '继续保存', success: result => result.confirm && this.performSave() })
+    this.performSave()
+  },
+  performSave() {
     const app = getApp<IAppOption>()
     const form = this.data.form
-    const age = String(form.age || '').trim()
-    if (age && (!/^\d+$/.test(age) || Number(age) < 1 || Number(age) > 150)) {
-      return wx.showToast({ title: '年龄请输入1-150的整数', icon: 'none' })
-    }
     this.setData({ saving: true })
     request<any>('/mini/profile/details', {
       method: 'PUT',
@@ -169,7 +174,9 @@ Page({
         nickname: String(form.nickname || '').trim(),
         realName: String(form.realName || '').trim(),
         gender: String(form.gender || '').trim(),
-        age: age ? Number(age) : null,
+        phone: String(form.phone || '').trim(),
+        birthDate: String(form.birthDate || '').trim() || null,
+        gradeYear: form.gradeYear ? Number(form.gradeYear) : null,
         graduationSchool: String(form.graduationSchool || '').trim(),
         majorDirection: String(form.majorDirection || '').trim(),
         city: String(form.city || '').trim(),
@@ -211,12 +218,15 @@ function toForm(profile: any, fallback: any = null): ProfileForm {
     nickname: firstNonBlank(profile.nickname, fallback?.nickname),
     realName: profile.realName ?? profile.real_name ?? '',
     gender: profile.gender ?? '',
-    age: profile.age === null || profile.age === undefined ? '' : String(profile.age),
+    phone: profile.phone ?? '',
+    birthDate: profile.birthDate ?? profile.birth_date ?? '',
+    gradeYear: profile.gradeYear ?? profile.grade_year ?? '',
     graduationSchool: profile.graduationSchool ?? profile.graduation_school ?? '',
     majorDirection: profile.majorDirection ?? profile.major_direction ?? '',
     city: profile.city ?? '',
   }
 }
+function gradeIndexFor(value: string) { if (!value) return 0; const index = gradeOptions.indexOf(`${value}级`); return index < 0 ? 0 : index }
 
 function firstNonBlank(...values: any[]) {
   return values.find((value) => value !== null && value !== undefined && String(value).trim() !== '') || ''

@@ -6,7 +6,7 @@
   </view>
   <image
     class="cover"
-    src="{{item.cover_url||'/assets/ux/activity-orange.jpg'}}"
+    src="{{item.effective_cover_url||item.cover_url||'/assets/ux/activity-orange.jpg'}}"
     mode="aspectFill"
   />
   <view class="detail-card first">

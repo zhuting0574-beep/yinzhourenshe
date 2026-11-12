@@ -87,6 +87,9 @@
   font-size: 27rpx;
   text-align: right;
 }
+.phone-input { flex: 1; }
+.phone-button { flex: 0 0 auto; height: 58rpx; margin: 0 0 0 12rpx; padding: 0 16rpx; border: 0; border-radius: 8rpx; background: #eaf4ff; color: #1769e0; font-size: 22rpx; line-height: 58rpx; }
+.phone-button::after { border: 0; }
 .form-input::placeholder {
   color: #abbac4;
   font-size: 25rpx;

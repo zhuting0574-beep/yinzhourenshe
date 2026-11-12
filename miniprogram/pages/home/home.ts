@@ -16,7 +16,7 @@ function normalizeQuestionnaire(questionnaire: any) {
   if (!questionnaire) return null
   return {
     ...questionnaire,
-    popupImageUrl: questionnaire.popup_image_url || questionnaire.popupImageUrl || '',
+    popupImageUrl: questionnaire.effective_image_url || questionnaire.popup_image_url || questionnaire.popupImageUrl || '',
     popupTitle: questionnaire.popup_title || questionnaire.popupTitle || '',
     headerTitle: questionnaire.header_title || questionnaire.headerTitle || '',
   }

@@ -16,7 +16,9 @@
       <view class="line">领取截止：{{item.expire_at}}</view>
       <view wx:if="{{item.cancel_reason}}" class="reason">取消原因：{{item.cancel_reason}}</view>
       <view wx:if="{{item.status==='PENDING'}}" class="tip">{{recordNotice}}</view>
+      <button wx:if="{{item.status==='PICKED_UP' && item.product_type !== 'PHYSICAL'}}" class="coupon-show-button" data-order="{{item}}" bindtap="showCoupon" loading="{{couponLoading}}">展示券</button>
     </view>
   </view>
   <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
+  <view wx:if="{{couponVisible}}" class="coupon-mask" catchtap="closeCoupon"><view class="coupon-sheet" catchtap="noop"><view class="coupon-sheet__head"><text>{{couponType === 'METRO_COUPON' ? '地铁乘车券' : '咖啡兑换券'}}</text><text class="coupon-close" bindtap="closeCoupon">×</text></view><block wx:if="{{couponType === 'METRO_COUPON'}}"><image wx:if="{{couponQrPath}}" class="coupon-qr" src="{{couponQrPath}}" mode="aspectFit" show-menu-by-longpress="true" /><view wx:else class="coupon-loading">二维码加载中...</view><view class="coupon-hint">长按二维码可保存到相册</view></block><block wx:else><view class="coffee-code">{{couponCode}}</view><button class="copy-button" bindtap="copyCoupon">复制兑换码</button></block></view></view>
 </view>

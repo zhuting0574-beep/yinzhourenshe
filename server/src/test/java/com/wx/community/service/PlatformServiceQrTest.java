@@ -105,7 +105,7 @@ class PlatformServiceQrTest {
 
  @Test void repeatedQrCheckInReturnsExistingParticipationWithoutAwardingAgain(){
   JdbcTemplate db=mock(JdbcTemplate.class);
-  Map<String,Object> activity=activity("QR",200);
+ Map<String,Object> activity=activity("QR",200);
   activity.put("participation_status","CHECKED_IN");
   Map<String,Object> checkedIn=Map.of("status","CHECKED_IN","checkin_method","QR");
   when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity,checkedIn);
@@ -150,7 +150,8 @@ class PlatformServiceQrTest {
   activity.put("status","PUBLISHED");
   activity.put("signup_start",LocalDateTime.now().minusHours(1));
   activity.put("signup_end",LocalDateTime.now().plusHours(1));
-  when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity);
+  Map<String,Object> profile=completeProfile();
+  when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(profile,activity);
   when(db.update(startsWith("insert into activity_participations"),any(Object[].class))).thenReturn(1);
   assertSame(activity,service(db).registerActivity(1L,9L));
   verify(db,times(1)).update(startsWith("insert into activity_participations"),any(Object[].class));
@@ -158,9 +159,10 @@ class PlatformServiceQrTest {
 
  @Test void repeatedRegistrationReturnsCurrentParticipationWithoutAnotherInsert(){
   JdbcTemplate db=mock(JdbcTemplate.class);
-  Map<String,Object> activity=activity("QR",200);
-  activity.put("participation_status","REGISTERED");
-  when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(activity);
+ Map<String,Object> activity=activity("QR",200);
+ activity.put("participation_status","REGISTERED");
+  Map<String,Object> profile=completeProfile();
+  when(db.queryForMap(anyString(),any(Object[].class))).thenReturn(profile,activity);
   assertSame(activity,service(db).registerActivity(1L,9L));
   verify(db,never()).update(startsWith("insert into activity_participations"),any(Object[].class));
  }
@@ -182,6 +184,7 @@ class PlatformServiceQrTest {
  }
 
  private PlatformService service(JdbcTemplate db){return new PlatformService(db,new ObjectMapper(),"a-qr-secret-that-is-long-enough-for-tests");}
+ private Map<String,Object> completeProfile(){Map<String,Object> user=new LinkedHashMap<>();user.put("id",1L);user.put("real_name","张三");user.put("gender","男");user.put("birth_date",java.sql.Date.valueOf("1996-05-10"));user.put("grade_year",2014);user.put("graduation_school","宁波大学");user.put("major_direction","计算机");user.put("city","宁波");user.put("phone","13800000000");return user;}
  private Map<String,Object> activity(String mode,double radius){
   Map<String,Object> activity=new LinkedHashMap<>();
   activity.put("id",9L); activity.put("title","测试活动"); activity.put("checkin_mode",mode);

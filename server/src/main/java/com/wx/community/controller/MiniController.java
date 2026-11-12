@@ -1,9 +1,10 @@
 package com.wx.community.controller;
 import com.fasterxml.jackson.core.type.TypeReference; import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wx.community.api.*; import com.wx.community.security.*; import com.wx.community.service.PlatformService;
+import com.google.zxing.*; import com.google.zxing.client.j2se.MatrixToImageWriter;
 import org.springframework.beans.factory.annotation.Value; import org.springframework.http.MediaType; import org.springframework.jdbc.core.JdbcTemplate; import org.springframework.security.core.annotation.AuthenticationPrincipal; import org.springframework.web.bind.annotation.*; import org.springframework.web.client.RestClient;
 import org.slf4j.Logger; import org.slf4j.LoggerFactory;
-import java.nio.charset.StandardCharsets; import java.util.*;
+import java.nio.charset.StandardCharsets; import java.util.*; import java.io.ByteArrayOutputStream;
 @RestController @RequestMapping("/api") public class MiniController {
  private static final Logger log=LoggerFactory.getLogger(MiniController.class);
  private final PlatformService s; private final TokenService tokens; private final JdbcTemplate db; private final ObjectMapper json; private final boolean dev; private final String appId,appSecret;
@@ -28,11 +29,14 @@ import java.nio.charset.StandardCharsets; import java.util.*;
  @GetMapping("/mini/check-ins") public ApiResponse<?> checkins(@AuthenticationPrincipal AuthUser a,@RequestParam(defaultValue="0")int year,@RequestParam(defaultValue="0")int month){var now=java.time.LocalDate.now(java.time.ZoneId.of("Asia/Shanghai"));return ApiResponse.ok(s.checkinSummary(required(a),year==0?now.getYear():year,month==0?now.getMonthValue():month));}
  @PostMapping("/mini/check-ins") public ApiResponse<?> checkin(@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.dailyCheckIn(registered(a)));}
  @GetMapping("/mini/questionnaires/active") public ApiResponse<?> questionnaire(@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.activeQuestionnaire(required(a)));}
+ @GetMapping("/mini/questionnaires/{id}") public ApiResponse<?> questionnaireById(@PathVariable Long id,@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.questionnaire(required(a),id));}
  @PostMapping("/mini/questionnaires/{id}/submit") public ApiResponse<?> submit(@PathVariable Long id,@AuthenticationPrincipal AuthUser a,@RequestBody Map<String,Object>b){return ApiResponse.ok(s.submitQuestionnaire(registered(a),id,b.get("answers")));}
  @GetMapping("/mini/products") public ApiResponse<?> products(){return ApiResponse.ok(s.products());}
  @GetMapping("/mini/products/{id}") public ApiResponse<?> product(@PathVariable Long id){return ApiResponse.ok(s.product(id));}
  @PostMapping("/mini/orders") public ApiResponse<?> exchange(@AuthenticationPrincipal AuthUser a,@RequestBody Map<String,Object>b,@RequestHeader(value="Idempotency-Key",required=false)String key){String request=key==null?str(b,"requestId",UUID.randomUUID().toString()):key;return ApiResponse.ok(s.exchange(registered(a),Long.valueOf(String.valueOf(b.get("productId"))),request));}
  @GetMapping("/mini/orders") public ApiResponse<?> orders(@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.orders(required(a)));}
+ @GetMapping("/mini/orders/{id}/coupon") public ApiResponse<?> orderCoupon(@PathVariable Long id,@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.couponForOrder(required(a),id));}
+ @GetMapping(value="/mini/orders/{id}/coupon-qr.png",produces=MediaType.IMAGE_PNG_VALUE) public byte[] orderCouponQr(@PathVariable Long id,@AuthenticationPrincipal AuthUser a)throws Exception{Map<String,Object> coupon=s.couponForOrder(required(a),id);if(!"METRO_COUPON".equals(coupon.get("product_type")))throw new BusinessException("INVALID_COUPON_TYPE","该订单不是地铁券");var matrix=new MultiFormatWriter().encode(String.valueOf(coupon.get("code")),BarcodeFormat.QR_CODE,720,720);ByteArrayOutputStream out=new ByteArrayOutputStream();MatrixToImageWriter.writeToStream(matrix,"PNG",out);return out.toByteArray();}
  @GetMapping("/mini/profile") public ApiResponse<?> profile(@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.profile(required(a)));}
  @PutMapping("/mini/profile/details") public ApiResponse<?> profileDetails(@AuthenticationPrincipal AuthUser a,@RequestBody Map<String,Object>b){return ApiResponse.ok(s.updateProfileDetails(required(a),b));}
  @GetMapping("/mini/profile/points") public ApiResponse<?> points(@AuthenticationPrincipal AuthUser a){return ApiResponse.ok(s.pointLogs(required(a)));}

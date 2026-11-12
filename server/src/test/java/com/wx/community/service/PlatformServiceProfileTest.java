@@ -10,6 +10,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -18,19 +19,19 @@ import static org.mockito.Mockito.*;
 
 class PlatformServiceProfileTest {
     private static final long USER_ID = 23L;
-    private static final String PROFILE_SQL = "select id,nickname,avatar_url,phone,points,status,created_at,real_name,gender,age,graduation_school,major_direction,city,profile_rewarded from users where id=?";
+    private static final String PROFILE_SQL = "select id,nickname,avatar_url,phone,points,status,created_at,real_name,gender,birth_date,grade_year,graduation_school,major_direction,city,profile_rewarded from users where id=?";
 
     @Test
-    void rejectsAgeOutsideAllowedRange() {
+    void rejectsFutureBirthDate() {
         JdbcTemplate db = mock(JdbcTemplate.class);
         when(db.queryForMap("select * from users where id=? for update", USER_ID)).thenReturn(Map.of("id", USER_ID));
         PlatformService service = new PlatformService(db, new ObjectMapper(), "profile-test-secret");
 
         Map<String, Object> details = new HashMap<>();
-        details.put("age", 151);
+        details.put("birthDate", LocalDate.now().plusDays(1).toString());
         BusinessException error = assertThrows(BusinessException.class, () -> service.updateProfileDetails(USER_ID, details));
 
-        assertEquals("INVALID_PROFILE_AGE", error.code);
+        assertEquals("INVALID_BIRTH_DATE", error.code);
         verify(db, never()).update(startsWith("update users set real_name"), any(Object[].class));
     }
 
@@ -42,7 +43,9 @@ class PlatformServiceProfileTest {
         result.put("id", USER_ID);
         result.put("real_name", "张三");
         result.put("gender", "男");
-        result.put("age", 30);
+        result.put("birth_date", java.sql.Date.valueOf("1996-05-10"));
+        result.put("grade_year", 2014);
+        result.put("phone", "13800000000");
         result.put("graduation_school", "宁波大学");
         result.put("major_direction", "计算机");
         result.put("city", "宁波");
@@ -64,7 +67,10 @@ class PlatformServiceProfileTest {
         PlatformService service = new PlatformService(db, new ObjectMapper(), "profile-test-secret");
         Map<String, Object> details = Map.of(
                 "realName", "张三",
-                "age", 30,
+                "gender", "男",
+                "birthDate", "1996-05-10",
+                "gradeYear", 2014,
+                "phone", "13800000000",
                 "graduationSchool", "宁波大学",
                 "majorDirection", "计算机",
                 "city", "宁波");
@@ -90,7 +96,8 @@ class PlatformServiceProfileTest {
         current.put("profile_rewarded", true);
         Map<String, Object> result = new HashMap<>(current);
         result.put("real_name", null);
-        result.put("age", null);
+        result.put("birth_date", null);
+        result.put("grade_year", null);
         result.put("graduation_school", null);
         result.put("major_direction", null);
         result.put("city", null);
@@ -103,8 +110,8 @@ class PlatformServiceProfileTest {
         PlatformService service = new PlatformService(db, new ObjectMapper(), "profile-test-secret");
         service.updateProfileDetails(USER_ID, Map.of("nickname", "", "avatarUrl", ""));
 
-        verify(db).update("update users set nickname=?,avatar_url=?,real_name=?,age=?,graduation_school=?,major_direction=?,city=? where id=?",
-                "微信昵称", "https://example.com/avatar.png", null, null, null, null, null, USER_ID);
+        verify(db).update("update users set nickname=?,avatar_url=?,gender=?,real_name=?,birth_date=?,grade_year=?,graduation_school=?,major_direction=?,city=?,phone=? where id=?",
+                "微信昵称", "https://example.com/avatar.png", null, null, null, null, null, null, null, null, USER_ID);
     }
 
     @Test
@@ -123,7 +130,9 @@ class PlatformServiceProfileTest {
         profile.put("status", "ACTIVE");
         profile.put("created_at", null);
         profile.put("real_name", "原账号实名");
-        profile.put("age", 30);
+        profile.put("birth_date", java.sql.Date.valueOf("1996-05-10"));
+        profile.put("grade_year", 2014);
+        profile.put("gender", "男");
         profile.put("graduation_school", "宁波大学");
         profile.put("major_direction", "计算机");
         profile.put("city", "宁波");
