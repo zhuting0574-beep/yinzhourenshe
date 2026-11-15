@@ -99,6 +99,10 @@ public class ImageCompressionService {
             } finally {
                 reader.dispose();
             }
+        } catch (BusinessException exception) {
+            throw exception;
+        } catch (IOException | RuntimeException exception) {
+            throw new BusinessException("INVALID_IMAGE", "图片无法解析，请转换为 JPG 或 PNG 后重试");
         }
     }
 

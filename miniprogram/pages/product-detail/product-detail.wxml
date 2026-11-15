@@ -10,7 +10,7 @@
       <view>
         <view class="name">{{item.name}}</view>
         <view class="cost">兑换积分：<text class="strong">{{item.points_cost}}积分</text></view>
-        <text>可用库存 {{item.stock}}</text>
+        <text>{{item.stock>0?'可用库存 '+item.stock:(item.redeemed_stock>0?'已兑完':'暂无库存')}}</text>
       </view>
     </view>
     <view class="notice">
@@ -34,10 +34,10 @@
   </view>
   <view class="action">
     <view>
-      <text class="strong">-{{item.points_cost}} <text class="small">积分</text></text>
-      <text>核销后扣除</text>
+      <text class="strong">{{item.points_cost}} <text class="small">积分</text></text>
+      <text>兑换时扣除</text>
     </view>
-    <button bindtap="redeem" loading="{{submitting}}" disabled="{{item.stock<=0}}">{{item.stock>0?'我要兑换':'已兑完'}}</button>
+    <button bindtap="redeem" loading="{{submitting}}" disabled="{{item.stock<=0}}">{{item.stock>0?'我要兑换':(item.redeemed_stock>0?'已兑完':'暂无库存')}}</button>
   </view>
   <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>
 </view>

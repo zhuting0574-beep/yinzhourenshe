@@ -2,6 +2,7 @@ package com.wx.community.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wx.community.service.ImageCompressionService;
+import com.wx.community.service.LabeledQrImageRenderer;
 import com.wx.community.service.PlatformService;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ class AssetControllerActivityExportTest {
    Map.of("real_name","张三","checked_in","是"),
    Map.of("real_name","李四","checked_in","否")
   ));
-  AssetController controller=new AssetController(tempDir.toString(),"http://localhost",db,mock(PlatformService.class),mock(ImageCompressionService.class),new ObjectMapper());
+  AssetController controller=new AssetController(tempDir.toString(),"http://localhost",db,mock(PlatformService.class),mock(ImageCompressionService.class),new LabeledQrImageRenderer(),new ObjectMapper());
 
   byte[] bytes=controller.exportActivityParticipants(4L).getBody();
   try(XSSFWorkbook book=new XSSFWorkbook(new ByteArrayInputStream(bytes))){

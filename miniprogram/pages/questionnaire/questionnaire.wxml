@@ -10,7 +10,7 @@
       <view class="status-pill pink">{{questionnaire.headerTitle || '问卷任务'}}</view>
       <view class="title">{{questionnaire.name}}</view>
       <view wx:if="{{questionnaire.description}}" class="intro">{{questionnaire.description}}</view>
-      <view class="reward">完成奖励 <text class="strong">100</text> 积分</view>
+      <view class="reward">完成奖励 <text class="strong">{{questionnaire.rewardPoints}}</text> 积分</view>
     </view>
     <view wx:if="{{questionnaire.completedThisMonth}}" class="done">本月已完成问卷</view>
     <view class="questions">
@@ -34,7 +34,7 @@
       </view>
     </view>
     <view wx:if="{{!questionnaire.completedThisMonth}}" class="submit-bar">
-      <button bindtap="submit" loading="{{submitting}}">提交问卷 · 获得100积分</button>
+      <button bindtap="submit" loading="{{submitting}}">提交问卷 · 获得{{questionnaire.rewardPoints}}积分</button>
     </view>
   </block>
   <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>

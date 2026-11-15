@@ -21,6 +21,7 @@ function normalizeQuestionnaire(questionnaire) {
         popupImageUrl: questionnaire.effective_image_url || questionnaire.popup_image_url || questionnaire.popupImageUrl || '',
         popupTitle: questionnaire.popup_title || questionnaire.popupTitle || '',
         headerTitle: questionnaire.header_title || questionnaire.headerTitle || '',
+        rewardPoints: Number(questionnaire.reward_points != null ? questionnaire.reward_points : (questionnaire.rewardPoints != null ? questionnaire.rewardPoints : 100)),
     };
 }
 Page({
@@ -39,6 +40,7 @@ Page({
         userName: '',
     },
     onShow() {
+        this.openPendingQuestionnaire();
         const tab = this.getTabBar && this.getTabBar();
         if (tab)
             tab.setData({ selected: 0 });
@@ -65,6 +67,20 @@ Page({
             }
         })
             .catch(() => this.setData({ loading: false, banners: [], questionnaire: null, aboutImageUrl: '', showSurvey: false, userName: getDisplayName(user, !!getApp().globalData.token) }));
+    },
+    openPendingQuestionnaire() {
+        const app = getApp();
+        const questionnaireId = String(app.globalData.pendingQuestionnaireId || '').trim();
+        if (!questionnaireId)
+            return;
+        app.globalData.pendingQuestionnaireId = '';
+        setTimeout(() => wx.navigateTo({
+            url: `/pages/questionnaire/questionnaire?id=${encodeURIComponent(questionnaireId)}`,
+            fail: () => {
+                app.globalData.pendingQuestionnaireId = questionnaireId;
+                wx.showToast({ title: '问卷打开失败，请重试', icon: 'none' });
+            },
+        }), 100);
     },
     openAbout() {
         this.setData({ showAbout: true });

@@ -6,10 +6,21 @@ function normalizeDescription(value: unknown) {
   return description.toLowerCase() === 'null' ? '' : description
 }
 
+function questionnaireIdFromOptions(options: any) {
+  const directId = String(options?.id || '').trim()
+  if (directId) return directId
+  const rawScene = String(options?.scene || '').trim()
+  if (rawScene) {
+    try { return decodeURIComponent(rawScene).replace(/^(?:id|questionnaire|q)=/i, '').trim() } catch { return rawScene.replace(/^(?:id|questionnaire|q)=/i, '').trim() }
+  }
+  return String((getApp<IAppOption>().globalData as any).pendingQuestionnaireId || '').trim()
+}
+
 Page({
   data: { questionnaire: null, questions: [], answers: {} as any, submitting: false },
   onLoad(options: any) {
-    const questionnaireId = String(options?.id || '').trim()
+    const questionnaireId = questionnaireIdFromOptions(options)
+    ;(getApp<IAppOption>().globalData as any).pendingQuestionnaireId = ''
     requireLogin()
       .then(() => request<any>(questionnaireId ? `/mini/questionnaires/${encodeURIComponent(questionnaireId)}` : '/mini/questionnaires/active'))
       .then(
@@ -21,6 +32,7 @@ Page({
               description: normalizeDescription(q.description),
               headerTitle: q.header_title || q.headerTitle || '',
               effectiveImageUrl: q.effective_image_url || q.popup_image_url || '',
+              rewardPoints: Number(q.reward_points ?? q.rewardPoints ?? 100),
             },
             questions: (q.questions || []).map((x: any) => ({
               ...x,
@@ -50,7 +62,7 @@ Page({
       .then(() =>
         wx.showModal({
           title: '提交成功',
-          content: '已获得100积分',
+          content: `已获得${Number(q.rewardPoints) || 100}积分`,
           showCancel: false,
           success: () => wx.navigateBack(),
         })

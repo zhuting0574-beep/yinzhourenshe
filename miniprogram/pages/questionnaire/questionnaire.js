@@ -7,10 +7,26 @@ function normalizeDescription(value) {
     const description = String(value).trim();
     return description.toLowerCase() === 'null' ? '' : description;
 }
+function questionnaireIdFromOptions(options) {
+    const directId = String((options === null || options === void 0 ? void 0 : options.id) || '').trim();
+    if (directId)
+        return directId;
+    const rawScene = String((options === null || options === void 0 ? void 0 : options.scene) || '').trim();
+    if (rawScene) {
+        try {
+            return decodeURIComponent(rawScene).replace(/^(?:id|questionnaire|q)=/i, '').trim();
+        }
+        catch (_a) {
+            return rawScene.replace(/^(?:id|questionnaire|q)=/i, '').trim();
+        }
+    }
+    return String(getApp().globalData.pendingQuestionnaireId || '').trim();
+}
 Page({
     data: { questionnaire: null, questions: [], answers: {}, submitting: false },
     onLoad(options) {
-        const questionnaireId = String((options === null || options === void 0 ? void 0 : options.id) || '').trim();
+        const questionnaireId = questionnaireIdFromOptions(options);
+        getApp().globalData.pendingQuestionnaireId = '';
         (0, request_1.requireLogin)()
             .then(() => (0, request_1.request)(questionnaireId ? `/mini/questionnaires/${encodeURIComponent(questionnaireId)}` : '/mini/questionnaires/active'))
             .then((q) => {
@@ -22,6 +38,7 @@ Page({
                     description: normalizeDescription(q.description),
                     headerTitle: q.header_title || q.headerTitle || '',
                     effectiveImageUrl: q.effective_image_url || q.popup_image_url || '',
+                    rewardPoints: Number(q.reward_points != null ? q.reward_points : (q.rewardPoints != null ? q.rewardPoints : 100)),
                 },
                 questions: (q.questions || []).map((x) => ({
                     ...x,
@@ -50,7 +67,7 @@ Page({
         })
             .then(() => wx.showModal({
             title: '提交成功',
-            content: '已获得100积分',
+            content: `已获得${Number(q.rewardPoints) || 100}积分`,
             showCancel: false,
             success: () => wx.navigateBack(),
         }))

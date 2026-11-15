@@ -10,6 +10,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,7 +23,7 @@ class PlatformServiceCouponTest {
  @Test void couponExchangeAllocatesOneCodeAndCreatesPickedUpOrder(){
   JdbcTemplate db=mock(JdbcTemplate.class);long uid=7L,pid=9L;
   when(db.queryForList(startsWith("select * from orders where user_id=? and idempotency_key=?"),any(Object[].class))).thenReturn(List.of());
-  when(db.queryForMap(startsWith("select * from products where id=?"),eq(pid))).thenReturn(Map.of("id",pid,"name","地铁券","product_type","METRO_COUPON","points_cost",20,"per_user_limit",2,"status","ON_SALE"));
+  when(db.queryForMap(startsWith("select * from products where id=?"),eq(pid))).thenReturn(Map.of("id",pid,"name","二维码券","product_type","METRO_COUPON","points_cost",20,"per_user_limit",2,"status","ON_SALE"));
   when(db.queryForMap("select * from users where id=? for update",uid)).thenReturn(Map.of("id",uid,"points",100,"phone","13800000000"));
   when(db.queryForObject("select count(*) from orders where user_id=? and product_id=? and status<>'CANCELED'",Integer.class,uid,pid)).thenReturn(0);
   when(db.queryForList(startsWith("select * from product_coupon_codes"),any(Object[].class))).thenReturn(List.of(Map.of("id",33L,"code_value","METRO-001")));
@@ -49,6 +50,17 @@ class PlatformServiceCouponTest {
   BusinessException error=assertThrows(BusinessException.class,()->service.cancelOrRevertOrder(88L,null,2L));
   assertEquals("COUPON_ORDER_FINAL",error.code);
   verify(db,never()).update(startsWith("update orders set status="),any(Object[].class));
+ }
+
+ @Test void barcodeCouponCanBeReadByItsOwner(){
+  JdbcTemplate db=mock(JdbcTemplate.class);
+  Map<String,Object> row=new LinkedHashMap<>();row.put("id",91L);row.put("product_type","BARCODE_COUPON");row.put("coupon_code_snapshot","BAR-001");
+  when(db.queryForMap(contains("BARCODE_COUPON"),eq(91L),eq(12L))).thenReturn(row);
+
+  Map<String,Object> coupon=new PlatformService(db,new ObjectMapper(),"coupon-test-secret-long-enough").couponForOrder(12L,91L);
+
+  assertEquals("BARCODE_COUPON",coupon.get("product_type"));
+  assertEquals("BAR-001",coupon.get("code"));
  }
 
  @Test void scheduledProductsArePublishedByMinuteJob(){

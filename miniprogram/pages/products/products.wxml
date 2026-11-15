@@ -17,7 +17,7 @@
       <view class="product-info">
         <view class="product-name">{{item.name}}</view>
         <view class="price">兑换积分：<text class="strong">{{item.points_cost}}积分</text></view>
-        <view class="stock">{{item.stock>0?'剩余 '+item.stock:'已兑完'}}</view>
+        <view class="stock">{{item.stock>0?'剩余 '+item.stock:(item.redeemed_stock>0?'已兑完':'暂无库存')}}</view>
       </view>
     </view>
   </view>

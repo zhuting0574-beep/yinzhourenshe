@@ -63,9 +63,9 @@
       <button class="modal-close" catchtap="closeSurvey">×</button>
       <view class="modal-brand">鄞领π</view>
       <view class="modal-icon">▤</view>
-      <view class="modal-title">{{questionnaire.popupTitle || '填写调查问卷'}}<text>得100积分</text></view>
+      <view class="modal-title">{{questionnaire.popupTitle || '填写调查问卷'}}<text>得{{questionnaire.rewardPoints}}积分</text></view>
       <view class="modal-pi">π</view>
-      <button class="survey-go" catchtap="goSurvey">去填写 <text>+100积分</text></button>
+      <button class="survey-go" catchtap="goSurvey">去填写 <text>+{{questionnaire.rewardPoints}}积分</text></button>
     </view>
   </view>
   <navigator class="icp-footer icp-footer__link" url="/pages/icp/icp">浙ICP备2026084324号-1</navigator>

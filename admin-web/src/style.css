@@ -17,7 +17,7 @@
 .login-page { min-height: 100vh; display: grid; grid-template-columns: 1.2fr 480px; background: #eef8ff; } .login-brand { padding: 18vh 10vw; background: #1769e0; color: #fff; }
 .login-brand b { font-size: 28px; } .login-brand h1 { font-size: 48px; margin: 28px 0 14px; } .login-brand p { opacity: .75; }
 .login-form { align-self: center; margin: 50px; padding: 42px; background: #fff; border: 1px solid #e6edf3; border-radius: 8px; } .login-form h2 { margin: 0 0 28px; } .login-form > .el-button { width: 100%; }
-.qr-panel { text-align: center; } .qr-panel img { width: 320px; height: 320px; display: block; margin: auto; } .qr-panel code { display: block; margin: 18px auto 0; max-width: 420px; overflow-wrap: anywhere; color: #60788c; } .qr-panel p { color: #95a5b2; }
+.qr-panel { text-align: center; } .qr-image-wrap { width: 320px; margin: 0 auto 14px; } .qr-image-wrap img { width: 320px; height: auto; display: block; } .qr-panel code { display: block; margin: 18px auto 0; max-width: 420px; overflow-wrap: anywhere; color: #60788c; } .qr-panel p { color: #95a5b2; }
 .inline-upload { margin-left: 8px; } .el-form-item .el-input + .inline-upload { flex: 0 0 auto; }
 .upload-size-tip { flex: 0 0 100%; margin: 4px 0 0 8px; color: #8796a5; font-size: 12px; line-height: 1.5; }
 .field-tip { flex: 0 0 100%; margin: 4px 0 0 8px; color: #8796a5; font-size: 12px; line-height: 1.5; }
@@ -30,6 +30,8 @@
 .question-editor { width: 100%; display: grid; gap: 12px; } .question-row { padding: 14px; border: 1px solid #e4eaf0; border-radius: 8px; background: #fafcff; }
 .question-import-actions,.coupon-actions,.review-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
 .coupon-editor { width:100%; } .coupon-row { display:flex; gap:10px; margin-top:10px; }
+.coupon-existing { margin-bottom:16px; }
+.coupon-section-title { margin:0 0 10px; color:#526b7c; font-size:13px; font-weight:600; }
 .product-type-grid { display:grid; gap:12px; }
 .product-type-grid button { width:100%; padding:18px; border:1px solid #dce5ec; border-radius:8px; background:#fff; text-align:left; cursor:pointer; }
 .product-type-grid button:hover { border-color:#409eff; background:#f5faff; }
@@ -49,4 +51,7 @@
 .user-detail__heading { margin: 22px 0 10px; color: #243e57; }
 .activity-actions-column .cell { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 10px; line-height: 24px; white-space: nowrap; }
 .activity-actions-column .el-button + .el-button { margin-left: 0; }
+.questionnaire-actions-column .cell { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 8px; line-height: 24px; white-space: nowrap; }
+.questionnaire-actions-column .el-button + .el-button { margin-left: 0; }
+.single-line-table-header .el-table__header-wrapper .cell { white-space: nowrap; word-break: keep-all; }
 @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, 1fr); } .login-page { grid-template-columns: 1fr; } .login-brand { display: none; } .login-form { width: min(440px, calc(100% - 32px)); margin: auto; } }

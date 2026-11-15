@@ -1,34 +1,32 @@
 package com.wx.community.controller;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.client.j2se.MatrixToImageWriter;
-import com.google.zxing.common.BitMatrix;
 import com.wx.community.api.ApiResponse;
 import com.wx.community.api.BusinessException;
+import com.wx.community.service.LabeledQrImageRenderer;
 import com.wx.community.service.WechatActivityLinkService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.ByteArrayOutputStream;
-import java.net.URI;
 import java.util.Map;
 
 @RestController
 public class ActivityShareController {
  private final WechatActivityLinkService links;
- public ActivityShareController(WechatActivityLinkService links){this.links=links;}
+ private final JdbcTemplate db;
+ private final LabeledQrImageRenderer qrImages;
+ public ActivityShareController(WechatActivityLinkService links,JdbcTemplate db,LabeledQrImageRenderer qrImages){this.links=links;this.db=db;this.qrImages=qrImages;}
 
  @GetMapping("/api/admin/activities/{id}/share-link") public ApiResponse<?> shareLink(@PathVariable Long id){return ApiResponse.ok(Map.of("url",links.publicActivityUrl(id)));}
  @GetMapping(value="/api/admin/activities/{id}/share-qr.png",produces=MediaType.IMAGE_PNG_VALUE) public byte[] shareQr(@PathVariable Long id)throws Exception{
-  BitMatrix matrix=new MultiFormatWriter().encode(links.publicActivityUrl(id),BarcodeFormat.QR_CODE,420,420);
-  ByteArrayOutputStream out=new ByteArrayOutputStream();MatrixToImageWriter.writeToStream(matrix,"PNG",out);return out.toByteArray();
+  return qrImages.render(links.publicActivityUrl(id),activityTitle(id)+" · 活动码");
  }
+ private String activityTitle(Long id){try{String title=db.queryForObject("select title from activities where id=?",String.class,id);return title==null||title.isBlank()?"活动":title.trim();}catch(org.springframework.dao.EmptyResultDataAccessException e){throw new BusinessException("NOT_FOUND","活动不存在");}}
  @GetMapping("/api/mini/activities/{id}/open") public ResponseEntity<?> open(@PathVariable Long id){
   try{return ResponseEntity.status(HttpStatus.FOUND).header(HttpHeaders.LOCATION,links.miniProgramUrl(id)).build();}
   catch(BusinessException e){

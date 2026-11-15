@@ -26,12 +26,13 @@ public class WechatActivityLinkService {
  private final ObjectMapper json;
  private final String appId;
  private final String appSecret;
+ private final String envVersion;
  private final String publicBaseUrl;
  private volatile String accessToken;
  private volatile Instant accessTokenExpiresAt=Instant.EPOCH;
 
- public WechatActivityLinkService(JdbcTemplate db,ObjectMapper json,@Value("${app.wechat.app-id:}")String appId,@Value("${app.wechat.app-secret:}")String appSecret,@Value("${app.public-base-url:https://www.yinlinpai.com}")String publicBaseUrl){
-  this.db=db;this.json=json;this.appId=appId;this.appSecret=appSecret;this.publicBaseUrl=publicBaseUrl.replaceAll("/+$","");
+ public WechatActivityLinkService(JdbcTemplate db,ObjectMapper json,@Value("${app.wechat.app-id:}")String appId,@Value("${app.wechat.app-secret:}")String appSecret,@Value("${app.wechat.env-version:release}")String envVersion,@Value("${app.public-base-url:https://www.yinlinpai.com}")String publicBaseUrl){
+  this.db=db;this.json=json;this.appId=appId;this.appSecret=appSecret;this.envVersion=normalizeEnvVersion(envVersion);this.publicBaseUrl=publicBaseUrl.replaceAll("/+$","");
  }
 
  public String publicActivityUrl(Long activityId){
@@ -40,20 +41,21 @@ public class WechatActivityLinkService {
  }
 
  public String miniProgramUrl(Long activityId){
-  List<Map<String,Object>> rows=db.queryForList("select share_url from activities where id=?",activityId);
+  List<Map<String,Object>> rows=db.queryForList("select share_url,share_env_version from activities where id=?",activityId);
   if(rows.isEmpty())throw new BusinessException("NOT_FOUND","活动不存在");
   String cached=text(rows.get(0).get("share_url"));
-  if(cached!=null)return cached;
+  String cachedEnv=text(rows.get(0).get("share_env_version"));
+  if(cached!=null&&envVersion.equals(cachedEnv))return cached;
   if(appId.isBlank()||appSecret.isBlank())throw new BusinessException("WECHAT_NOT_CONFIGURED","微信小程序链接尚未配置");
   Map<String,Object> request=new LinkedHashMap<>();
   request.put("path","pages/activity-detail/activity-detail");
   request.put("query","id="+activityId);
-  request.put("env_version","release");
+  request.put("env_version",envVersion);
   request.put("is_expire",false);
   Map<String,Object> response=wechatPost("https://api.weixin.qq.com/wxa/generate_urllink?access_token="+url(accessToken()),request,"ACTIVITY_LINK_FAILED","活动链接生成失败");
   String generated=text(response.get("url_link"));
   if(generated==null)throw new BusinessException("ACTIVITY_LINK_FAILED","微信未返回活动链接");
-  db.update("update activities set share_url=?,share_url_created_at=? where id=?",generated,LocalDateTime.now(),activityId);
+  db.update("update activities set share_url=?,share_url_created_at=?,share_env_version=? where id=?",generated,LocalDateTime.now(),envVersion,activityId);
   return generated;
  }
 
@@ -83,5 +85,6 @@ public class WechatActivityLinkService {
   }catch(BusinessException e){throw e;}catch(Exception e){log.warn("Invalid WeChat API response for {}: {}",code,body);throw new BusinessException(code,message);}
  }
  private String text(Object value){if(value==null)return null;String text=String.valueOf(value).trim();return text.isEmpty()?null:text;}
+ private String normalizeEnvVersion(String value){String normalized=value==null?"release":value.trim().toLowerCase();return List.of("release","trial","develop").contains(normalized)?normalized:"release";}
  private String url(String value){return URLEncoder.encode(value,StandardCharsets.UTF_8);}
 }

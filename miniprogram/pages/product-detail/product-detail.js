@@ -53,10 +53,10 @@ Page({
               data: { productId: item.id, requestId: `${Date.now()}-${item.id}` },
             })
           )
-          .then(() =>
+          .then((order) =>
             wx.showModal({
               title: '兑换成功',
-              content: this.data.successNotice,
+              content: successNoticeFor((order && order.product_type) || item.product_type, this.data.successNotice),
               showCancel: false,
               success: () => wx.navigateTo({ url: '/pages/orders/orders' }),
             })
@@ -76,4 +76,11 @@ Page({
 
 function stripHtml(value) {
   return String(value || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim()
+}
+
+function successNoticeFor(productType, physicalNotice) {
+  if (productType === 'METRO_COUPON') return '二维码券已发放，可前往兑换记录查看二维码'
+  if (productType === 'BARCODE_COUPON') return '条形码券已发放，可前往兑换记录查看条形码'
+  if (productType === 'COFFEE_COUPON') return '兑换券已发放，可前往兑换记录查看并复制兑换码'
+  return physicalNotice
 }

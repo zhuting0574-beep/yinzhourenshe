@@ -38,6 +38,8 @@ Page({
         actionDisabled: false,
       }
     }
+    if (isActivityEnded(item))
+      return { actionText: '已结束报名', rewardText: '活动已结束', actionDisabled: true }
     return { actionText: '我要报名', rewardText: '立即报名', actionDisabled: false }
   },
   setActivity(item: any) {
@@ -54,7 +56,7 @@ Page({
   },
   primaryAction() {
     const item: any = this.data.item
-    if (!item || item.participation_status === 'CHECKED_IN' || this.data.submitting) return
+    if (!item || item.participation_status === 'CHECKED_IN' || this.data.actionDisabled || this.data.submitting) return
     if (item.participation_status === 'REGISTERED') {
       return this.qrCheckIn()
     }
@@ -173,4 +175,11 @@ function isProfileComplete(user: any) {
   if (typeof user.profile_complete === 'boolean') return user.profile_complete
   const values = [user.realName || user.real_name, user.gender, user.birthDate || user.birth_date, user.gradeYear || user.grade_year, user.graduationSchool || user.graduation_school, user.majorDirection || user.major_direction, user.city]
   return values.every((value) => value !== null && value !== undefined && String(value).trim() !== '')
+}
+
+function isActivityEnded(item: any) {
+  const value = item?.end_time || item?.endTime
+  if (!value) return false
+  const timestamp = Date.parse(String(value).replace(' ', 'T'))
+  return Number.isFinite(timestamp) && timestamp <= Date.now()
 }

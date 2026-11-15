@@ -94,6 +94,15 @@ export function scanActivity() {
               })
               return
             }
+            const sharedQuestionnaireId = questionnaireIdFromShareLink(token)
+            if (sharedQuestionnaireId) {
+              wx.navigateTo({
+                url: `/pages/questionnaire/questionnaire?id=${encodeURIComponent(sharedQuestionnaireId)}`,
+                success: () => resolve({ questionnaireId: sharedQuestionnaireId, navigated: true }),
+                fail: reject,
+              })
+              return
+            }
             request<any>('/mini/activities/verify', { method: 'POST', data: { token } })
               .then((verified) => {
                 if (!verified.requiresLocation) return verified
@@ -136,7 +145,11 @@ export function scanActivity() {
   )
 }
 function activityIdFromShareLink(value: string) {
-  const match = String(value || '').match(/^https:\/\/(?:www\.)?yinlinpai\.com\/api\/mini\/activities\/(\d+)\/open(?:[?#].*)?$/i)
+  const match = String(value || '').match(/^https:\/\/(?:www\.)?yinlinpai\.com\/(?:test-api\/)?api\/mini\/activities\/(\d+)\/open(?:[?#].*)?$/i)
+  return match ? match[1] : ''
+}
+function questionnaireIdFromShareLink(value: string) {
+  const match = String(value || '').match(/^https:\/\/(?:www\.)?yinlinpai\.com\/(?:test-api\/)?api\/mini\/questionnaires\/(\d+)\/open(?:[?#].*)?$/i)
   return match ? match[1] : ''
 }
 export function bindPhone(code: string) {
