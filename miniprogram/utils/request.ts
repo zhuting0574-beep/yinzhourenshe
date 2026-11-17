@@ -1,17 +1,6 @@
 const app = getApp<IAppOption>()
 type ApiResult<T> = { success: boolean; data: T; message: string; code: string }
 type RequestOptions = Wechat.RequestOption & { silent?: boolean; errorTitle?: string }
-function normalizeDateTimes(value: any): any {
-  if (typeof value === 'string')
-    return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value) ? value.replace('T', ' ') : value
-  if (Array.isArray(value)) return value.map(normalizeDateTimes)
-  if (value && typeof value === 'object')
-    return Object.keys(value).reduce((result, key) => {
-      result[key] = normalizeDateTimes(value[key])
-      return result
-    }, {} as any)
-  return value
-}
 function clearAuth() {
   app.globalData.token = ''
   app.globalData.user = null
@@ -32,7 +21,7 @@ export function request<T>(url: string, options: RequestOptions = {}) {
       success: (r) => {
         const body = r.data as ApiResult<T>
         if (r.statusCode >= 200 && r.statusCode < 300 && body.success)
-          resolve(normalizeDateTimes(body.data))
+          resolve(body.data)
         else {
           if (r.statusCode === 401 || r.statusCode === 403 || body.code === 'LOGIN_REQUIRED' || (body.code === 'NOT_FOUND' && ['/mini/home', '/mini/profile'].includes(url))) clearAuth()
           if (errorTitle) console.warn(`${url} failed`, r.statusCode, body)
